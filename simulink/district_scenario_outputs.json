@@ -1,0 +1,194 @@
+[
+  {
+    "scenarioKey": "normal",
+    "name": "Baseline District Operation",
+    "dailyPatientArrivals": 135,
+    "camerasAvailable": 6,
+    "screeningCapacityPerDay": 143,
+    "imageThroughputPerHour": 17,
+    "ophthalmologistsAvailable": 3,
+    "avgQueueLength": 2,
+    "avgWaitTimeMinutes": 8,
+    "healthWorkerWorkloadPct": 80,
+    "referralDemandPerWeek": 157,
+    "description": "Balanced operations across 4 PHCs and 1 Mobile Van unit.",
+    "estimatedMonthlyCostInr": 663000,
+    "bottleneck": "Balanced Baseline Across Primary Health Centres",
+    "hourlyQueueCurve": [
+      {
+        "hour": "08:00",
+        "queueLength": 1,
+        "waitMinutes": 5
+      },
+      {
+        "hour": "10:00",
+        "queueLength": 2,
+        "waitMinutes": 10
+      },
+      {
+        "hour": "12:00",
+        "queueLength": 3,
+        "waitMinutes": 15
+      },
+      {
+        "hour": "14:00",
+        "queueLength": 2,
+        "waitMinutes": 8
+      },
+      {
+        "hour": "16:00",
+        "queueLength": 1,
+        "waitMinutes": 8
+      },
+      {
+        "hour": "18:00",
+        "queueLength": 0,
+        "waitMinutes": 3
+      }
+    ]
+  },
+  {
+    "scenarioKey": "rural_surge",
+    "name": "Rural Screening Surge Drive",
+    "dailyPatientArrivals": 240,
+    "camerasAvailable": 6,
+    "screeningCapacityPerDay": 143,
+    "imageThroughputPerHour": 21,
+    "ophthalmologistsAvailable": 3,
+    "avgQueueLength": 22,
+    "avgWaitTimeMinutes": 44,
+    "healthWorkerWorkloadPct": 98,
+    "referralDemandPerWeek": 306,
+    "description": "ASHA/VHN intensive village mobilization increases arrivals by 78%.",
+    "estimatedMonthlyCostInr": 717000,
+    "bottleneck": "Fundus Camera Capture Desk Saturation",
+    "hourlyQueueCurve": [
+      {
+        "hour": "08:00",
+        "queueLength": 9,
+        "waitMinutes": 18
+      },
+      {
+        "hour": "10:00",
+        "queueLength": 19,
+        "waitMinutes": 37
+      },
+      {
+        "hour": "12:00",
+        "queueLength": 28,
+        "waitMinutes": 55
+      },
+      {
+        "hour": "14:00",
+        "queueLength": 22,
+        "waitMinutes": 44
+      },
+      {
+        "hour": "16:00",
+        "queueLength": 13,
+        "waitMinutes": 26
+      },
+      {
+        "hour": "18:00",
+        "queueLength": 4,
+        "waitMinutes": 9
+      }
+    ]
+  },
+  {
+    "scenarioKey": "ophthalmologist_shortage",
+    "name": "Specialist Staff Shortage",
+    "dailyPatientArrivals": 135,
+    "camerasAvailable": 5,
+    "screeningCapacityPerDay": 119,
+    "imageThroughputPerHour": 17,
+    "ophthalmologistsAvailable": 1,
+    "avgQueueLength": 37,
+    "avgWaitTimeMinutes": 130,
+    "healthWorkerWorkloadPct": 96,
+    "referralDemandPerWeek": 134,
+    "description": "Two ophthalmologist vacancies at District Hospital create review bottlenecks.",
+    "estimatedMonthlyCostInr": 398000,
+    "bottleneck": "Specialist Ophthalmologist Review Backlog",
+    "hourlyQueueCurve": [
+      {
+        "hour": "08:00",
+        "queueLength": 15,
+        "waitMinutes": 52
+      },
+      {
+        "hour": "10:00",
+        "queueLength": 31,
+        "waitMinutes": 110
+      },
+      {
+        "hour": "12:00",
+        "queueLength": 46,
+        "waitMinutes": 162
+      },
+      {
+        "hour": "14:00",
+        "queueLength": 37,
+        "waitMinutes": 130
+      },
+      {
+        "hour": "16:00",
+        "queueLength": 22,
+        "waitMinutes": 78
+      },
+      {
+        "hour": "18:00",
+        "queueLength": 7,
+        "waitMinutes": 26
+      }
+    ]
+  },
+  {
+    "scenarioKey": "transport_delay",
+    "name": "Rural Transport & Transit Delay",
+    "dailyPatientArrivals": 140,
+    "camerasAvailable": 6,
+    "screeningCapacityPerDay": 143,
+    "imageThroughputPerHour": 18,
+    "ophthalmologistsAvailable": 3,
+    "avgQueueLength": 3,
+    "avgWaitTimeMinutes": 10,
+    "healthWorkerWorkloadPct": 83,
+    "referralDemandPerWeek": 78,
+    "description": "Monsoon flooding blocks rural transit causing severe referral dropouts.",
+    "estimatedMonthlyCostInr": 645000,
+    "bottleneck": "Rural Transit & Referral Dropout Failure",
+    "hourlyQueueCurve": [
+      {
+        "hour": "08:00",
+        "queueLength": 1,
+        "waitMinutes": 5
+      },
+      {
+        "hour": "10:00",
+        "queueLength": 3,
+        "waitMinutes": 10
+      },
+      {
+        "hour": "12:00",
+        "queueLength": 4,
+        "waitMinutes": 15
+      },
+      {
+        "hour": "14:00",
+        "queueLength": 3,
+        "waitMinutes": 10
+      },
+      {
+        "hour": "16:00",
+        "queueLength": 2,
+        "waitMinutes": 8
+      },
+      {
+        "hour": "18:00",
+        "queueLength": 1,
+        "waitMinutes": 3
+      }
+    ]
+  }
+]

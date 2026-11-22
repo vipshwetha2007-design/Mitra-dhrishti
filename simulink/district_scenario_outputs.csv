@@ -1,0 +1,5 @@
+scenarioKey,name,dailyPatientArrivals,camerasAvailable,screeningCapacityPerDay,imageThroughputPerHour,ophthalmologistsAvailable,avgQueueLength,avgWaitTimeMinutes,healthWorkerWorkloadPct,referralDemandPerWeek,description,estimatedMonthlyCostInr,bottleneck
+normal,Baseline District Operation,135,6,143,17,3,2,8,80,157,Balanced operations across 4 PHCs and 1 Mobile Van unit.,663000,Balanced Baseline Across Primary Health Centres
+rural_surge,Rural Screening Surge Drive,240,6,143,21,3,22,44,98,306,ASHA/VHN intensive village mobilization increases arrivals by 78%.,717000,Fundus Camera Capture Desk Saturation
+ophthalmologist_shortage,Specialist Staff Shortage,135,5,119,17,1,37,130,96,134,Two ophthalmologist vacancies at District Hospital create review bottlenecks.,398000,Specialist Ophthalmologist Review Backlog
+transport_delay,Rural Transport & Transit Delay,140,6,143,18,3,3,10,83,78,Monsoon flooding blocks rural transit causing severe referral dropouts.,645000,Rural Transit & Referral Dropout Failure
