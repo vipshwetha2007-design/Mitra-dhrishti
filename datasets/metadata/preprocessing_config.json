@@ -1,0 +1,47 @@
+{
+  "pipeline_name": "GrahamRetinalCircularAperture",
+  "target_resolution": [
+    224,
+    224
+  ],
+  "channels": 3,
+  "color_space": "RGB",
+  "field_of_view_crop": {
+    "method": "BoundingBoxLuminanceThreshold",
+    "threshold": 12,
+    "aspect_ratio_preservation": "SquareCenterPad"
+  },
+  "circular_aperture_mask": {
+    "enabled": true,
+    "radius_margin_pixels": 2,
+    "perimeter_fill": 0
+  },
+  "resampling_filter": "Image.Resampling.LANCZOS",
+  "train_augmentations": {
+    "horizontal_flip": {
+      "probability": 0.5
+    },
+    "vertical_flip": {
+      "probability": 0.2
+    },
+    "rotation_degrees": {
+      "min": -15,
+      "max": 15,
+      "probability": 0.5
+    },
+    "deterministic_val_test": true
+  },
+  "normalization": {
+    "method": "StandardScore / ImageNet",
+    "mean": [
+      0.485,
+      0.456,
+      0.406
+    ],
+    "std": [
+      0.229,
+      0.224,
+      0.225
+    ]
+  }
+}

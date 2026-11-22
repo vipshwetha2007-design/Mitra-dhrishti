@@ -1,0 +1,22 @@
+{
+  "dataset_name": "APTOS 2019 Blindness Detection (Mritidhristi Curated & Leakage-Free)",
+  "primary_source": "Aravind Eye Hospital, Tamil Nadu, India / Kaggle Competition Dataset",
+  "license": "Competition Data Agreement / Educational & Non-commercial Clinical Research",
+  "curation_version": "5.0.0",
+  "total_inspected_images": 3662,
+  "valid_usable_images": 3662,
+  "rejected_images_count": 0,
+  "splits": {
+    "train_count": 2629,
+    "val_count": 373,
+    "test_count": 660
+  },
+  "class_distribution_overall": {
+    "0": 1805,
+    "1": 370,
+    "2": 999,
+    "3": 193,
+    "4": 295
+  },
+  "rejection_summary": {}
+}

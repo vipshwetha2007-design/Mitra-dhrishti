@@ -1,0 +1,11 @@
+{
+  "total_inspected": 3662,
+  "valid_passed": 3662,
+  "rejected_count": 0,
+  "pass_rate_pct": 100.0,
+  "mean_laplacian_variance": 260.67,
+  "min_laplacian_variance": 14.05,
+  "max_laplacian_variance": 1453.11,
+  "mean_fov_luminance": 87.66,
+  "rejections": {}
+}

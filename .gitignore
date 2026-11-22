@@ -7,3 +7,10 @@ coverage/
 *.log
 .env*
 !.env.example
+
+# Large Dataset Binaries (Images & Cache)
+datasets/raw/
+datasets/processed/
+*.arrow
+.cache/
+

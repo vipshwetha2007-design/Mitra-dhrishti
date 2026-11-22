@@ -1,0 +1,49 @@
+{
+  "num_classes": 5,
+  "train_sample_count": 2629,
+  "class_counts_train": {
+    "0": 1291,
+    "1": 270,
+    "2": 715,
+    "3": 141,
+    "4": 212
+  },
+  "class_percentages_train": {
+    "0": 49.11,
+    "1": 10.27,
+    "2": 27.2,
+    "3": 5.36,
+    "4": 8.06
+  },
+  "class_names": {
+    "0": "No DR",
+    "1": "Mild NPDR",
+    "2": "Moderate NPDR",
+    "3": "Severe NPDR",
+    "4": "Proliferative DR"
+  },
+  "inverse_class_weights": {
+    "0": 0.4073,
+    "1": 1.9474,
+    "2": 0.7354,
+    "3": 3.7291,
+    "4": 2.4802
+  },
+  "effective_number_weights": {
+    "0": 0.2301,
+    "1": 1.0463,
+    "2": 0.4039,
+    "3": 1.9908,
+    "4": 1.3288
+  },
+  "recommended_strategy": {
+    "loss_function": "FocalLoss(gamma=2.0) with effective_number_weights OR WeightedCrossEntropyLoss",
+    "sampler": "WeightedRandomSampler using inverse_class_weights for training batches",
+    "evaluation_metrics": [
+      "Quadratic Weighted Kappa (QWK)",
+      "Macro-Averaged Sensitivity / Specificity",
+      "Multi-Class ROC-AUC (One-vs-Rest)",
+      "Referable DR Sensitivity (Grade >= 2, target >= 90%)"
+    ]
+  }
+}
