@@ -821,6 +821,7 @@ export default function App() {
               onCreateFollowUp={handleCreateFollowUp}
               onLogFollowUpAttempt={handleLogFollowUpAttempt}
               onUpdateFollowUp={handleUpdateFollowUp}
+              onRegisterPatient={handleRegisterPatient}
             />
           )}
 
