@@ -33,6 +33,17 @@
   - Referral generation, facility tracking, and specialist feedback completion.
   - Appointment scheduling, confirmation, attendance, cancellation, and missed-visit escalation.
   - Continuity-of-care health-worker follow-up tracking and next screening scheduling.
+- **Phase 5 — Retinal Dataset Preparation & Clinical Quality Assessment**:
+  - Ingestion, quality auditing, and leakage-free splitting of authentic **APTOS 2019 Blindness Detection** dataset (3,662 genuine clinical retinal fundus scans from Aravind Eye Hospital, Tamil Nadu).
+  - Multi-point Image Quality Assessment (Laplacian blur focus variance, exposure clipping, mean FOV luminance, aspect ratio, FOV circularity, and retinal color profile).
+  - Strict 5-class ICDR label integrity verification (Grades 0 to 4).
+  - Leakage-free, stratified train/validation/test partitions (71.8% Train / 10.2% Val / 18.0% Test) with atomic perceptual clustering (dHash Hamming distance ≤ 2 and MD5) preventing duplicate cross-split leakage.
+  - Quarantined, held-out test split (660 scans in `datasets/splits/test.csv`) strictly reserved for unbiased final evaluation.
+  - Multi-strategy class imbalance weighting computed (inverse frequency weights and Cui et al. effective number of samples weights) for Phase 6 training.
+  - Preprocessing configuration authored for Graham's circular aperture FOV cropping and Lanczos resampling.
+  - Complete reporting and documentation: `reports/dataset_quality_report.md`, `reports/dataset_statistics_report.md`, `reports/dataset_split_report.md`, and `docs/DATASETS_AND_LICENSES.md`.
+  - Backend integration: `GET /api/detect/dataset-stats` endpoint and live statistics dashboard in DETECT module's `datasets` tab.
+  - Automated verification test suite: `npm run test:dataset` (13/13 passing tests). Zero CNN training claimed in Phase 5.
 - **Phase 6 — Offline-First PWA & IndexedDB**:
   - `vite-plugin-pwa` Service Worker + Web App Manifest + valid 192px/512px/maskable/Apple Touch PNG icons.
   - Dexie.js IndexedDB (`MritidhristiOfflineDB`) caching minimized permitted summaries and queueing offline Prevent mutations with unique `idempotencyKey`s.
