@@ -304,61 +304,69 @@ export const DoctorDashboard: React.FC<DoctorDashboardProps> = ({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {filteredPatients.map((pat) => {
-                const asm = data.assessments.find((a) => a.patientId === pat.id);
-                const lab = data.labs.find((l) => l.patientId === pat.id);
-                const scr = data.screenings.find((s) => s.patientId === pat.id);
-                return (
-                  <tr key={pat.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="px-5 py-3.5">
-                      <div className="font-semibold text-slate-900">{pat.name}</div>
-                      <div className="font-mono text-[11px] text-slate-500">
-                        {pat.mrn} · {pat.age}y {pat.sex} · {pat.district}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3.5 text-slate-700">
-                      {pat.diabetesStatus === 'diagnosed_t2d'
-                        ? 'Diagnosed Type 2 Diabetes'
-                        : pat.diabetesStatus === 'prediabetes_lab'
-                        ? 'Prediabetes (Lab Confirmed)'
-                        : 'Lifestyle Prevention'}
-                    </td>
-                    <td className="px-4 py-3.5 font-mono tabular-nums text-slate-800">
-                      {asm ? `${asm.experimentalScore}/100 (${asm.riskCategory})` : 'Not assessed'}
-                    </td>
-                    <td className="px-4 py-3.5 font-mono tabular-nums text-slate-800">
-                      {lab
-                        ? `${lab.hba1cPercent ?? '—'}% / ${lab.fastingGlucoseMgDl ?? '—'} mg/dL`
-                        : 'Pending lab'}
-                    </td>
-                    <td className="px-4 py-3.5">
-                      {scr ? (
-                        <span
-                          className={`font-semibold ${
-                            scr.humanReviewStatus === 'confirmed'
-                              ? 'text-emerald-700'
-                              : 'text-amber-700'
-                          }`}
+              {filteredPatients.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-5 py-8 text-center text-xs text-slate-500">
+                    No matching patient records found.
+                  </td>
+                </tr>
+              ) : (
+                filteredPatients.map((pat) => {
+                  const asm = data.assessments.find((a) => a.patientId === pat.id);
+                  const lab = data.labs.find((l) => l.patientId === pat.id);
+                  const scr = data.screenings.find((s) => s.patientId === pat.id);
+                  return (
+                    <tr key={pat.id} className="hover:bg-slate-50/80 transition-colors">
+                      <td className="px-5 py-3.5">
+                        <div className="font-semibold text-slate-900">{pat.name}</div>
+                        <div className="font-mono text-[11px] text-slate-500">
+                          {pat.mrn} · {pat.age}y {pat.sex} · {pat.district}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3.5 text-slate-700">
+                        {pat.diabetesStatus === 'diagnosed_t2d'
+                          ? 'Diagnosed Type 2 Diabetes'
+                          : pat.diabetesStatus === 'prediabetes_lab'
+                          ? 'Prediabetes (Lab Confirmed)'
+                          : 'Lifestyle Prevention'}
+                      </td>
+                      <td className="px-4 py-3.5 font-mono tabular-nums text-slate-800">
+                        {asm ? `${asm.experimentalScore}/100 (${asm.riskCategory})` : 'Not assessed'}
+                      </td>
+                      <td className="px-4 py-3.5 font-mono tabular-nums text-slate-800">
+                        {lab
+                          ? `${lab.hba1cPercent ?? '—'}% / ${lab.fastingGlucoseMgDl ?? '—'} mg/dL`
+                          : 'Pending lab'}
+                      </td>
+                      <td className="px-4 py-3.5">
+                        {scr ? (
+                          <span
+                            className={`font-semibold ${
+                              scr.humanReviewStatus === 'confirmed'
+                                ? 'text-emerald-700'
+                                : 'text-amber-700'
+                            }`}
+                          >
+                            {scr.humanReviewStatus.replace('_', ' ')}
+                          </span>
+                        ) : (
+                          <span className="text-slate-400">Not screened</span>
+                        )}
+                      </td>
+                      <td className="px-5 py-3.5 text-right">
+                        <button
+                          type="button"
+                          onClick={() => onNavigate('protect', pat.id)}
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-[#0B2540] hover:bg-slate-100"
                         >
-                          {scr.humanReviewStatus.replace('_', ' ')}
-                        </span>
-                      ) : (
-                        <span className="text-slate-400">Not screened</span>
-                      )}
-                    </td>
-                    <td className="px-5 py-3.5 text-right">
-                      <button
-                        type="button"
-                        onClick={() => onNavigate('protect', pat.id)}
-                        className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-[#0B2540] hover:bg-slate-100"
-                      >
-                        <Stethoscope className="h-3.5 w-3.5 text-[#0D9488]" />
-                        Open Chart
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
+                          <Stethoscope className="h-3.5 w-3.5 text-[#0D9488]" />
+                          Open Chart
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>

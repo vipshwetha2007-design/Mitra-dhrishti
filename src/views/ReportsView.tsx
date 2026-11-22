@@ -14,6 +14,37 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ data, searchQuery }) =
 
   const patientMap = new Map(data.patients.map((p) => [p.id, p]));
 
+  const filteredScreenings = data.screenings.filter((s) => {
+    const pat = patientMap.get(s.patientId);
+    return (
+      !q ||
+      s.modelPrediction.gradeLabel.toLowerCase().includes(q) ||
+      (pat?.name.toLowerCase().includes(q) ?? false) ||
+      (pat?.mrn.toLowerCase().includes(q) ?? false)
+    );
+  });
+
+  const filteredAssessments = data.assessments.filter((asm) => {
+    const pat = patientMap.get(asm.patientId);
+    return (
+      !q ||
+      asm.riskCategory.toLowerCase().includes(q) ||
+      asm.topModifiableFactors.some((f) => f.toLowerCase().includes(q)) ||
+      (pat?.name.toLowerCase().includes(q) ?? false) ||
+      (pat?.mrn.toLowerCase().includes(q) ?? false)
+    );
+  });
+
+  const filteredLabs = data.labs.filter((lab) => {
+    const pat = patientMap.get(lab.patientId);
+    return (
+      !q ||
+      (lab.guidelineInterpretation?.toLowerCase().includes(q) ?? false) ||
+      (pat?.name.toLowerCase().includes(q) ?? false) ||
+      (pat?.mrn.toLowerCase().includes(q) ?? false)
+    );
+  });
+
   const exportSummaryJson = () => {
     const payload = {
       exportedAt: new Date().toISOString(),
@@ -66,9 +97,9 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ data, searchQuery }) =
       <div className="flex flex-wrap gap-1.5 rounded-xl bg-slate-200/70 p-1 w-fit">
         {[
           { id: 'all', label: 'All Reports' },
-          { id: 'retinal', label: `Retinal Screenings (${data.screenings.length})` },
-          { id: 'lifestyle', label: `Lifestyle Assessments (${data.assessments.length})` },
-          { id: 'labs', label: `Laboratory Results (${data.labs.length})` },
+          { id: 'retinal', label: `Retinal Screenings (${filteredScreenings.length})` },
+          { id: 'lifestyle', label: `Lifestyle Assessments (${filteredAssessments.length})` },
+          { id: 'labs', label: `Laboratory Results (${filteredLabs.length})` },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -90,17 +121,8 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ data, searchQuery }) =
             <Eye className="h-4 w-4 text-[#12598C]" />
             Step 7 Annotated Retinal Screening Reports
           </h2>
-          {data.screenings
-            .filter((s) => {
-              const pat = patientMap.get(s.patientId);
-              return (
-                !q ||
-                s.modelPrediction.gradeLabel.toLowerCase().includes(q) ||
-                (pat?.name.toLowerCase().includes(q) ?? false) ||
-                (pat?.mrn.toLowerCase().includes(q) ?? false)
-              );
-            })
-            .map((scr) => {
+          {filteredScreenings.length > 0 ? (
+            filteredScreenings.map((scr) => {
               const pat = patientMap.get(scr.patientId);
               const rev = data.doctorReviews.find((r) => r.screeningId === scr.id);
               return (
@@ -157,7 +179,18 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ data, searchQuery }) =
                   </div>
                 </article>
               );
-            })}
+            })
+          ) : (
+            <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-8 text-center text-xs text-slate-500">
+              <Eye className="mx-auto h-8 w-8 text-slate-300 mb-2" />
+              <p className="font-semibold text-slate-700">No retinal screening reports found</p>
+              <p className="text-slate-400 mt-1">
+                {q
+                  ? `No retinal screenings match the search query "${q}".`
+                  : 'No retinal screening examinations recorded yet.'}
+              </p>
+            </div>
+          )}
         </section>
       )}
 
@@ -168,33 +201,45 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ data, searchQuery }) =
             <FileText className="h-4 w-4 text-[#0D9488]" />
             Lifestyle Risk Assessment Reports (Experimental)
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {data.assessments.map((asm) => {
-              const pat = patientMap.get(asm.patientId);
-              return (
-                <div key={asm.id} className="rounded-2xl border border-slate-200 bg-white p-5 text-xs space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-[#0B2540]">
-                      {pat?.name || asm.patientId} ({pat?.mrn})
-                    </span>
-                    <span className="font-mono text-[11px] text-slate-500">
-                      {new Date(asm.assessedAt).toLocaleDateString()}
-                    </span>
+          {filteredAssessments.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {filteredAssessments.map((asm) => {
+                const pat = patientMap.get(asm.patientId);
+                return (
+                  <div key={asm.id} className="rounded-2xl border border-slate-200 bg-white p-5 text-xs space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-[#0B2540]">
+                        {pat?.name || asm.patientId} ({pat?.mrn})
+                      </span>
+                      <span className="font-mono text-[11px] text-slate-500">
+                        {new Date(asm.assessedAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <div className="font-mono text-sm font-bold text-[#0F766E] tabular-nums">
+                      Score: {asm.experimentalScore}/100 ({asm.riskCategory} Risk Tier)
+                    </div>
+                    <div className="text-slate-600">
+                      Top Modifiable Drivers: <strong>{asm.topModifiableFactors.join(', ')}</strong>
+                    </div>
+                    <p className="text-slate-600 leading-relaxed">{asm.explanation}</p>
+                    <div className="text-[11px] text-slate-500">
+                      {asm.scoringModelLabel} · {asm.recordedOffline ? 'Captured Offline & Synced' : 'Online Capture'}
+                    </div>
                   </div>
-                  <div className="font-mono text-sm font-bold text-[#0F766E] tabular-nums">
-                    Score: {asm.experimentalScore}/100 ({asm.riskCategory} Risk Tier)
-                  </div>
-                  <div className="text-slate-600">
-                    Top Modifiable Drivers: <strong>{asm.topModifiableFactors.join(', ')}</strong>
-                  </div>
-                  <p className="text-slate-600 leading-relaxed">{asm.explanation}</p>
-                  <div className="text-[11px] text-slate-500">
-                    {asm.scoringModelLabel} · {asm.recordedOffline ? 'Captured Offline & Synced' : 'Online Capture'}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-8 text-center text-xs text-slate-500">
+              <FileText className="mx-auto h-8 w-8 text-slate-300 mb-2" />
+              <p className="font-semibold text-slate-700">No lifestyle assessment reports found</p>
+              <p className="text-slate-400 mt-1">
+                {q
+                  ? `No assessments match the search query "${q}".`
+                  : 'No lifestyle questionnaires completed yet.'}
+              </p>
+            </div>
+          )}
         </section>
       )}
 
@@ -205,24 +250,36 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ data, searchQuery }) =
             <FlaskConical className="h-4 w-4 text-indigo-700" />
             Clinician-Recorded Laboratory Reports (HbA1c &amp; FPG)
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {data.labs.map((lab) => {
-              const pat = patientMap.get(lab.patientId);
-              return (
-                <div key={lab.id} className="rounded-2xl border border-slate-200 bg-white p-5 text-xs space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-[#0B2540]">{pat?.name || lab.patientId}</span>
-                    <span className="font-mono text-[11px] text-slate-500">{lab.testedAt.slice(0, 10)}</span>
+          {filteredLabs.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {filteredLabs.map((lab) => {
+                const pat = patientMap.get(lab.patientId);
+                return (
+                  <div key={lab.id} className="rounded-2xl border border-slate-200 bg-white p-5 text-xs space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-[#0B2540]">{pat?.name || lab.patientId}</span>
+                      <span className="font-mono text-[11px] text-slate-500">{lab.testedAt.slice(0, 10)}</span>
+                    </div>
+                    <div className="font-mono text-sm font-bold text-slate-900 tabular-nums">
+                      HbA1c: {lab.hba1cPercent ?? '—'}% · Fasting Glucose: {lab.fastingGlucoseMgDl ?? '—'} mg/dL
+                    </div>
+                    <p className="text-slate-700">{lab.guidelineInterpretation}</p>
+                    <div className="text-[11px] text-slate-500">Recorded by {lab.recordedByName}</div>
                   </div>
-                  <div className="font-mono text-sm font-bold text-slate-900 tabular-nums">
-                    HbA1c: {lab.hba1cPercent ?? '—'}% · Fasting Glucose: {lab.fastingGlucoseMgDl ?? '—'} mg/dL
-                  </div>
-                  <p className="text-slate-700">{lab.guidelineInterpretation}</p>
-                  <div className="text-[11px] text-slate-500">Recorded by {lab.recordedByName}</div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-8 text-center text-xs text-slate-500">
+              <FlaskConical className="mx-auto h-8 w-8 text-slate-300 mb-2" />
+              <p className="font-semibold text-slate-700">No laboratory reports found</p>
+              <p className="text-slate-400 mt-1">
+                {q
+                  ? `No lab results match the search query "${q}".`
+                  : 'No laboratory tests (HbA1c/FPG) recorded yet.'}
+              </p>
+            </div>
+          )}
         </section>
       )}
     </div>

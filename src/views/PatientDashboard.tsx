@@ -13,9 +13,7 @@ import {
   Eye,
   FileText,
   Lightbulb,
-  Shield,
   ShieldCheck,
-  Sparkles,
   Target,
   TrendingDown,
   TrendingUp,
@@ -55,31 +53,401 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
   const [range, setRange] = useState<'6m' | '3m'>('6m');
   const [showGradCamPreview, setShowGradCamPreview] = useState(false);
 
-  const patient = data.patients[0];
-  const latestAssessment = data.assessments[0];
-  const latestScreening = data.screenings[0];
+  // 1. Patient-specific record retrieval
+  const patient = data.patients.find((p) => p.id === data.user.patientId) || data.patients[0];
+
+  const patientAssessments = useMemo(() => {
+    return data.assessments
+      .filter((a) => !patient || a.patientId === patient.id)
+      .sort((a, b) => new Date(b.assessedAt).getTime() - new Date(a.assessedAt).getTime());
+  }, [data.assessments, patient]);
+
+  const latestAssessment = patientAssessments[0];
+  const previousAssessment = patientAssessments[1];
+
+  const patientScreenings = useMemo(() => {
+    return data.screenings
+      .filter((s) => !patient || s.patientId === patient.id)
+      .sort((a, b) => new Date(b.capturedAt).getTime() - new Date(a.capturedAt).getTime());
+  }, [data.screenings, patient]);
+
+  const latestScreening = patientScreenings[0];
   const latestReview = data.doctorReviews.find((r) => r.screeningId === latestScreening?.id);
-  const programme = data.programmes[0];
+
+  const patientProgrammes = useMemo(() => {
+    return data.programmes.filter((p) => !patient || p.patientId === patient.id);
+  }, [data.programmes, patient]);
+  const programme = patientProgrammes[0];
+
+  const patientAppointments = useMemo(() => {
+    return data.appointments
+      .filter((a) => !patient || a.patientId === patient.id)
+      .sort((a, b) => new Date(a.scheduledDate).getTime() - new Date(b.scheduledDate).getTime());
+  }, [data.appointments, patient]);
+
   const upcomingApt =
-    data.appointments.find((a) => a.status === 'Confirmed' || a.status === 'Pending Confirmation') ||
-    data.appointments[0];
+    patientAppointments.find((a) => a.status === 'Confirmed' || a.status === 'Pending Confirmation') ||
+    patientAppointments[0];
 
-  // 6-Month series matching reference dashboard curve (Jan - Jun)
+  const patientHabits = useMemo(() => {
+    return data.habitLogs
+      .filter((h) => !patient || h.patientId === patient.id)
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [data.habitLogs, patient]);
+
+  const patientNotifications = useMemo(() => {
+    return data.notifications
+      .filter(
+        (n) =>
+          (!n.patientId || n.patientId === patient?.id) &&
+          (n.roleTargets ? n.roleTargets.includes('patient') : true)
+      )
+      .sort((a, b) => {
+        const timeA = new Date(a.createdAt).getTime();
+        const timeB = new Date(b.createdAt).getTime();
+        return timeB - timeA;
+      })
+      .slice(0, 3);
+  }, [data.notifications, patient]);
+
+  // Dynamic Delta & Risk Status for PREVENT
+  const riskDelta = useMemo(() => {
+    if (!latestAssessment || !previousAssessment) return null;
+    return latestAssessment.experimentalScore - previousAssessment.experimentalScore;
+  }, [latestAssessment, previousAssessment]);
+
+  // Pillar 1: PREVENT Status calculation
+  const preventStatus = useMemo(() => {
+    if (!latestAssessment) {
+      return {
+        label: t.dashboard.notAssessed,
+        deltaText: '',
+        colorClass: 'text-slate-600',
+        dotClass: 'bg-slate-400',
+      };
+    }
+    const cat = latestAssessment.riskCategory;
+    let label = t.dashboard.lowRisk;
+    let colorClass = 'text-emerald-700';
+    let dotClass = 'bg-emerald-500';
+
+    if (cat === 'Moderate') {
+      label = t.dashboard.moderateRisk;
+      colorClass = 'text-amber-700';
+      dotClass = 'bg-amber-500';
+    } else if (cat === 'Elevated') {
+      label = t.dashboard.highRisk;
+      colorClass = 'text-rose-700';
+      dotClass = 'bg-rose-500';
+    }
+
+    let deltaText = '';
+    if (riskDelta !== null) {
+      if (riskDelta < 0) {
+        deltaText = `↓ ${Math.abs(riskDelta)}%`;
+      } else if (riskDelta > 0) {
+        deltaText = `↑ ${riskDelta}%`;
+      } else {
+        deltaText = '0%';
+      }
+    } else {
+      deltaText = `${latestAssessment.experimentalScore}/100`;
+    }
+
+    return { label, deltaText, colorClass, dotClass };
+  }, [latestAssessment, riskDelta, t]);
+
+  // Pillar 2: DETECT Status calculation
+  const detectStatus = useMemo(() => {
+    if (!latestScreening) {
+      return {
+        label: t.dashboard.noScreeningsYet,
+        isPending: false,
+        isDr: false,
+        colorClass: 'text-slate-600',
+      };
+    }
+
+    if (latestScreening.humanReviewStatus === 'pending_review') {
+      return {
+        label: t.dashboard.pendingReview,
+        isPending: true,
+        isDr: false,
+        colorClass: 'text-amber-700',
+      };
+    }
+
+    const icdr = latestScreening.modelPrediction.icdrGrade ?? 0;
+    if (icdr === 0) {
+      return {
+        label: t.dashboard.noDrDetected,
+        isPending: false,
+        isDr: false,
+        colorClass: 'text-emerald-700',
+      };
+    }
+
+    return {
+      label: t.dashboard.drDetected,
+      isPending: false,
+      isDr: true,
+      colorClass: 'text-rose-700',
+    };
+  }, [latestScreening, t]);
+
+  // Pillar 3: PROTECT Status calculation
+  const protectStatus = useMemo(() => {
+    const hasPendingReview = latestScreening?.humanReviewStatus === 'pending_review';
+    const hasOpenReferral = data.referrals.some(
+      (r) => (!patient || r.patientId === patient.id) && (r.status === 'Pending' || r.status === 'Accepted')
+    );
+    const hasUnconfirmedApt = upcomingApt && upcomingApt.status === 'Pending Confirmation';
+
+    const requiresAction = hasPendingReview || hasOpenReferral || hasUnconfirmedApt;
+
+    if (requiresAction) {
+      return {
+        label: t.dashboard.actionRequired,
+        actionRequired: true,
+        colorClass: 'text-amber-700',
+      };
+    }
+
+    return {
+      label: t.dashboard.allGood,
+      actionRequired: false,
+      colorClass: 'text-emerald-700',
+    };
+  }, [latestScreening, data.referrals, patient, upcomingApt, t]);
+
+  // Dynamic Health Overview aggregation
   const healthSeries = useMemo(() => {
-    const all = [
-      { month: 'Jan', riskScore: 32, activity: 42, sleep: 36 },
-      { month: 'Feb', riskScore: 48, activity: 70, sleep: 52 },
-      { month: 'Mar', riskScore: 42, activity: 68, sleep: 56 },
-      { month: 'Apr', riskScore: 36, activity: 62, sleep: 46 },
-      { month: 'May', riskScore: 54, activity: 74, sleep: 58 },
-      { month: 'Jun', riskScore: 55, activity: 76, sleep: 60 },
-    ];
-    return range === '3m' ? all.slice(3) : all;
-  }, [range]);
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const numMonths = range === '3m' ? 3 : 6;
+    
+    let refYear = 2026;
+    let refMonth = 10; // Nov = 10
+    
+    if (patientHabits.length > 0) {
+      const latestHabitDate = new Date(patientHabits[0].date);
+      if (!isNaN(latestHabitDate.getTime())) {
+        refYear = latestHabitDate.getFullYear();
+        refMonth = latestHabitDate.getMonth();
+      }
+    } else if (patientAssessments.length > 0) {
+      const latestAsmDate = new Date(patientAssessments[0].assessedAt);
+      if (!isNaN(latestAsmDate.getTime())) {
+        refYear = latestAsmDate.getFullYear();
+        refMonth = latestAsmDate.getMonth();
+      }
+    }
 
-  const adherence = programme?.adherencePercent ?? 72;
+    const targetMonths: { year: number; monthIndex: number; label: string }[] = [];
+    for (let i = numMonths - 1; i >= 0; i--) {
+      const d = new Date(refYear, refMonth - i, 1);
+      targetMonths.push({
+        year: d.getFullYear(),
+        monthIndex: d.getMonth(),
+        label: monthNames[d.getMonth()],
+      });
+    }
+
+    let hasAnyData = false;
+
+    const series = targetMonths.map((m) => {
+      const asms = patientAssessments.filter((a) => {
+        const ad = new Date(a.assessedAt);
+        return ad.getFullYear() === m.year && ad.getMonth() === m.monthIndex;
+      });
+
+      const habits = patientHabits.filter((h) => {
+        const hd = new Date(h.date);
+        return hd.getFullYear() === m.year && hd.getMonth() === m.monthIndex;
+      });
+
+      let riskScore: number | null = null;
+      if (asms.length > 0) {
+        riskScore = Math.round(asms.reduce((acc, a) => acc + a.experimentalScore, 0) / asms.length);
+        hasAnyData = true;
+      }
+
+      let activity: number | null = null;
+      let sleep: number | null = null;
+
+      if (habits.length > 0) {
+        hasAnyData = true;
+        const avgSteps = habits.reduce((acc, h) => acc + (h.stepsAchieved || 0), 0) / habits.length;
+        activity = Math.min(100, Math.round((avgSteps / 10000) * 100));
+
+        const avgSleep = habits.reduce((acc, h) => acc + (h.sleepHours || 0), 0) / habits.length;
+        sleep = Math.min(100, Math.round((avgSleep / 8) * 100));
+      }
+
+      return {
+        month: m.label,
+        riskScore: riskScore ?? undefined,
+        activity: activity ?? undefined,
+        sleep: sleep ?? undefined,
+      };
+    });
+
+    return hasAnyData ? series : [];
+  }, [range, patientAssessments, patientHabits]);
+
+  // Dynamic Prevention Programme Checklist & Adherence
+  const programmeChecklist = useMemo(() => {
+    const dietCompleted =
+      programme?.lessons.find((l) => l.category === 'Indian Nutrition')?.completed ||
+      (patientHabits.length > 0 && patientHabits[0].healthyIndianDiet);
+
+    const exerciseCompleted =
+      programme?.lessons.find((l) => l.category === 'Physical Activity')?.completed ||
+      (patientHabits.length > 0 && (patientHabits[0].stepsAchieved ?? 0) >= 8000);
+
+    const sleepCompleted =
+      programme?.lessons.find((l) => l.category === 'Sleep & Stress')?.completed ||
+      (patientHabits.length > 0 && (patientHabits[0].sleepHours ?? 0) >= 7);
+
+    const weightCompleted = programme
+      ? programme.currentWeightKg <= programme.baselineWeightKg
+      : false;
+
+    const activityGoalCompleted =
+      programme?.checkpoints.some((c) => c.status === 'completed') ||
+      patientHabits.some((h) => (h.stepsAchieved ?? 0) >= 10000);
+
+    return [
+      { label: 'Healthy Diet', completed: !!dietCompleted },
+      { label: 'Regular Exercise', completed: !!exerciseCompleted },
+      { label: 'Good Sleep', completed: !!sleepCompleted },
+      { label: 'Weight Goal', completed: !!weightCompleted },
+      { label: 'Activity Goal', completed: !!activityGoalCompleted },
+    ];
+  }, [programme, patientHabits]);
+
+  const adherence = useMemo(() => {
+    if (programme?.adherencePercent !== undefined) {
+      return programme.adherencePercent;
+    }
+    const completedCount = programmeChecklist.filter((c) => c.completed).length;
+    return Math.round((completedCount / programmeChecklist.length) * 100);
+  }, [programme, programmeChecklist]);
+
   const ringCircumference = 2 * Math.PI * 36;
   const ringOffset = ringCircumference - (adherence / 100) * ringCircumference;
+
+  // Appointment dynamic date parsing & reminder banner text
+  const appointmentInfo = useMemo(() => {
+    if (!upcomingApt) return null;
+
+    const aptDate = new Date(upcomingApt.scheduledDate + 'T00:00:00');
+    const day = isNaN(aptDate.getTime()) ? '—' : aptDate.getDate();
+    const month = isNaN(aptDate.getTime())
+      ? '—'
+      : aptDate.toLocaleString('default', { month: 'short' });
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const target = new Date(upcomingApt.scheduledDate + 'T00:00:00');
+    const diffDays = Math.round((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
+    let reminderText = `Your appointment is scheduled for ${upcomingApt.scheduledDate} at ${upcomingApt.scheduledTime || '10:30 AM'}`;
+    if (diffDays === 0) {
+      reminderText = `Your appointment is today at ${upcomingApt.scheduledTime || '10:30 AM'}`;
+    } else if (diffDays === 1) {
+      reminderText = `Your appointment is tomorrow at ${upcomingApt.scheduledTime || '10:30 AM'}`;
+    } else if (diffDays > 1) {
+      reminderText = `Your appointment is in ${diffDays} days (${upcomingApt.scheduledDate}) at ${upcomingApt.scheduledTime || '10:30 AM'}`;
+    }
+
+    return { day, month, reminderText };
+  }, [upcomingApt]);
+
+  // Dynamic Health Insights derived from real patient differences
+  const healthInsights = useMemo(() => {
+    const items: { text: string; icon: 'check' | 'trending-up' | 'calendar' }[] = [];
+
+    // Insight 1: Assessment delta / status
+    if (latestAssessment && previousAssessment) {
+      const delta = latestAssessment.experimentalScore - previousAssessment.experimentalScore;
+      if (delta < 0) {
+        items.push({
+          text: `Your risk score dropped by ${Math.abs(delta)} points from previous assessment!`,
+          icon: 'check',
+        });
+      } else if (delta > 0) {
+        items.push({
+          text: `Risk score increased by ${delta} points. Focus on: ${latestAssessment.topModifiableFactors?.slice(0, 2).join(', ') || 'diet and physical activity'}.`,
+          icon: 'trending-up',
+        });
+      } else {
+        items.push({
+          text: `Lifestyle risk is stable at ${latestAssessment.experimentalScore}/100 (${latestAssessment.riskCategory} risk).`,
+          icon: 'check',
+        });
+      }
+    } else if (latestAssessment) {
+      items.push({
+        text: `Latest lifestyle risk: ${latestAssessment.riskCategory} (${latestAssessment.experimentalScore}/100). Focus on ${latestAssessment.topModifiableFactors?.[0] || 'balanced nutrition'}.`,
+        icon: 'check',
+      });
+    } else {
+      items.push({
+        text: 'Take your lifestyle risk assessment to unlock personalized insights.',
+        icon: 'check',
+      });
+    }
+
+    // Insight 2: Activity habits average
+    if (patientHabits.length > 0) {
+      const avgSteps = Math.round(
+        patientHabits.reduce((acc, h) => acc + (h.stepsAchieved || 0), 0) / patientHabits.length
+      );
+      if (avgSteps >= 8000) {
+        items.push({
+          text: `Averaging ${avgSteps.toLocaleString()} steps/day! Exceeding daily activity target.`,
+          icon: 'check',
+        });
+      } else {
+        items.push({
+          text: `Averaging ${avgSteps.toLocaleString()} steps/day. Aim for 8,000 steps or 15-min post-meal walks.`,
+          icon: 'trending-up',
+        });
+      }
+    } else {
+      items.push({
+        text: 'Log daily steps and sleep in Prevent to track habit adherence.',
+        icon: 'check',
+      });
+    }
+
+    // Insight 3: Retinal screening schedule
+    if (latestScreening) {
+      if (latestScreening.humanReviewStatus === 'pending_review') {
+        items.push({
+          text: `Screening from ${latestScreening.capturedAt.slice(0, 10)} is pending clinician review.`,
+          icon: 'calendar',
+        });
+      } else if ((latestScreening.modelPrediction.icdrGrade ?? 0) === 0) {
+        items.push({
+          text: 'No DR detected. Next routine retinal screening in 12 months.',
+          icon: 'calendar',
+        });
+      } else {
+        items.push({
+          text: `ICDR Grade ${latestScreening.modelPrediction.icdrGrade} noted. Ophthalmology follow-up recommended.`,
+          icon: 'calendar',
+        });
+      }
+    } else {
+      items.push({
+        text: 'No retinal screening recorded yet. Schedule your AI fundus screening.',
+        icon: 'calendar',
+      });
+    }
+
+    return items;
+  }, [latestAssessment, previousAssessment, patientHabits, latestScreening]);
 
   const firstName = (patient?.name || data.user.name || 'Shwetha').split(' ')[0];
 
@@ -102,13 +470,13 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
         {/* Left Interactive Content */}
         <div className="relative z-10 px-6 py-6 sm:px-8 max-w-xl">
           <h1 className="font-display text-2xl sm:text-3xl font-extrabold tracking-tight text-[#0B2540]">
-            Welcome back, {firstName}!
+            {t.hero.welcomeBack}, {firstName}!
           </h1>
           <p className="mt-1 text-sm sm:text-base font-bold text-[#143B5A]">
-            Your health. Our priority.
+            {t.hero.subtitle}
           </p>
           <p className="mt-1 text-xs sm:text-sm text-slate-600 font-normal">
-            Prevent diabetes. Detect complications. Protect your future.
+            {t.hero.tagline}
           </p>
           <div className="mt-4">
             <button
@@ -116,7 +484,7 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
               onClick={() => onNavigate('prevent')}
               className="inline-flex items-center gap-2 rounded-full bg-[#0D9488] hover:bg-[#0F766E] px-5 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-md hover:shadow-lg transition-all cursor-pointer"
             >
-              <span>Explore Your Health</span>
+              <span>{t.hero.exploreCta}</span>
               <ArrowRight className="h-4 w-4" />
             </button>
           </div>
@@ -136,19 +504,21 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
             </div>
             <div className="min-w-0">
               <div className="font-display text-sm font-extrabold tracking-wide text-[#0B2540]">
-                PREVENT
+                {t.pillars.preventTitle}
               </div>
               <div className="text-xs text-slate-600 truncate mt-0.5">
-                Manage Your Diabetes Risk
+                {t.pillars.preventDesc}
               </div>
-              <div className="mt-1.5 flex items-center gap-2 text-xs font-bold text-emerald-700">
+              <div className={`mt-1.5 flex items-center gap-2 text-xs font-bold ${preventStatus.colorClass}`}>
                 <span className="flex items-center gap-1">
-                  <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                  Low Risk
+                  <span className={`h-2 w-2 rounded-full ${preventStatus.dotClass}`} />
+                  {preventStatus.label}
                 </span>
-                <span className="text-emerald-600 font-semibold flex items-center">
-                  ↓ 12%
-                </span>
+                {preventStatus.deltaText && (
+                  <span className="font-semibold flex items-center">
+                    {preventStatus.deltaText}
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -168,14 +538,22 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
             </div>
             <div className="min-w-0">
               <div className="font-display text-sm font-extrabold tracking-wide text-[#0B2540]">
-                DETECT
+                {t.pillars.detectTitle}
               </div>
               <div className="text-xs text-slate-600 truncate mt-0.5">
-                AI Retinal Screening
+                {t.pillars.detectDesc}
               </div>
-              <div className="mt-1.5 flex items-center gap-1.5 text-xs font-bold text-emerald-700">
-                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                <span>No DR Detected</span>
+              <div className={`mt-1.5 flex items-center gap-1.5 text-xs font-bold ${detectStatus.colorClass}`}>
+                {detectStatus.isPending ? (
+                  <AlertCircle className="h-3.5 w-3.5 text-amber-600 shrink-0" />
+                ) : detectStatus.isDr ? (
+                  <AlertCircle className="h-3.5 w-3.5 text-rose-600 shrink-0" />
+                ) : latestScreening ? (
+                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                ) : (
+                  <span className="h-2 w-2 rounded-full bg-slate-400 shrink-0" />
+                )}
+                <span className="truncate">{detectStatus.label}</span>
               </div>
             </div>
           </div>
@@ -195,14 +573,18 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
             </div>
             <div className="min-w-0">
               <div className="font-display text-sm font-extrabold tracking-wide text-[#0B2540]">
-                PROTECT
+                {t.pillars.protectTitle}
               </div>
               <div className="text-xs text-slate-600 truncate mt-0.5">
-                Stay on Track with Care
+                {t.pillars.protectDesc}
               </div>
-              <div className="mt-1.5 flex items-center gap-1.5 text-xs font-bold text-emerald-700">
-                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                <span>All Good</span>
+              <div className={`mt-1.5 flex items-center gap-1.5 text-xs font-bold ${protectStatus.colorClass}`}>
+                {protectStatus.actionRequired ? (
+                  <AlertCircle className="h-3.5 w-3.5 text-amber-600 shrink-0" />
+                ) : (
+                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                )}
+                <span>{protectStatus.label}</span>
               </div>
             </div>
           </div>
@@ -225,11 +607,11 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
                   <div className="flex items-center gap-2">
                     <TrendingUp className="h-4 w-4 text-[#0B2540]" />
                     <h2 className="font-display text-sm font-bold text-[#0B2540]">
-                      Health Overview
+                      {t.dashboard.healthOverview}
                     </h2>
                   </div>
                   <div className="flex items-center gap-1 rounded-md border border-slate-200 bg-slate-50 px-2 py-0.5 text-xs text-slate-600">
-                    <span>{range === '6m' ? 'Last 6 Months' : 'Last 3 Months'}</span>
+                    <span>{range === '6m' ? t.dashboard.last6Months : t.dashboard.last3Months}</span>
                     <ChevronDown
                       className="h-3 w-3 cursor-pointer"
                       onClick={() => setRange((r) => (r === '6m' ? '3m' : '6m'))}
@@ -241,74 +623,85 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
                 <div className="mt-2.5 flex items-center justify-end gap-3 text-[11px] font-medium text-slate-600">
                   <span className="flex items-center gap-1">
                     <span className="h-2 w-2 rounded-full bg-[#2563EB]" />
-                    Risk Score
+                    {t.dashboard.riskScore}
                   </span>
                   <span className="flex items-center gap-1">
                     <span className="h-2 w-2 rounded-full bg-[#10B981]" />
-                    Activity
+                    {t.dashboard.activity}
                   </span>
                   <span className="flex items-center gap-1">
                     <span className="h-2 w-2 rounded-full bg-[#8B5CF6]" />
-                    Sleep
+                    {t.dashboard.sleep}
                   </span>
                 </div>
               </div>
 
-              {/* 6-Month Smooth Line Chart */}
+              {/* Smooth Line Chart or Clean Empty State */}
               <div className="h-48 w-full mt-2">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={healthSeries} margin={{ top: 10, right: 10, left: -22, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#EEF2F6" vertical={false} />
-                    <XAxis
-                      dataKey="month"
-                      tick={{ fontSize: 11, fill: '#64748B' }}
-                      axisLine={{ stroke: '#E2E8F0' }}
-                      tickLine={false}
-                    />
-                    <YAxis
-                      domain={[0, 100]}
-                      ticks={[0, 25, 50, 75, 100]}
-                      tick={{ fontSize: 10, fill: '#64748B' }}
-                      axisLine={false}
-                      tickLine={false}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        borderRadius: '12px',
-                        borderColor: '#E2E8F0',
-                        fontSize: '11px',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
-                      }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="riskScore"
-                      name="Risk Score"
-                      stroke="#2563EB"
-                      strokeWidth={2}
-                      dot={{ r: 3, fill: '#2563EB', strokeWidth: 0 }}
-                      activeDot={{ r: 5 }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="activity"
-                      name="Activity"
-                      stroke="#10B981"
-                      strokeWidth={2}
-                      dot={{ r: 3, fill: '#10B981', strokeWidth: 0 }}
-                      activeDot={{ r: 5 }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="sleep"
-                      name="Sleep"
-                      stroke="#8B5CF6"
-                      strokeWidth={2}
-                      dot={{ r: 3, fill: '#8B5CF6', strokeWidth: 0 }}
-                      activeDot={{ r: 5 }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
+                {healthSeries.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={healthSeries} margin={{ top: 10, right: 10, left: -22, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#EEF2F6" vertical={false} />
+                      <XAxis
+                        dataKey="month"
+                        tick={{ fontSize: 11, fill: '#64748B' }}
+                        axisLine={{ stroke: '#E2E8F0' }}
+                        tickLine={false}
+                      />
+                      <YAxis
+                        domain={[0, 100]}
+                        ticks={[0, 25, 50, 75, 100]}
+                        tick={{ fontSize: 10, fill: '#64748B' }}
+                        axisLine={false}
+                        tickLine={false}
+                      />
+                      <Tooltip
+                        contentStyle={{
+                          borderRadius: '12px',
+                          borderColor: '#E2E8F0',
+                          fontSize: '11px',
+                          boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+                        }}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="riskScore"
+                        name={t.dashboard.riskScore}
+                        stroke="#2563EB"
+                        strokeWidth={2}
+                        dot={{ r: 3, fill: '#2563EB', strokeWidth: 0 }}
+                        activeDot={{ r: 5 }}
+                        connectNulls
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="activity"
+                        name={t.dashboard.activity}
+                        stroke="#10B981"
+                        strokeWidth={2}
+                        dot={{ r: 3, fill: '#10B981', strokeWidth: 0 }}
+                        activeDot={{ r: 5 }}
+                        connectNulls
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="sleep"
+                        name={t.dashboard.sleep}
+                        stroke="#8B5CF6"
+                        strokeWidth={2}
+                        dot={{ r: 3, fill: '#8B5CF6', strokeWidth: 0 }}
+                        activeDot={{ r: 5 }}
+                        connectNulls
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="flex h-full w-full flex-col items-center justify-center rounded-xl bg-slate-50/60 border border-dashed border-slate-200 text-center p-4">
+                    <TrendingUp className="h-6 w-6 text-slate-300 mb-1" />
+                    <p className="text-xs font-semibold text-slate-600">No health trend data available yet</p>
+                    <p className="text-[11px] text-slate-400 mt-0.5">Complete a lifestyle assessment or habit log to track progress</p>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -318,7 +711,7 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
                 <div className="flex items-center gap-2">
                   <Eye className="h-4 w-4 text-[#0B2540]" />
                   <h2 className="font-display text-sm font-bold text-[#0B2540]">
-                    Retinal Screening Result
+                    {t.dashboard.retinalResult}
                   </h2>
                 </div>
                 <button
@@ -326,81 +719,91 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
                   onClick={() => onNavigate('reports')}
                   className="text-xs font-semibold text-[#0284C7] hover:underline whitespace-nowrap cursor-pointer"
                 >
-                  View Report →
+                  {t.dashboard.viewReport}
                 </button>
               </div>
 
-              {/* Fundus Circle + Diagnosis Info + Grad-CAM CTA */}
-              <div className="my-auto py-2 flex items-center gap-4">
-                {/* Circular Fundus Photography */}
-                <div
-                  onClick={() => setShowGradCamPreview((v) => !v)}
-                  className="relative h-24 w-24 sm:h-26 sm:w-26 shrink-0 rounded-full overflow-hidden border border-slate-200 shadow-inner cursor-pointer group"
-                  title="Click to toggle Grad-CAM overlay"
-                >
-                  {showGradCamPreview ? (
+              {latestScreening ? (
+                /* Fundus Circle + Diagnosis Info + Grad-CAM CTA */
+                <div className="my-auto py-2 flex items-center gap-4">
+                  {/* Circular Fundus Photography */}
+                  <div
+                    onClick={() => setShowGradCamPreview((v) => !v)}
+                    className="relative h-24 w-24 sm:h-26 sm:w-26 shrink-0 rounded-full overflow-hidden border border-slate-200 shadow-inner cursor-pointer group"
+                    title="Click to toggle Grad-CAM overlay"
+                  >
                     <FundusVisualizer
-                      preset={latestScreening?.imagePreset || 'normal_retina'}
-                      stage="gradcam"
-                      hotspots={latestScreening?.gradCam.hotspots || []}
+                      preset={latestScreening.imagePreset || 'normal_retina'}
+                      imageDataUrl={latestScreening.imageDataUrl}
+                      stage={showGradCamPreview ? 'gradcam' : 'raw'}
+                      hotspots={latestScreening.gradCam?.hotspots || []}
                       size={120}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <img
-                      src="/assets/dashboard/fundus_circle.png"
-                      alt="Retinal Fundus"
                       className="h-full w-full object-cover group-hover:scale-105 transition-transform"
-                      onError={(e) => {
-                        (e.target as HTMLElement).style.display = 'none';
-                      }}
                     />
-                  )}
-                  {showGradCamPreview && (
-                    <div className="absolute inset-0 bg-black/20 flex items-center justify-center text-[9px] font-bold text-white uppercase tracking-wider">
-                      Grad-CAM
-                    </div>
-                  )}
-                </div>
-
-                {/* Status, ICDR Grade, and Grad-CAM trigger */}
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-1.5">
-                    <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
-                    <span className="font-display text-sm font-bold text-[#0B2540] leading-tight">
-                      No DR Detected
-                    </span>
-                  </div>
-                  <div className="mt-1 text-xs font-semibold text-slate-700">
-                    ICDR Grade: 0
-                  </div>
-                  <div className="text-[11px] text-slate-500">
-                    (No Signs of DR)
+                    {showGradCamPreview && (
+                      <div className="absolute inset-0 bg-black/20 flex items-center justify-center text-[9px] font-bold text-white uppercase tracking-wider">
+                        Grad-CAM
+                      </div>
+                    )}
                   </div>
 
-                  {/* View Grad-CAM Button + Colorful Heatmap Thumbnail */}
-                  <div className="mt-3 flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setShowGradCamPreview((v) => !v)}
-                      className="rounded-lg bg-[#EBF4FD] hover:bg-[#D8EDFD] px-3 py-1.5 text-xs font-semibold text-[#0284C7] transition-colors cursor-pointer"
-                    >
-                      {showGradCamPreview ? 'Show Fundus' : 'View Grad-CAM'}
-                    </button>
-                    <div
-                      onClick={() => setShowGradCamPreview((v) => !v)}
-                      className="h-8 w-8 rounded-lg overflow-hidden border border-sky-200 cursor-pointer shadow-2xs hover:scale-110 transition-transform shrink-0"
-                      title="Grad-CAM Activation Map"
-                    >
-                      <img
-                        src="/assets/dashboard/gradcam_sample.png"
-                        alt="Grad-CAM Heatmap"
-                        className="h-full w-full object-cover"
-                      />
+                  {/* Status, ICDR Grade, and Grad-CAM trigger */}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5">
+                      {detectStatus.isPending ? (
+                        <AlertCircle className="h-5 w-5 text-amber-600 shrink-0" />
+                      ) : detectStatus.isDr ? (
+                        <AlertCircle className="h-5 w-5 text-rose-600 shrink-0" />
+                      ) : (
+                        <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
+                      )}
+                      <span className="font-display text-sm font-bold text-[#0B2540] leading-tight truncate">
+                        {detectStatus.label}
+                      </span>
+                    </div>
+                    <div className="mt-1 text-xs font-semibold text-slate-700">
+                      ICDR Grade: {latestReview ? latestReview.clinicianGrade : (latestScreening.modelPrediction.icdrGrade ?? 0)}
+                    </div>
+                    <div className="text-[11px] text-slate-500 truncate">
+                      ({latestScreening.modelPrediction.gradeLabel})
+                    </div>
+
+                    {/* View Grad-CAM Button + Colorful Heatmap Thumbnail */}
+                    <div className="mt-3 flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setShowGradCamPreview((v) => !v)}
+                        className="rounded-lg bg-[#EBF4FD] hover:bg-[#D8EDFD] px-3 py-1.5 text-xs font-semibold text-[#0284C7] transition-colors cursor-pointer"
+                      >
+                        {showGradCamPreview ? 'Show Fundus' : 'View Grad-CAM'}
+                      </button>
+                      <div
+                        onClick={() => setShowGradCamPreview((v) => !v)}
+                        className="h-8 w-8 rounded-lg overflow-hidden border border-sky-200 cursor-pointer shadow-2xs hover:scale-110 transition-transform shrink-0"
+                        title="Grad-CAM Activation Map"
+                      >
+                        <img
+                          src="/assets/dashboard/gradcam_sample.png"
+                          alt="Grad-CAM Heatmap"
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
+              ) : (
+                <div className="my-auto py-4 flex flex-col items-center justify-center text-center">
+                  <Eye className="h-8 w-8 text-slate-300 mb-1.5" />
+                  <p className="text-xs font-semibold text-slate-700">{t.dashboard.noScreeningsYet}</p>
+                  <button
+                    type="button"
+                    onClick={() => onNavigate('detect')}
+                    className="mt-2 text-xs font-semibold text-[#0284C7] hover:underline cursor-pointer"
+                  >
+                    Schedule Screening →
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Card C: Prevention Programme */}
@@ -408,7 +811,7 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
               <div className="flex items-center gap-2">
                 <Target className="h-4 w-4 text-[#0B2540]" />
                 <h2 className="font-display text-sm font-bold text-[#0B2540]">
-                  Prevention Programme
+                  {t.dashboard.preventionProgramme}
                 </h2>
               </div>
 
@@ -442,33 +845,28 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
                       {adherence}%
                     </span>
                     <span className="text-[9px] text-slate-500 font-medium">
-                      6 / 12 Months
+                      {programme?.currentMonth || 1} / 12 Months
                     </span>
                   </div>
                 </div>
 
-                {/* Checklist from reference */}
+                {/* Checklist from real programme data */}
                 <div className="space-y-1.5 text-xs text-slate-700 min-w-0 flex-1">
-                  <div className="flex items-center gap-1.5">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                    <span className="truncate">Healthy Diet</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                    <span className="truncate">Regular Exercise</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                    <span className="truncate">Good Sleep</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-slate-400">
-                    <span className="h-3.5 w-3.5 rounded-full border border-slate-300 shrink-0" />
-                    <span className="truncate">Weight Goal</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-slate-400">
-                    <span className="h-3.5 w-3.5 rounded-full border border-slate-300 shrink-0" />
-                    <span className="truncate">Activity Goal</span>
-                  </div>
+                  {programmeChecklist.map((item, idx) => (
+                    <div
+                      key={idx}
+                      className={`flex items-center gap-1.5 ${
+                        item.completed ? 'text-slate-700' : 'text-slate-400'
+                      }`}
+                    >
+                      {item.completed ? (
+                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                      ) : (
+                        <span className="h-3.5 w-3.5 rounded-full border border-slate-300 shrink-0" />
+                      )}
+                      <span className="truncate">{item.label}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
 
@@ -478,7 +876,7 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
                 onClick={() => onNavigate('prevent')}
                 className="w-full rounded-xl bg-[#EAF3FA] hover:bg-[#DCEBF7] py-2 text-xs font-semibold text-[#0B2540] transition-colors text-center cursor-pointer"
               >
-                Continue Programme →
+                {t.dashboard.continueProgramme}
               </button>
             </div>
           </div>
@@ -492,7 +890,7 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4 text-[#0B2540]" />
                     <h2 className="font-display text-sm font-bold text-[#0B2540]">
-                      Upcoming Appointments
+                      {t.dashboard.upcomingAppointments}
                     </h2>
                   </div>
                   <button
@@ -500,43 +898,57 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
                     onClick={() => onNavigate('appointments')}
                     className="text-xs font-semibold text-[#0284C7] hover:underline cursor-pointer"
                   >
-                    View All →
+                    {t.dashboard.viewAll}
                   </button>
                 </div>
 
-                {/* Appointment Date Badge & Details */}
-                <div className="mt-3.5 flex items-start gap-3">
-                  <div className="flex flex-col items-center justify-center rounded-xl bg-[#EAF4FD] px-3 py-2 text-center shrink-0 w-14">
-                    <span className="font-mono text-lg font-extrabold text-[#0284C7] leading-none">
-                      28
-                    </span>
-                    <span className="mt-0.5 text-[11px] font-bold text-[#0284C7]">
-                      Nov
-                    </span>
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="text-sm font-bold text-[#0B2540] truncate">
-                      {upcomingApt?.title || 'Follow-up Consultation'}
-                    </div>
-                    <div className="mt-0.5 text-xs text-slate-500">
-                      {upcomingApt?.scheduledTime || '10:30 AM'} • {upcomingApt?.facility || 'City Hospital'}
-                    </div>
-                    <div className="mt-1">
-                      <span className="inline-block rounded-full bg-[#E8F8EE] px-2.5 py-0.5 text-[10px] font-bold text-[#10B981]">
-                        Confirmed
+                {appointmentInfo ? (
+                  /* Appointment Date Badge & Details */
+                  <div className="mt-3.5 flex items-start gap-3">
+                    <div className="flex flex-col items-center justify-center rounded-xl bg-[#EAF4FD] px-3 py-2 text-center shrink-0 w-14">
+                      <span className="font-mono text-lg font-extrabold text-[#0284C7] leading-none">
+                        {appointmentInfo.day}
+                      </span>
+                      <span className="mt-0.5 text-[11px] font-bold text-[#0284C7]">
+                        {appointmentInfo.month}
                       </span>
                     </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-bold text-[#0B2540] truncate">
+                        {upcomingApt?.title || 'Consultation'}
+                      </div>
+                      <div className="mt-0.5 text-xs text-slate-500">
+                        {upcomingApt?.scheduledTime || '10:30 AM'} • {upcomingApt?.facility || 'Care Center'}
+                      </div>
+                      <div className="mt-1">
+                        <span
+                          className={`inline-block rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
+                            upcomingApt?.status === 'Confirmed'
+                              ? 'bg-[#E8F8EE] text-[#10B981]'
+                              : 'bg-amber-50 text-amber-700'
+                          }`}
+                        >
+                          {upcomingApt?.status || 'Scheduled'}
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="py-6 text-center text-xs text-slate-500">
+                    {t.dashboard.noAppointments}
+                  </div>
+                )}
               </div>
 
-              {/* Orange Callout Reminder Banner */}
-              <div className="mt-3 rounded-xl bg-[#FEF6EE] border border-[#FEE4C8] px-3.5 py-2.5 text-xs text-[#9A4200] flex items-center gap-2.5">
-                <Bell className="h-4 w-4 text-[#EA580C] shrink-0" />
-                <span>
-                  <strong>Reminder:</strong> Your appointment is tomorrow at 10:30 AM
-                </span>
-              </div>
+              {/* Dynamic Reminder Banner */}
+              {appointmentInfo && (
+                <div className="mt-3 rounded-xl bg-[#FEF6EE] border border-[#FEE4C8] px-3.5 py-2.5 text-xs text-[#9A4200] flex items-center gap-2.5">
+                  <Bell className="h-4 w-4 text-[#EA580C] shrink-0" />
+                  <span className="truncate">
+                    <strong>Reminder:</strong> {appointmentInfo.reminderText}
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* Card E: Quick Actions (4 Colorful Cards) */}
@@ -544,7 +956,7 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
               <div className="flex items-center gap-2">
                 <Zap className="h-4 w-4 text-[#0B2540]" />
                 <h2 className="font-display text-sm font-bold text-[#0B2540]">
-                  Quick Actions
+                  {t.dashboard.quickActions}
                 </h2>
               </div>
 
@@ -556,8 +968,8 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
                   className="flex flex-col items-center justify-center text-center p-2.5 rounded-xl bg-[#E8F8EE] hover:bg-[#D5F3DF] transition-all cursor-pointer group shadow-2xs"
                 >
                   <BarChart2 className="h-5 w-5 text-[#059669] mb-1.5 group-hover:scale-110 transition-transform" />
-                  <span className="text-[11px] font-bold text-[#065F46] leading-tight">
-                    Take<br />Risk Assessment
+                  <span className="text-[11px] font-bold text-[#065F46] leading-tight whitespace-pre-line">
+                    {t.dashboard.takeAssessment}
                   </span>
                 </button>
 
@@ -568,8 +980,8 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
                   className="flex flex-col items-center justify-center text-center p-2.5 rounded-xl bg-[#EBF4FD] hover:bg-[#D5EAFB] transition-all cursor-pointer group shadow-2xs"
                 >
                   <Eye className="h-5 w-5 text-[#0284C7] mb-1.5 group-hover:scale-110 transition-transform" />
-                  <span className="text-[11px] font-bold text-[#0369A1] leading-tight">
-                    Upload<br />Retinal Image
+                  <span className="text-[11px] font-bold text-[#0369A1] leading-tight whitespace-pre-line">
+                    {t.dashboard.uploadImage}
                   </span>
                 </button>
 
@@ -580,8 +992,8 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
                   className="flex flex-col items-center justify-center text-center p-2.5 rounded-xl bg-[#F3EEFD] hover:bg-[#E6DBFB] transition-all cursor-pointer group shadow-2xs"
                 >
                   <FileText className="h-5 w-5 text-[#7C3AED] mb-1.5 group-hover:scale-110 transition-transform" />
-                  <span className="text-[11px] font-bold text-[#6D28D9] leading-tight">
-                    View<br />Reports
+                  <span className="text-[11px] font-bold text-[#6D28D9] leading-tight whitespace-pre-line">
+                    {t.dashboard.viewReports}
                   </span>
                 </button>
 
@@ -592,8 +1004,8 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
                   className="flex flex-col items-center justify-center text-center p-2.5 rounded-xl bg-[#FFF4E5] hover:bg-[#FEE7CA] transition-all cursor-pointer group shadow-2xs"
                 >
                   <Calendar className="h-5 w-5 text-[#EA580C] mb-1.5 group-hover:scale-110 transition-transform" />
-                  <span className="text-[11px] font-bold text-[#C2410C] leading-tight">
-                    Book<br />Appointment
+                  <span className="text-[11px] font-bold text-[#C2410C] leading-tight whitespace-pre-line">
+                    {t.dashboard.bookAppointment}
                   </span>
                 </button>
               </div>
@@ -604,25 +1016,19 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
               <div className="flex items-center gap-2">
                 <Lightbulb className="h-4 w-4 text-[#0B2540]" />
                 <h2 className="font-display text-sm font-bold text-[#0B2540]">
-                  Health Insights
+                  {t.dashboard.healthInsights}
                 </h2>
               </div>
 
               <div className="my-auto py-2 flex items-center justify-between gap-3">
-                {/* Insights Bullets */}
+                {/* Dynamic Insights Bullets */}
                 <div className="space-y-2 text-xs text-slate-700 min-w-0 flex-1">
-                  <div className="flex items-start gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
-                    <span className="leading-snug">Your risk is lower than last month!</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
-                    <span className="leading-snug">Keep up the healthy lifestyle.</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
-                    <span className="leading-snug">Next screening in 6 months.</span>
-                  </div>
+                  {healthInsights.map((insight, idx) => (
+                    <div key={idx} className="flex items-start gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
+                      <span className="leading-snug">{insight.text}</span>
+                    </div>
+                  ))}
                 </div>
 
                 {/* Upward Trending Green Chart Graphics matching reference */}
@@ -669,7 +1075,7 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
               <div className="flex items-center gap-2">
                 <Bell className="h-4 w-4 text-[#0B2540]" />
                 <h2 className="font-display text-sm font-bold text-[#0B2540]">
-                  Alerts &amp; Notifications
+                  {t.dashboard.alertsNotifications}
                 </h2>
               </div>
               <button
@@ -677,73 +1083,64 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
                 onClick={() => onNavigate('notifications')}
                 className="text-xs font-semibold text-[#0284C7] hover:underline cursor-pointer"
               >
-                View All →
+                {t.dashboard.viewAll}
               </button>
             </div>
 
             <div className="space-y-3">
-              {/* Item 1: Doctor Review Required */}
-              <div
-                onClick={() => onNavigate('protect')}
-                className="flex items-start gap-3 rounded-xl p-2 hover:bg-slate-50 transition-colors cursor-pointer"
-              >
-                <div className="h-5 w-5 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center shrink-0 mt-0.5">
-                  <AlertCircle className="h-3.5 w-3.5" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="text-xs font-bold text-[#0B2540]">
-                    Doctor Review Required
-                  </div>
-                  <div className="text-[11px] text-slate-500 truncate">
-                    Retinal image needs review
-                  </div>
-                  <div className="text-[10px] text-slate-400 font-mono mt-0.5">
-                    2h ago
-                  </div>
-                </div>
-              </div>
+              {patientNotifications.length > 0 ? (
+                patientNotifications.map((notif) => {
+                  const isUrgent = notif.severity === 'urgent';
+                  const isWarning = notif.severity === 'warning';
+                  const isSuccess = notif.severity === 'success';
 
-              {/* Item 2: Appointment Tomorrow */}
-              <div
-                onClick={() => onNavigate('appointments')}
-                className="flex items-start gap-3 rounded-xl p-2 hover:bg-slate-50 transition-colors cursor-pointer"
-              >
-                <div className="h-5 w-5 rounded-full bg-sky-100 text-sky-600 flex items-center justify-center shrink-0 mt-0.5">
-                  <Calendar className="h-3.5 w-3.5" />
+                  return (
+                    <div
+                      key={notif.id}
+                      onClick={() => onNavigate(notif.actionView || 'notifications')}
+                      className="flex items-start gap-3 rounded-xl p-2 hover:bg-slate-50 transition-colors cursor-pointer"
+                    >
+                      <div
+                        className={`h-5 w-5 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${
+                          isUrgent
+                            ? 'bg-rose-100 text-rose-600'
+                            : isWarning
+                            ? 'bg-amber-100 text-amber-600'
+                            : isSuccess
+                            ? 'bg-emerald-100 text-emerald-600'
+                            : 'bg-sky-100 text-sky-600'
+                        }`}
+                      >
+                        {isUrgent || isWarning ? (
+                          <AlertCircle className="h-3.5 w-3.5" />
+                        ) : isSuccess ? (
+                          <Check className="h-3.5 w-3.5" />
+                        ) : (
+                          <Bell className="h-3.5 w-3.5" />
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="text-xs font-bold text-[#0B2540] truncate">
+                          {notif.title}
+                        </div>
+                        <div className="text-[11px] text-slate-500 truncate">
+                          {notif.message}
+                        </div>
+                        <div className="text-[10px] text-slate-400 font-mono mt-0.5">
+                          {new Date(notif.createdAt).toLocaleTimeString([], {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="py-4 text-center text-xs text-slate-500">
+                  {t.dashboard.noNotifications}
                 </div>
-                <div className="min-w-0 flex-1">
-                  <div className="text-xs font-bold text-[#0B2540]">
-                    Appointment Tomorrow
-                  </div>
-                  <div className="text-[11px] text-slate-500 truncate">
-                    Follow-up consultation
-                  </div>
-                  <div className="text-[10px] text-slate-400 font-mono mt-0.5">
-                    3h ago
-                  </div>
-                </div>
-              </div>
-
-              {/* Item 3: Sync Complete */}
-              <div
-                onClick={() => onNavigate('offline')}
-                className="flex items-start gap-3 rounded-xl p-2 hover:bg-slate-50 transition-colors cursor-pointer"
-              >
-                <div className="h-5 w-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">
-                  <Check className="h-3.5 w-3.5" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="text-xs font-bold text-[#0B2540]">
-                    Sync Complete
-                  </div>
-                  <div className="text-[11px] text-slate-500 truncate">
-                    Your data is updated
-                  </div>
-                  <div className="text-[10px] text-slate-400 font-mono mt-0.5">
-                    4h ago
-                  </div>
-                </div>
-              </div>
+              )}
             </div>
           </div>
 
@@ -752,12 +1149,12 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
             <div className="flex items-center gap-2">
               <BarChart2 className="h-4 w-4 text-emerald-600" />
               <span className="font-display text-xs font-bold text-[#0B2540]">
-                System Status
+                {t.dashboard.systemStatus}
               </span>
             </div>
             <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-600">
               <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span>All Systems Online</span>
+              <span>{t.dashboard.allSystemsOnline}</span>
             </div>
           </div>
 
@@ -771,10 +1168,10 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
             </div>
             <div className="min-w-0">
               <div className="text-xs font-bold text-[#065F46]">
-                Offline Mode Available
+                {t.dashboard.offlineModeAvailable}
               </div>
               <div className="text-[11px] text-slate-600 leading-tight mt-0.5">
-                Access core features without internet
+                {t.dashboard.offlineModeDesc}
               </div>
             </div>
           </div>
