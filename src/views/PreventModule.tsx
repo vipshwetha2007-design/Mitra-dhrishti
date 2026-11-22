@@ -1,16 +1,26 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Activity,
   AlertTriangle,
   ArrowLeft,
   ArrowRight,
   BookOpen,
+  Calendar,
   CheckCircle2,
+  CheckSquare,
   ClipboardCheck,
+  Clock,
+  Filter,
+  Flame,
   FlaskConical,
+  Heart,
   Sliders,
+  Target,
+  TrendingDown,
+  TrendingUp,
   UserPlus,
   WifiOff,
+  X,
 } from 'lucide-react';
 import {
   CartesianGrid,
@@ -23,6 +33,7 @@ import {
 } from 'recharts';
 import type {
   BootstrapPayload,
+  CheckpointRecord,
   LanguageCode,
   LifestyleInput,
 } from '../types/domain';
@@ -45,6 +56,13 @@ interface PreventModuleProps {
     barrierReported?: string;
   }) => Promise<void>;
   onToggleLesson: (patientId: string, lessonId: string) => Promise<void>;
+  onCompleteCheckpoint?: (payload: {
+    patientId: string;
+    day: number;
+    weightKg?: number;
+    waistCm?: number;
+    notes?: string;
+  }) => Promise<void>;
   onRegisterPatient: (payload: {
     name: string;
     age: number;
@@ -88,6 +106,7 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
   onSubmitAssessment,
   onSubmitHabit,
   onToggleLesson,
+  onCompleteCheckpoint,
   onRegisterPatient,
   onRecordLab,
 }) => {
@@ -107,6 +126,7 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
 
   const [inputs, setInputs] = useState<LifestyleInput>({
     age: patient?.age ?? 36,
+    sex: patient?.sex ?? 'Female',
     dietQuality: latestAssessment?.inputs.dietQuality ?? 'moderate_refined',
     sleepHours: latestAssessment?.inputs.sleepHours ?? 7,
     dailySteps: latestAssessment?.inputs.dailySteps ?? 6500,
@@ -117,6 +137,29 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
     smokingStatus: latestAssessment?.inputs.smokingStatus ?? 'never',
     alcoholUse: latestAssessment?.inputs.alcoholUse ?? 'none',
   });
+
+  useEffect(() => {
+    if (patient) {
+      setInputs((prev) => ({
+        ...prev,
+        age: patient.age,
+        sex: patient.sex,
+        weightKg: latestAssessment?.inputs.weightKg ?? prev.weightKg,
+        waistCm: latestAssessment?.inputs.waistCm ?? prev.waistCm,
+      }));
+    }
+  }, [patient?.id, latestAssessment?.id]);
+
+  // Checkpoint Completion Form State
+  const [activeCheckpointModal, setActiveCheckpointModal] = useState<CheckpointRecord | null>(null);
+  const [cpWeight, setCpWeight] = useState<number>(programme?.currentWeightKg ?? 60);
+  const [cpWaist, setCpWaist] = useState<number>(programme?.currentWaistCm ?? 78);
+  const [cpNotes, setCpNotes] = useState<string>('');
+
+  // Curriculum Filter States
+  const [lessonPhaseTab, setLessonPhaseTab] = useState<0 | 1 | 2>(1); // Default Phase 1 (Weeks 1-24)
+  const [lessonCategoryTab, setLessonCategoryTab] = useState<string>('All');
+  const [lessonSearch, setLessonSearch] = useState<string>('');
 
   const [whatIf, setWhatIf] = useState<LifestyleInput>(inputs);
   const baseEval = useMemo(() => evaluateClientExperimentalRisk(inputs), [inputs]);
@@ -263,14 +306,85 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
     }
   };
 
+  const handleCompleteCp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!patient || !activeCheckpointModal || !onCompleteCheckpoint) return;
+    setSubmitting(true);
+    setBannerMsg(null);
+    try {
+      await onCompleteCheckpoint({
+        patientId: patient.id,
+        day: activeCheckpointModal.day,
+        weightKg: cpWeight,
+        waistCm: cpWaist,
+        notes: cpNotes,
+      });
+      setActiveCheckpointModal(null);
+      setBannerMsg({
+        type: 'success',
+        text: `${activeCheckpointModal.day}-Day Checkpoint recorded successfully.`,
+      });
+    } catch (err) {
+      setBannerMsg({
+        type: 'error',
+        text: err instanceof Error ? err.message : 'Unable to complete checkpoint.',
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const openCheckpointForm = (cp: CheckpointRecord) => {
+    setActiveCheckpointModal(cp);
+    setCpWeight(cp.measurements?.weightKg ?? programme?.currentWeightKg ?? 60);
+    setCpWaist(cp.measurements?.waistCm ?? programme?.currentWaistCm ?? 78);
+    setCpNotes(cp.measurements?.notes ?? cp.notes ?? '');
+  };
+
+  // Accurate longitudinal chart data without fabricating missing weight or waist
   const progressChartData = [...patientHabits]
     .reverse()
     .map((h) => ({
       date: h.date.slice(5),
       steps: Math.round(h.stepsAchieved / 100),
-      weight: h.weightKg ?? programme?.currentWeightKg ?? 60,
-      waist: h.waistCm ?? programme?.currentWaistCm ?? 78,
+      weight: typeof h.weightKg === 'number' ? h.weightKg : null,
+      waist: typeof h.waistCm === 'number' ? h.waistCm : null,
+      sleep: h.sleepHours,
     }));
+
+  const recentHabits = patientHabits.slice(0, 7);
+  const avgSteps7d =
+    recentHabits.length > 0
+      ? Math.round(recentHabits.reduce((acc, h) => acc + h.stepsAchieved, 0) / recentHabits.length)
+      : null;
+  const avgSleep7d =
+    recentHabits.length > 0
+      ? Number((recentHabits.reduce((acc, h) => acc + h.sleepHours, 0) / recentHabits.length).toFixed(1))
+      : null;
+  const dietAdherence7d =
+    recentHabits.length > 0
+      ? Math.round((recentHabits.filter((h) => h.healthyIndianDiet).length / recentHabits.length) * 100)
+      : null;
+  const loggingStreakDays = patientHabits.length;
+
+  const filteredLessons = useMemo(() => {
+    return (programme?.lessons || []).filter((l) => {
+      if (lessonPhaseTab !== 0 && l.phase !== lessonPhaseTab) return false;
+      if (lessonCategoryTab !== 'All' && l.category !== lessonCategoryTab) return false;
+      if (lessonSearch.trim()) {
+        const q = lessonSearch.toLowerCase();
+        return (
+          l.title.toLowerCase().includes(q) ||
+          (l.titleTa && l.titleTa.toLowerCase().includes(q)) ||
+          l.summary.toLowerCase().includes(q) ||
+          String(l.week).includes(q)
+        );
+      }
+      return true;
+    });
+  }, [programme?.lessons, lessonPhaseTab, lessonCategoryTab, lessonSearch]);
+
+  const completedLessonsCount = (programme?.lessons || []).filter((l) => l.completed).length;
 
   return (
     <div className="space-y-5">
@@ -855,69 +969,488 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
                 </span>
               </div>
 
-              <div className="mt-4 grid grid-cols-1 sm:grid-cols-5 gap-2">
+              {/* Checkpoint Milestone Cards */}
+              <div className="mt-4 grid grid-cols-1 sm:grid-cols-5 gap-2.5">
                 {(programme?.checkpoints || []).map((cp) => (
                   <div
                     key={cp.day}
-                    className={`rounded-xl border p-2.5 text-xs ${
+                    className={`rounded-xl border p-3 text-xs transition-all flex flex-col justify-between ${
                       cp.status === 'completed'
                         ? 'border-emerald-200 bg-emerald-50/70'
                         : cp.status === 'due'
-                        ? 'border-amber-300 bg-amber-50/70'
+                        ? 'border-amber-300 bg-amber-50/70 shadow-sm'
+                        : cp.status === 'missed'
+                        ? 'border-rose-300 bg-rose-50/70'
                         : 'border-slate-200 bg-slate-50'
                     }`}
                   >
-                    <div className="font-semibold text-slate-900">{cp.label}</div>
-                    <div className="mt-0.5 text-[11px] capitalize text-slate-600">{cp.status}</div>
+                    <div>
+                      <div className="flex items-center justify-between gap-1">
+                        <span className="font-bold text-slate-900">{cp.title || cp.label}</span>
+                        <span
+                          className={`rounded px-1.5 py-0.5 text-[10px] font-bold capitalize ${
+                            cp.status === 'completed'
+                              ? 'bg-emerald-200/60 text-emerald-800'
+                              : cp.status === 'due'
+                              ? 'bg-amber-200/80 text-amber-900 animate-pulse'
+                              : cp.status === 'missed'
+                              ? 'bg-rose-200 text-rose-900'
+                              : 'bg-slate-200/60 text-slate-700'
+                          }`}
+                        >
+                          {cp.status}
+                        </span>
+                      </div>
+                      <div className="mt-1 text-[11px] text-slate-500 font-mono">
+                        Due: {cp.dueDate}
+                      </div>
+                      {cp.completedAt && (
+                        <div className="text-[10px] text-emerald-700">
+                          Completed: {cp.completedAt.slice(0, 10)}
+                        </div>
+                      )}
+                      {cp.baselineComparison?.summary && (
+                        <div className="mt-1.5 rounded bg-emerald-100/70 p-1.5 text-[10px] font-medium text-emerald-800">
+                          {cp.baselineComparison.summary}
+                        </div>
+                      )}
+                    </div>
+
+                    {!cp.completed && (cp.status === 'due' || cp.status === 'missed') && onCompleteCheckpoint && (
+                      <button
+                        type="button"
+                        onClick={() => openCheckpointForm(cp)}
+                        className="mt-2.5 w-full rounded-lg bg-[#0D9488] py-1 text-[11px] font-semibold text-white hover:bg-[#0F766E] shadow-sm transition-colors"
+                      >
+                        Complete Checkpoint
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>
 
-              <div className="mt-5 h-52 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={progressChartData} margin={{ top: 8, right: 12, left: -18, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
-                    <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#64748B' }} />
-                    <YAxis tick={{ fontSize: 11, fill: '#64748B' }} />
-                    <Tooltip contentStyle={{ borderRadius: '10px', fontSize: '12px' }} />
-                    <Line type="monotone" dataKey="weight" name="Weight (kg)" stroke="#0B2540" strokeWidth={2} />
-                    <Line type="monotone" dataKey="waist" name="Waist (cm)" stroke="#0D9488" strokeWidth={2} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-slate-200 bg-white p-5">
-              <div className="flex items-center gap-2 mb-3">
-                <BookOpen className="h-4 w-4 text-[#0D9488]" />
-                <h2 className="font-display text-base font-bold text-[#0B2540]">
-                  Weekly Indian Nutrition &amp; Lifestyle Lessons
-                </h2>
-              </div>
-              <div className="divide-y divide-slate-100">
-                {(programme?.lessons || []).map((les) => (
-                  <div key={les.id} className="flex items-start justify-between gap-4 py-3">
-                    <div className="min-w-0">
-                      <div className="text-xs text-slate-500">
-                        Phase {les.phase} · Week {les.week} · {les.category} · {les.durationMinutes} min
-                      </div>
-                      <div className="text-sm font-semibold text-slate-900 mt-0.5">{les.title}</div>
-                      <div className="text-xs text-[#0F766E]">{les.titleTa}</div>
-                      <p className="mt-1 text-xs text-slate-600">{les.summary}</p>
+              {/* Checkpoint Completion Form / Drawer */}
+              {activeCheckpointModal && (
+                <form
+                  onSubmit={handleCompleteCp}
+                  className="mt-4 rounded-xl border border-teal-300 bg-teal-50/50 p-4 text-xs space-y-3"
+                >
+                  <div className="flex items-center justify-between border-b border-teal-200/70 pb-2">
+                    <div className="flex items-center gap-2">
+                      <ClipboardCheck className="h-4 w-4 text-[#0D9488]" />
+                      <span className="font-bold text-[#0B2540]">
+                        Record {activeCheckpointModal.day}-Day Checkpoint ({activeCheckpointModal.title || activeCheckpointModal.label})
+                      </span>
                     </div>
                     <button
                       type="button"
-                      onClick={() => patient && void onToggleLesson(patient.id, les.id)}
-                      className={`shrink-0 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
-                        les.completed
-                          ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-                          : 'bg-[#0B2540] text-white hover:bg-[#113556]'
-                      }`}
+                      onClick={() => setActiveCheckpointModal(null)}
+                      className="text-slate-500 hover:text-slate-800"
                     >
-                      {les.completed ? 'Completed' : 'Mark Done'}
+                      <X className="h-4 w-4" />
                     </button>
                   </div>
-                ))}
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                        Weight (kg) · Baseline: {programme?.baselineWeightKg ?? '—'} kg
+                      </label>
+                      <input
+                        type="number"
+                        step={0.1}
+                        min={25}
+                        max={250}
+                        required
+                        value={cpWeight}
+                        onChange={(e) => setCpWeight(Number(e.target.value))}
+                        className="w-full rounded-lg border border-slate-300 bg-white px-3 py-1.5 font-mono"
+                      />
+                      {programme && (
+                        <div className="mt-1 text-[10px] font-mono font-medium text-slate-600">
+                          Change vs baseline:{' '}
+                          <span
+                            className={
+                              cpWeight <= programme.baselineWeightKg
+                                ? 'text-emerald-700 font-bold'
+                                : 'text-amber-700 font-bold'
+                            }
+                          >
+                            {(cpWeight - programme.baselineWeightKg).toFixed(1)} kg
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                        Waist (cm) · Baseline: {programme?.baselineWaistCm ?? '—'} cm
+                      </label>
+                      <input
+                        type="number"
+                        step={0.5}
+                        min={45}
+                        max={180}
+                        required
+                        value={cpWaist}
+                        onChange={(e) => setCpWaist(Number(e.target.value))}
+                        className="w-full rounded-lg border border-slate-300 bg-white px-3 py-1.5 font-mono"
+                      />
+                      {programme && (
+                        <div className="mt-1 text-[10px] font-mono font-medium text-slate-600">
+                          Change vs baseline:{' '}
+                          <span
+                            className={
+                              cpWaist <= programme.baselineWaistCm
+                                ? 'text-emerald-700 font-bold'
+                                : 'text-amber-700 font-bold'
+                            }
+                          >
+                            {(cpWaist - programme.baselineWaistCm).toFixed(1)} cm
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                      Checkpoint Observations &amp; Clinical Notes
+                    </label>
+                    <input
+                      type="text"
+                      value={cpNotes}
+                      onChange={(e) => setCpNotes(e.target.value)}
+                      placeholder="e.g. Consistent millet breakfast swaps, evening walks maintained without joint pain"
+                      className="w-full rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs"
+                    />
+                  </div>
+
+                  <div className="flex justify-end gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => setActiveCheckpointModal(null)}
+                      className="rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={submitting}
+                      className="rounded-lg bg-[#0D9488] px-4 py-1.5 text-xs font-semibold text-white hover:bg-[#0F766E] disabled:opacity-50"
+                    >
+                      {submitting ? 'Saving Checkpoint...' : 'Submit & Complete Checkpoint'}
+                    </button>
+                  </div>
+                </form>
+              )}
+
+              {/* Longitudinal Progress Chart with Steps, Weight, and Waist */}
+              <div className="mt-5">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-xs font-bold text-slate-800">
+                    Longitudinal Trajectory: Steps, Weight &amp; Waist
+                  </div>
+                  <div className="flex items-center gap-3 text-[11px] font-medium">
+                    <span className="flex items-center gap-1 text-[#0B2540]">
+                      <span className="h-2 w-2 rounded-full bg-[#0B2540]" /> Weight (kg)
+                    </span>
+                    <span className="flex items-center gap-1 text-[#0D9488]">
+                      <span className="h-2 w-2 rounded-full bg-[#0D9488]" /> Waist (cm)
+                    </span>
+                    <span className="flex items-center gap-1 text-[#2563EB]">
+                      <span className="h-2 w-2 rounded-full bg-[#2563EB]" /> Steps (×100)
+                    </span>
+                  </div>
+                </div>
+
+                <div className="h-56 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={progressChartData} margin={{ top: 8, right: 12, left: -18, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
+                      <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#64748B' }} />
+                      <YAxis tick={{ fontSize: 11, fill: '#64748B' }} />
+                      <Tooltip contentStyle={{ borderRadius: '10px', fontSize: '12px' }} />
+                      <Line
+                        type="monotone"
+                        dataKey="weight"
+                        name="Weight (kg)"
+                        stroke="#0B2540"
+                        strokeWidth={2}
+                        connectNulls={true}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="waist"
+                        name="Waist (cm)"
+                        stroke="#0D9488"
+                        strokeWidth={2}
+                        connectNulls={true}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="steps"
+                        name="Steps (×100)"
+                        stroke="#2563EB"
+                        strokeWidth={2}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              {/* Longitudinal Health Metrics Grid */}
+              <div className="mt-5 grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4 border-t border-slate-100">
+                <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-3">
+                  <div className="flex items-center gap-1.5 text-slate-500 text-[11px] font-medium">
+                    <Flame className="h-3.5 w-3.5 text-blue-600" />
+                    <span>7-Day Steps Avg</span>
+                  </div>
+                  <div className="mt-1 font-display text-lg font-bold text-slate-900 tabular-nums">
+                    {avgSteps7d !== null ? `${avgSteps7d.toLocaleString()} /day` : '—'}
+                  </div>
+                  <div className="text-[10px] text-slate-500">Benchmark: 7,000+</div>
+                </div>
+
+                <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-3">
+                  <div className="flex items-center gap-1.5 text-slate-500 text-[11px] font-medium">
+                    <Clock className="h-3.5 w-3.5 text-indigo-600" />
+                    <span>7-Day Sleep Avg</span>
+                  </div>
+                  <div className="mt-1 font-display text-lg font-bold text-slate-900 tabular-nums">
+                    {avgSleep7d !== null ? `${avgSleep7d} hrs` : '—'}
+                  </div>
+                  <div className="text-[10px] text-slate-500">Target: 7–8.5 hrs</div>
+                </div>
+
+                <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-3">
+                  <div className="flex items-center gap-1.5 text-slate-500 text-[11px] font-medium">
+                    <Heart className="h-3.5 w-3.5 text-emerald-600" />
+                    <span>Plate Adherence</span>
+                  </div>
+                  <div className="mt-1 font-display text-lg font-bold text-emerald-700 tabular-nums">
+                    {dietAdherence7d !== null ? `${dietAdherence7d}%` : '—'}
+                  </div>
+                  <div className="text-[10px] text-slate-500">Traditional Plate</div>
+                </div>
+
+                <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-3">
+                  <div className="flex items-center gap-1.5 text-slate-500 text-[11px] font-medium">
+                    <CheckSquare className="h-3.5 w-3.5 text-teal-600" />
+                    <span>Habit Streak</span>
+                  </div>
+                  <div className="mt-1 font-display text-lg font-bold text-slate-900 tabular-nums">
+                    {loggingStreakDays} days
+                  </div>
+                  <div className="text-[10px] text-slate-500">Consecutive log active</div>
+                </div>
+              </div>
+
+              {/* Baseline vs Latest Measurements & Historical Score Timeline */}
+              <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t border-slate-100">
+                <div className="rounded-xl bg-slate-50 p-3 text-xs space-y-1.5">
+                  <div className="font-bold text-slate-800">Baseline vs. Latest Trajectory</div>
+                  <div className="flex justify-between items-center text-[11px]">
+                    <span className="text-slate-600">Body Weight:</span>
+                    <span className="font-mono font-semibold text-slate-900">
+                      {programme?.baselineWeightKg ?? '—'} kg → {programme?.currentWeightKg ?? '—'} kg
+                      {programme && programme.currentWeightKg && programme.baselineWeightKg && (
+                        <span className="ml-1 text-emerald-700">
+                          ({(programme.currentWeightKg - programme.baselineWeightKg).toFixed(1)} kg)
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center text-[11px]">
+                    <span className="text-slate-600">Central Waist:</span>
+                    <span className="font-mono font-semibold text-slate-900">
+                      {programme?.baselineWaistCm ?? '—'} cm → {programme?.currentWaistCm ?? '—'} cm
+                      {programme && programme.currentWaistCm && programme.baselineWaistCm && (
+                        <span className="ml-1 text-emerald-700">
+                          ({(programme.currentWaistCm - programme.baselineWaistCm).toFixed(1)} cm)
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="rounded-xl bg-slate-50 p-3 text-xs space-y-1.5">
+                  <div className="font-bold text-slate-800">Historical Assessment Timeline</div>
+                  {patientAssessments.slice(0, 3).map((a, idx) => (
+                    <div key={a.id} className="flex justify-between items-center text-[11px]">
+                      <span className="text-slate-600 font-mono">
+                        {a.assessedAt.slice(0, 10)} {idx === 0 ? '(Latest)' : idx === patientAssessments.length - 1 ? '(Baseline)' : ''}
+                      </span>
+                      <span className="font-mono font-bold text-slate-900">
+                        {a.experimentalScore}/100 ({a.riskCategory})
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Complete 52-Week Curriculum Component */}
+            <div className="rounded-2xl border border-slate-200 bg-white p-5 space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <BookOpen className="h-5 w-5 text-[#0D9488]" />
+                    <h2 className="font-display text-base font-bold text-[#0B2540]">
+                      52-Week Indian Nutrition &amp; Prevention Curriculum
+                    </h2>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Structured 12-month curriculum: Phase 1 (Weeks 1–24) &amp; Phase 2 (Weeks 25–52)
+                  </p>
+                </div>
+                <div className="rounded-xl bg-teal-50 border border-teal-200 px-3 py-1.5 text-right">
+                  <div className="text-[11px] font-bold text-teal-900">
+                    {completedLessonsCount} of 52 weeks completed
+                  </div>
+                  <div className="mt-1 h-1.5 w-32 bg-teal-200 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-teal-600 rounded-full transition-all"
+                      style={{ width: `${Math.round((completedLessonsCount / 52) * 100)}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Phase Tabs & Category Filters */}
+              <div className="flex flex-wrap items-center justify-between gap-2.5 pt-2 border-t border-slate-100">
+                <div className="flex rounded-lg bg-slate-100 p-0.5 text-xs font-semibold">
+                  <button
+                    type="button"
+                    onClick={() => setLessonPhaseTab(1)}
+                    className={`rounded-md px-3 py-1 transition-colors ${
+                      lessonPhaseTab === 1 ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    Phase 1 (Weeks 1–24)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setLessonPhaseTab(2)}
+                    className={`rounded-md px-3 py-1 transition-colors ${
+                      lessonPhaseTab === 2 ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    Phase 2 (Weeks 25–52)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setLessonPhaseTab(0)}
+                    className={`rounded-md px-3 py-1 transition-colors ${
+                      lessonPhaseTab === 0 ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    All 52 Weeks
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-1.5 overflow-x-auto text-[11px]">
+                  {['All', 'Indian Nutrition', 'Physical Activity', 'Sleep & Stress', 'Monitoring'].map((cat) => (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => setLessonCategoryTab(cat)}
+                      className={`rounded-full px-2.5 py-0.5 font-medium transition-colors whitespace-nowrap ${
+                        lessonCategoryTab === cat
+                          ? 'bg-[#0B2540] text-white'
+                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Lesson Search */}
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Search lessons by topic, millet, exercise, or Tamil keywords..."
+                  value={lessonSearch}
+                  onChange={(e) => setLessonSearch(e.target.value)}
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs focus:bg-white focus:outline-none focus:ring-1 focus:ring-teal-500"
+                />
+              </div>
+
+              {/* Lessons List */}
+              <div className="divide-y divide-slate-100 max-h-[580px] overflow-y-auto pr-1">
+                {filteredLessons.length === 0 ? (
+                  <div className="py-8 text-center text-xs text-slate-500">
+                    No lessons found matching the selected filters.
+                  </div>
+                ) : (
+                  filteredLessons.map((les) => (
+                    <div key={les.id} className="py-3.5 space-y-2">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                            <span className="font-bold text-slate-800">Week {les.week}</span>
+                            <span>·</span>
+                            <span>Phase {les.phase} ({les.phase === 1 ? 'Learning' : 'Maintenance'})</span>
+                            <span>·</span>
+                            <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-700">
+                              {les.category}
+                            </span>
+                            <span>·</span>
+                            <span>{les.durationMinutes} min</span>
+                          </div>
+
+                          <div className="text-sm font-bold text-slate-900 mt-1">
+                            {les.title}
+                          </div>
+                          <div className="text-xs font-medium text-[#0F766E] mt-0.5">
+                            {les.titleTa}
+                          </div>
+
+                          <p className="mt-1 text-xs text-slate-600">{les.summary}</p>
+                          {les.summaryTa && (
+                            <p className="mt-0.5 text-xs text-slate-500 italic">{les.summaryTa}</p>
+                          )}
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => patient && void onToggleLesson(patient.id, les.id)}
+                          className={`shrink-0 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+                            les.completed
+                              ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                              : 'bg-[#0B2540] text-white hover:bg-[#113556]'
+                          }`}
+                        >
+                          {les.completed ? '✓ Completed' : 'Mark Done'}
+                        </button>
+                      </div>
+
+                      {/* Practical Activity & Measurable Target Cards */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] pt-1">
+                        {les.practicalActivity && (
+                          <div className="rounded-lg bg-teal-50/70 border border-teal-100 p-2 flex items-start gap-1.5 text-teal-900">
+                            <Activity className="h-3.5 w-3.5 text-teal-700 shrink-0 mt-0.5" />
+                            <div>
+                              <span className="font-bold">Activity: </span>
+                              {les.practicalActivity}
+                            </div>
+                          </div>
+                        )}
+                        {les.measurableHabitTarget && (
+                          <div className="rounded-lg bg-blue-50/70 border border-blue-100 p-2 flex items-start gap-1.5 text-blue-900">
+                            <Target className="h-3.5 w-3.5 text-blue-700 shrink-0 mt-0.5" />
+                            <div>
+                              <span className="font-bold">Weekly Target: </span>
+                              {les.measurableHabitTarget}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           </div>

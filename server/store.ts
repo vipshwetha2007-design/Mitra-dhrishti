@@ -6,6 +6,8 @@ import {
   evaluateExperimentalLifestyleRisk,
   interpretLaboratoryResult,
 } from './clinicalLogic.ts';
+import { buildDefaultLessons } from './curriculumData.ts';
+export { buildDefaultLessons };
 import type {
   AppointmentRecord,
   AuditLogEntry,
@@ -75,80 +77,6 @@ export function verifyPassword(password: string, salt: string, expectedHash: str
   const expected = Buffer.from(expectedHash, 'hex');
   if (derived.length !== expected.length) return false;
   return crypto.timingSafeEqual(derived, expected);
-}
-
-function buildDefaultLessons(): WeeklyLesson[] {
-  return [
-    {
-      id: 'les-1',
-      week: 1,
-      phase: 1,
-      title: 'Balanced South Indian Plate (Thali Proportions)',
-      titleTa: 'சமச்சீரான தென்னிந்திய உணவுத் தட்டு',
-      category: 'Indian Nutrition',
-      durationMinutes: 6,
-      summary: 'Fill half your plate with poriyal/kootu greens, one quarter with sambar/dal or sprouts, and one quarter with hand-pounded rice or millets.',
-      completed: true,
-      completedAt: '2026-10-02T09:00:00Z',
-    },
-    {
-      id: 'les-2',
-      week: 2,
-      phase: 1,
-      title: '15-Minute Post-Meal Walking for Glucose Stability',
-      titleTa: 'உணவுக்குப் பின் 15 நிமிட நடைப்பயிற்சி',
-      category: 'Physical Activity',
-      durationMinutes: 5,
-      summary: 'Light brisk walking 15–20 minutes after lunch and dinner gently lowers post-meal blood glucose spikes.',
-      completed: true,
-      completedAt: '2026-10-10T10:15:00Z',
-    },
-    {
-      id: 'les-3',
-      week: 3,
-      phase: 1,
-      title: 'Millet Swaps: Ragi, Thinai & Kambu in Daily Meals',
-      titleTa: 'தினசரி உணவில் சிறுதானிய மாற்றங்கள்',
-      category: 'Indian Nutrition',
-      durationMinutes: 7,
-      summary: 'Practical ways to blend ragi dosa, thinai upma, and vegetable dalia without losing family meal enjoyment.',
-      completed: true,
-      completedAt: '2026-10-18T11:30:00Z',
-    },
-    {
-      id: 'les-4',
-      week: 4,
-      phase: 1,
-      title: 'Restorative Sleep & Stress Cortisol Balance',
-      titleTa: 'நல்ல தூக்கம் மற்றும் மன அழுத்த சமநிலை',
-      category: 'Sleep & Stress',
-      durationMinutes: 6,
-      summary: 'Consistent 7–8 hour sleep routines support insulin sensitivity and reduce late-night cravings.',
-      completed: false,
-    },
-    {
-      id: 'les-5',
-      week: 12,
-      phase: 1,
-      title: '90-Day Checkpoint: Understanding HbA1c & Fasting Glucose',
-      titleTa: '90-நாள் சோதனை: HbA1c மற்றும் சர்க்கரை அளவு வழிகாட்டி',
-      category: 'Monitoring',
-      durationMinutes: 8,
-      summary: 'How laboratory blood tests complement lifestyle tracking — and why clinical interpretation belongs to your doctor.',
-      completed: false,
-    },
-    {
-      id: 'les-6',
-      week: 28,
-      phase: 2,
-      title: 'Maintenance Phase: Festival Meals & Travel Continuity',
-      titleTa: 'பராமரிப்பு கட்டம்: பண்டிகை உணவு மற்றும் பயண வழிகாட்டி',
-      category: 'Indian Nutrition',
-      durationMinutes: 6,
-      summary: 'Long-term maintenance strategies for Months 7–12 to sustain waist and step habits during celebrations.',
-      completed: false,
-    },
-  ];
 }
 
 function createSyntheticSeedData(): PersistentDatabase {
@@ -435,11 +363,11 @@ function createSyntheticSeedData(): PersistentDatabase {
       baselineWaistCm: 83,
       currentWaistCm: 78,
       checkpoints: [
-        { day: 30, label: '30-Day Checkpoint', status: 'completed', notes: 'Established post-dinner walking and millet breakfast swaps.' },
-        { day: 60, label: '60-Day Checkpoint', status: 'completed', notes: 'Weight -1.4 kg; consistent 7.5h sleep achieved.' },
-        { day: 90, label: '90-Day Checkpoint', status: 'completed', notes: 'Waist reduced by 3 cm; lab review scheduled.' },
-        { day: 180, label: 'Month 6 Transition', status: 'due', notes: 'Ready to transition from Phase 1 (Learning) to Phase 2 (Maintenance).' },
-        { day: 365, label: '12-Month Outcome', status: 'upcoming', notes: 'Annual longitudinal review & HbA1c re-evaluation.' },
+        { day: 30, title: '30-Day Checkpoint', label: '30-Day Checkpoint', dueDate: '2026-06-19', completed: true, completedAt: '2026-06-19T10:00:00Z', status: 'completed', notes: 'Established post-dinner walking and millet breakfast swaps.', measurements: { weightKg: 62.1, waistCm: 81.5 }, baselineComparison: { weightChangeKg: -1.4, waistChangeCm: -1.5, summary: 'Weight reduced by 1.4 kg; Waist reduced by 1.5 cm' } },
+        { day: 60, title: '60-Day Checkpoint', label: '60-Day Checkpoint', dueDate: '2026-07-19', completed: true, completedAt: '2026-07-19T10:00:00Z', status: 'completed', notes: 'Weight -1.4 kg; consistent 7.5h sleep achieved.', measurements: { weightKg: 61.0, waistCm: 80.0 }, baselineComparison: { weightChangeKg: -2.5, waistChangeCm: -3.0, summary: 'Weight reduced by 2.5 kg; Waist reduced by 3.0 cm' } },
+        { day: 90, title: '90-Day Checkpoint', label: '90-Day Checkpoint', dueDate: '2026-08-18', completed: true, completedAt: '2026-08-18T10:00:00Z', status: 'completed', notes: 'Waist reduced by 3 cm; lab review scheduled.', measurements: { weightKg: 60.0, waistCm: 78.0 }, baselineComparison: { weightChangeKg: -3.5, waistChangeCm: -5.0, summary: 'Weight reduced by 3.5 kg; Waist reduced by 5.0 cm' } },
+        { day: 180, title: 'Month 6 Transition', label: 'Month 6 Transition', dueDate: '2026-11-16', completed: false, status: 'due', notes: 'Ready to transition from Phase 1 (Learning) to Phase 2 (Maintenance).' },
+        { day: 365, title: '12-Month Outcome', label: '12-Month Outcome', dueDate: '2027-05-20', completed: false, status: 'upcoming', notes: 'Annual longitudinal review & HbA1c re-evaluation.' },
       ],
       lessons: buildDefaultLessons(),
     },
@@ -455,11 +383,11 @@ function createSyntheticSeedData(): PersistentDatabase {
       baselineWaistCm: 101,
       currentWaistCm: 99,
       checkpoints: [
-        { day: 30, label: '30-Day Checkpoint', status: 'completed', notes: 'Reduced sweetened tea frequency.' },
-        { day: 60, label: '60-Day Checkpoint', status: 'completed', notes: 'Shift work barrier noted for evening walks.' },
-        { day: 90, label: '90-Day Checkpoint', status: 'due', notes: 'Health worker coaching follow-up scheduled.' },
-        { day: 180, label: 'Month 6 Transition', status: 'upcoming', notes: 'Pending Phase 1 completion.' },
-        { day: 365, label: '12-Month Outcome', status: 'upcoming', notes: 'Annual review.' },
+        { day: 30, title: '30-Day Checkpoint', label: '30-Day Checkpoint', dueDate: '2026-10-01', completed: true, completedAt: '2026-10-01T10:00:00Z', status: 'completed', notes: 'Reduced sweetened tea frequency.', measurements: { weightKg: 85.0, waistCm: 100 }, baselineComparison: { weightChangeKg: -1.0, waistChangeCm: -1.0, summary: 'Weight reduced by 1.0 kg; Waist reduced by 1.0 cm' } },
+        { day: 60, title: '60-Day Checkpoint', label: '60-Day Checkpoint', dueDate: '2026-10-31', completed: true, completedAt: '2026-10-31T10:00:00Z', status: 'completed', notes: 'Shift work barrier noted for evening walks.', measurements: { weightKg: 84.0, waistCm: 99 }, baselineComparison: { weightChangeKg: -2.0, waistChangeCm: -2.0, summary: 'Weight reduced by 2.0 kg; Waist reduced by 2.0 cm' } },
+        { day: 90, title: '90-Day Checkpoint', label: '90-Day Checkpoint', dueDate: '2026-11-30', completed: false, status: 'due', notes: 'Health worker coaching follow-up scheduled.' },
+        { day: 180, title: 'Month 6 Transition', label: 'Month 6 Transition', dueDate: '2027-02-28', completed: false, status: 'upcoming', notes: 'Pending Phase 1 completion.' },
+        { day: 365, title: '12-Month Outcome', label: '12-Month Outcome', dueDate: '2027-09-01', completed: false, status: 'upcoming', notes: 'Annual review.' },
       ],
       lessons: buildDefaultLessons().map((l, idx) => ({ ...l, completed: idx === 0 })),
     },
@@ -475,11 +403,11 @@ function createSyntheticSeedData(): PersistentDatabase {
       baselineWaistCm: 90,
       currentWaistCm: 88,
       checkpoints: [
-        { day: 30, label: '30-Day Checkpoint', status: 'completed', notes: 'Consistent morning walk group attendance.' },
-        { day: 60, label: '60-Day Checkpoint', status: 'due', notes: 'Review portion sizes and waist tracking.' },
-        { day: 90, label: '90-Day Checkpoint', status: 'upcoming', notes: 'Repeat FPG/HbA1c discussion.' },
-        { day: 180, label: 'Month 6 Transition', status: 'upcoming', notes: 'Phase 2 entry.' },
-        { day: 365, label: '12-Month Outcome', status: 'upcoming', notes: 'Annual review.' },
+        { day: 30, title: '30-Day Checkpoint', label: '30-Day Checkpoint', dueDate: '2026-10-15', completed: true, completedAt: '2026-10-15T10:00:00Z', status: 'completed', notes: 'Consistent morning walk group attendance.', measurements: { weightKg: 71.5, waistCm: 89 }, baselineComparison: { weightChangeKg: -1.0, waistChangeCm: -1.0, summary: 'Weight reduced by 1.0 kg; Waist reduced by 1.0 cm' } },
+        { day: 60, title: '60-Day Checkpoint', label: '60-Day Checkpoint', dueDate: '2026-11-14', completed: false, status: 'due', notes: 'Review portion sizes and waist tracking.' },
+        { day: 90, title: '90-Day Checkpoint', label: '90-Day Checkpoint', dueDate: '2026-12-14', completed: false, status: 'upcoming', notes: 'Repeat FPG/HbA1c discussion.' },
+        { day: 180, title: 'Month 6 Transition', label: 'Month 6 Transition', dueDate: '2027-03-14', completed: false, status: 'upcoming', notes: 'Phase 2 entry.' },
+        { day: 365, title: '12-Month Outcome', label: '12-Month Outcome', dueDate: '2027-09-15', completed: false, status: 'upcoming', notes: 'Annual review.' },
       ],
       lessons: buildDefaultLessons().map((l, idx) => ({ ...l, completed: idx < 2 })),
     },
@@ -864,12 +792,78 @@ class MritidhristiStore {
     this.db = this.load();
   }
 
+  private normalizeProgrammes(programmes: PreventionProgramme[]) {
+    const defaultLessons = buildDefaultLessons();
+    const checkpointDays: (30 | 60 | 90 | 180 | 365)[] = [30, 60, 90, 180, 365];
+    const titles: Record<number, string> = {
+      30: '30-Day Checkpoint',
+      60: '60-Day Checkpoint',
+      90: '90-Day Checkpoint',
+      180: 'Month 6 Transition',
+      365: '12-Month Outcome',
+    };
+
+    for (const prog of programmes) {
+      if (!prog.lessons || prog.lessons.length < 52) {
+        const existingMap = new Map((prog.lessons || []).map((l) => [l.week, l]));
+        prog.lessons = defaultLessons.map((defLesson) => {
+          const existing = existingMap.get(defLesson.week);
+          if (existing) {
+            return {
+              ...defLesson,
+              completed: existing.completed,
+              completedAt: existing.completedAt,
+            };
+          }
+          return { ...defLesson };
+        });
+      }
+
+      const startedAtMs = new Date(prog.startedAt || '2026-06-01T09:00:00Z').getTime();
+      const existingCheckpoints = prog.checkpoints || [];
+      prog.checkpoints = checkpointDays.map((day) => {
+        const existing = existingCheckpoints.find((c) => c.day === day);
+        const calculatedDue = new Date(startedAtMs + day * 86400000).toISOString().split('T')[0];
+        const isCompleted = existing?.status === 'completed' || existing?.completed === true;
+        let status: 'completed' | 'due' | 'upcoming' | 'missed' = 'upcoming';
+        if (isCompleted) {
+          status = 'completed';
+        } else {
+          const now = Date.now();
+          const dueTime = new Date(existing?.dueDate || calculatedDue).getTime();
+          if (now > dueTime + 14 * 86400000) {
+            status = 'missed';
+          } else if (now >= dueTime) {
+            status = 'due';
+          } else {
+            status = 'upcoming';
+          }
+        }
+        return {
+          day,
+          title: existing?.title || existing?.label || titles[day],
+          label: existing?.label || existing?.title || titles[day],
+          dueDate: existing?.dueDate || calculatedDue,
+          completed: isCompleted,
+          completedAt: existing?.completedAt,
+          status,
+          notes: existing?.notes || '',
+          measurements: existing?.measurements,
+          baselineComparison: existing?.baselineComparison,
+        };
+      });
+    }
+  }
+
   private load(): PersistentDatabase {
     try {
       if (fs.existsSync(STORE_PATH)) {
         const raw = fs.readFileSync(STORE_PATH, 'utf-8');
         const parsed = JSON.parse(raw) as PersistentDatabase;
         if (parsed && Array.isArray(parsed.users) && Array.isArray(parsed.patients)) {
+          if (Array.isArray(parsed.programmes)) {
+            this.normalizeProgrammes(parsed.programmes);
+          }
           return parsed;
         }
       }
@@ -877,6 +871,9 @@ class MritidhristiStore {
       console.error('Failed to read local store, re-seeding synthetic dataset:', err);
     }
     const seeded = createSyntheticSeedData();
+    if (Array.isArray(seeded.programmes)) {
+      this.normalizeProgrammes(seeded.programmes);
+    }
     this.persist(seeded);
     return seeded;
   }

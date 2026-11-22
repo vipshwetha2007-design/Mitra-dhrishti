@@ -67,6 +67,27 @@ interface ProtectModuleProps {
     outcomeNotes: string;
     nextScreeningDate?: string;
   }) => Promise<void>;
+  onLogFollowUpAttempt?: (
+    followUpId: string,
+    payload: {
+      date: string;
+      type: 'Phone Call' | 'Home Visit';
+      notes: string;
+      outcome: 'reached' | 'unreachable' | 'declined' | 'rescheduled';
+    }
+  ) => Promise<void>;
+  onUpdateFollowUp?: (
+    followUpId: string,
+    payload: {
+      status?: FollowUpRecord['status'];
+      channel?: FollowUpRecord['channel'];
+      dueDate?: string;
+      outcomeNotes?: string;
+      nextScreeningDate?: string;
+      priority?: FollowUpRecord['priority'];
+      structuredOutcome?: FollowUpRecord['structuredOutcome'];
+    }
+  ) => Promise<void>;
   initialTab?: 'review' | 'referrals' | 'appointments' | 'continuity';
 }
 
@@ -81,6 +102,8 @@ export const ProtectModule: React.FC<ProtectModuleProps> = ({
   onCreateAppointment,
   onUpdateAppointment,
   onCreateFollowUp,
+  onLogFollowUpAttempt,
+  onUpdateFollowUp,
   initialTab = 'review',
 }) => {
   const [subTab, setSubTab] = useState<'review' | 'referrals' | 'appointments' | 'continuity'>(
@@ -224,6 +247,53 @@ export const ProtectModule: React.FC<ProtectModuleProps> = ({
       setMsg({ type: 'success', text: 'Health-worker continuity follow-up recorded.' });
     } catch (err) {
       setMsg({ type: 'error', text: err instanceof Error ? err.message : 'Unable to save follow-up.' });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const [activeAttemptFuId, setActiveAttemptFuId] = useState<string | null>(null);
+  const [attemptType, setAttemptType] = useState<'Phone Call' | 'Home Visit'>('Phone Call');
+  const [attemptOutcome, setAttemptOutcome] = useState<'reached' | 'unreachable' | 'declined' | 'rescheduled'>('reached');
+  const [attemptNotes, setAttemptNotes] = useState('');
+  const [attemptDate, setAttemptDate] = useState(new Date().toISOString().slice(0, 10));
+
+  const handleLogAttempt = async (fuId: string) => {
+    if (!onLogFollowUpAttempt) return;
+    setBusy(true);
+    try {
+      await onLogFollowUpAttempt(fuId, {
+        date: attemptDate,
+        type: attemptType,
+        notes: attemptNotes,
+        outcome: attemptOutcome,
+      });
+      setActiveAttemptFuId(null);
+      setAttemptNotes('');
+      setMsg({ type: 'success', text: 'Contact attempt recorded successfully.' });
+    } catch (err) {
+      setMsg({ type: 'error', text: err instanceof Error ? err.message : 'Failed to log attempt' });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleQuickUpdateFollowUp = async (fuId: string, updates: {
+    status?: FollowUpRecord['status'];
+    channel?: FollowUpRecord['channel'];
+    dueDate?: string;
+    outcomeNotes?: string;
+    nextScreeningDate?: string;
+    priority?: FollowUpRecord['priority'];
+    structuredOutcome?: FollowUpRecord['structuredOutcome'];
+  }) => {
+    if (!onUpdateFollowUp) return;
+    setBusy(true);
+    try {
+      await onUpdateFollowUp(fuId, updates);
+      setMsg({ type: 'success', text: 'Follow-up status updated.' });
+    } catch (err) {
+      setMsg({ type: 'error', text: err instanceof Error ? err.message : 'Failed to update follow-up' });
     } finally {
       setBusy(false);
     }
@@ -788,11 +858,35 @@ export const ProtectModule: React.FC<ProtectModuleProps> = ({
               <p className="text-xs text-slate-500">No health-worker follow-up records yet.</p>
             ) : (
               followUps.map((fu) => (
-                <div key={fu.id} className="rounded-xl border border-slate-200 p-4 text-xs space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-slate-900">
-                      {fu.healthWorkerName} · {fu.channel}
-                    </span>
+                <div key={fu.id} className="rounded-xl border border-slate-200 p-4 text-xs space-y-2">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-slate-900">
+                        {fu.healthWorkerName} · {fu.channel}
+                      </span>
+                      {fu.priority && (
+                        <span
+                          className={`rounded px-1.5 py-0.5 text-[10px] font-bold ${
+                            fu.priority === 'Urgent'
+                              ? 'bg-rose-100 text-rose-800'
+                              : fu.priority === 'Priority'
+                              ? 'bg-amber-100 text-amber-800'
+                              : 'bg-slate-100 text-slate-700'
+                          }`}
+                        >
+                          {fu.priority}
+                        </span>
+                      )}
+                      {fu.source && (
+                        <span className="rounded bg-indigo-50 text-indigo-700 border border-indigo-200 px-1.5 py-0.5 text-[10px] font-medium">
+                          {fu.source === 'prevent_barrier'
+                            ? 'PREVENT Barrier'
+                            : fu.source === 'prevent_checkpoint_missed'
+                            ? 'Missed Checkpoint'
+                            : fu.source.replace(/_/g, ' ')}
+                        </span>
+                      )}
+                    </div>
                     <span
                       className={`font-semibold ${
                         fu.status === 'Escalated' ? 'text-rose-700' : 'text-[#0F766E]'
@@ -801,11 +895,149 @@ export const ProtectModule: React.FC<ProtectModuleProps> = ({
                       {fu.status}
                     </span>
                   </div>
+
                   <div className="font-mono text-[11px] text-slate-500 tabular-nums">
                     Due: {fu.dueDate}{' '}
                     {fu.nextScreeningDate ? `· Next Retinal Screening: ${fu.nextScreeningDate}` : ''}
                   </div>
                   <p className="text-slate-700">{fu.outcomeNotes}</p>
+
+                  {fu.structuredOutcome && (
+                    <div className="inline-flex items-center gap-1.5 rounded-lg bg-teal-50 border border-teal-200 px-2 py-1 text-[11px] text-teal-800 font-medium">
+                      Outcome: <span className="capitalize">{fu.structuredOutcome.replace(/_/g, ' ')}</span>
+                      {fu.referralId && <span className="text-[10px] text-indigo-700">(Referral Linked: {fu.referralId})</span>}
+                    </div>
+                  )}
+
+                  {fu.contactAttempts && fu.contactAttempts.length > 0 && (
+                    <div className="rounded-lg bg-slate-50 border border-slate-100 p-2.5 space-y-1.5">
+                      <div className="text-[11px] font-bold text-slate-700">
+                        VHN Contact Attempts ({fu.contactAttempts.length}):
+                      </div>
+                      <div className="space-y-1 divide-y divide-slate-100">
+                        {fu.contactAttempts.map((att) => (
+                          <div key={att.id} className="pt-1 first:pt-0 text-[11px] flex flex-wrap items-center justify-between text-slate-600">
+                            <div>
+                              <span className="font-medium text-slate-800">{att.date}</span> · {att.type} by {att.performedBy}: &quot;{att.notes}&quot;
+                            </div>
+                            <span className="capitalize font-mono text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-200 text-slate-800">
+                              {att.outcome}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {isStaff && (
+                    <div className="pt-2 border-t border-slate-100 space-y-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setActiveAttemptFuId(activeAttemptFuId === fu.id ? null : fu.id)}
+                          className="rounded border border-slate-300 bg-white px-2 py-1 text-[11px] font-semibold text-slate-700 hover:bg-slate-50"
+                        >
+                          {activeAttemptFuId === fu.id ? 'Cancel Attempt Form' : '+ Log Contact Attempt'}
+                        </button>
+                        <select
+                          value={fu.status}
+                          onChange={(e) =>
+                            void handleQuickUpdateFollowUp(fu.id, {
+                              status: e.target.value as FollowUpRecord['status'],
+                            })
+                          }
+                          className="rounded border border-slate-200 bg-white px-2 py-1 text-[11px] font-medium"
+                        >
+                          <option value="Scheduled">Scheduled</option>
+                          <option value="Completed">Completed</option>
+                          <option value="Escalated">Escalated</option>
+                        </select>
+                        <select
+                          value={fu.structuredOutcome || 'ongoing'}
+                          onChange={(e) =>
+                            void handleQuickUpdateFollowUp(fu.id, {
+                              structuredOutcome: e.target.value as FollowUpRecord['structuredOutcome'],
+                            })
+                          }
+                          className="rounded border border-slate-200 bg-white px-2 py-1 text-[11px] font-medium"
+                        >
+                          <option value="ongoing">Outcome: Ongoing</option>
+                          <option value="barrier_resolved">Outcome: Barrier Resolved</option>
+                          <option value="referred_to_doctor">Outcome: Refer to Doctor</option>
+                          <option value="unable_to_contact">Outcome: Unable to Contact</option>
+                          <option value="patient_declined">Outcome: Patient Declined</option>
+                        </select>
+                      </div>
+
+                      {activeAttemptFuId === fu.id && (
+                        <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+                          <div className="font-bold text-[11px] text-slate-800">Log VHN Contact Attempt</div>
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                            <div>
+                              <label className="block text-[10px] font-semibold text-slate-600 mb-0.5">Date</label>
+                              <input
+                                type="date"
+                                value={attemptDate}
+                                onChange={(e) => setAttemptDate(e.target.value)}
+                                className="w-full rounded border border-slate-300 px-2 py-1 text-[11px]"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[10px] font-semibold text-slate-600 mb-0.5">Channel</label>
+                              <select
+                                value={attemptType}
+                                onChange={(e) => setAttemptType(e.target.value as 'Phone Call' | 'Home Visit')}
+                                className="w-full rounded border border-slate-300 px-2 py-1 text-[11px] bg-white"
+                              >
+                                <option value="Phone Call">Phone Call</option>
+                                <option value="Home Visit">Home Visit</option>
+                              </select>
+                            </div>
+                            <div>
+                              <label className="block text-[10px] font-semibold text-slate-600 mb-0.5">Outcome</label>
+                              <select
+                                value={attemptOutcome}
+                                onChange={(e) => setAttemptOutcome(e.target.value as typeof attemptOutcome)}
+                                className="w-full rounded border border-slate-300 px-2 py-1 text-[11px] bg-white"
+                              >
+                                <option value="reached">Reached / Engaged</option>
+                                <option value="unreachable">Unreachable / No Answer</option>
+                                <option value="rescheduled">Rescheduled</option>
+                                <option value="declined">Patient Declined</option>
+                              </select>
+                            </div>
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-semibold text-slate-600 mb-0.5">Contact Notes</label>
+                            <input
+                              type="text"
+                              value={attemptNotes}
+                              onChange={(e) => setAttemptNotes(e.target.value)}
+                              placeholder="e.g., Reviewed walking barrier, patient agreed to morning walks with family"
+                              className="w-full rounded border border-slate-300 px-2 py-1 text-[11px]"
+                            />
+                          </div>
+                          <div className="flex justify-end gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setActiveAttemptFuId(null)}
+                              className="px-2.5 py-1 text-[11px] font-medium text-slate-600 hover:bg-slate-100 rounded"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              type="button"
+                              disabled={busy || !attemptNotes.trim()}
+                              onClick={() => void handleLogAttempt(fu.id)}
+                              className="px-3 py-1 text-[11px] font-semibold text-white bg-teal-600 hover:bg-teal-700 rounded disabled:opacity-50"
+                            >
+                              {busy ? 'Saving...' : 'Save Attempt'}
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               ))
             )}

@@ -9,7 +9,7 @@ import type {
 export interface PendingOfflineAction {
   id?: number;
   idempotencyKey: string;
-  type: 'LIFESTYLE_ASSESSMENT' | 'HABIT_LOG' | 'LESSON_COMPLETE';
+  type: 'LIFESTYLE_ASSESSMENT' | 'HABIT_LOG' | 'LESSON_COMPLETE' | 'CHECKPOINT_COMPLETE';
   patientId: string;
   summary: string;
   payload: Record<string, unknown>;

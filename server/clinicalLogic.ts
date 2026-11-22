@@ -36,7 +36,46 @@ export function evaluateExperimentalLifestyleRisk(inputs: LifestyleInput) {
       ? 8
       : 15;
   const weightPoints = bmi < 23 ? 2 : bmi < 25 ? 6 : bmi < 27.5 ? 10 : 14;
-  const waistPoints = inputs.waistCm < 80 ? 2 : inputs.waistCm < 90 ? 7 : 12;
+
+  // ICMR / IDF Asian Indian central obesity thresholds
+  let waistPoints = 2;
+  let waistGuidance = 'Healthy';
+  if (inputs.sex === 'Female') {
+    if (inputs.waistCm < 80) {
+      waistPoints = 2;
+      waistGuidance = 'Healthy (< 80 cm for South Asian women)';
+    } else if (inputs.waistCm < 85) {
+      waistPoints = 7;
+      waistGuidance = 'Moderate central risk (80–84 cm for South Asian women)';
+    } else {
+      waistPoints = 12;
+      waistGuidance = 'Elevated central obesity (≥ 85 cm for South Asian women)';
+    }
+  } else if (inputs.sex === 'Male') {
+    if (inputs.waistCm < 90) {
+      waistPoints = 2;
+      waistGuidance = 'Healthy (< 90 cm for South Asian men)';
+    } else if (inputs.waistCm < 95) {
+      waistPoints = 7;
+      waistGuidance = 'Moderate central risk (90–94 cm for South Asian men)';
+    } else {
+      waistPoints = 12;
+      waistGuidance = 'Elevated central obesity (≥ 95 cm for South Asian men)';
+    }
+  } else {
+    // Unspecified or Other general fallback
+    if (inputs.waistCm < 80) {
+      waistPoints = 2;
+      waistGuidance = 'Healthy (< 80 cm general reference)';
+    } else if (inputs.waistCm < 90) {
+      waistPoints = 7;
+      waistGuidance = 'Moderate central risk (80–89 cm general reference)';
+    } else {
+      waistPoints = 12;
+      waistGuidance = 'Elevated central obesity (≥ 90 cm general reference)';
+    }
+  }
+
   const familyPoints =
     inputs.familyHistory === 'none'
       ? 0
@@ -88,7 +127,7 @@ export function evaluateExperimentalLifestyleRisk(inputs: LifestyleInput) {
       points: waistPoints,
       maxPoints: 12,
       modifiable: true,
-      summary: `${inputs.waistCm} cm central waist measurement.`,
+      summary: `${inputs.waistCm} cm central waist measurement (${waistGuidance}).`,
     },
     {
       factor: 'Sleep Duration & Quality',
@@ -247,7 +286,7 @@ export function evaluateAdaptiveIntervention(params: {
   // Step 5: Clinical symptom / severe warning escalation (strictly deterministic, no bandit)
   if (
     params.barrierReported &&
-    /dizzy|chest|blurred vision|vision|numb|faint|severe/i.test(params.barrierReported)
+    /dizzy|chest|blurred vision|vision|numb|faint|severe pain|severe breath|severe chest/i.test(params.barrierReported)
   ) {
     return {
       id: `int-${Date.now()}`,
@@ -262,13 +301,16 @@ export function evaluateAdaptiveIntervention(params: {
     };
   }
 
-  // Step 4: Repeated missed check-ins -> escalate to health coach
-  if (params.missedCheckInsCount >= 2) {
+  // Step 4: Repeated missed check-ins or persistent coaching barriers -> escalate to health coach
+  if (
+    params.missedCheckInsCount >= 2 ||
+    (params.barrierReported && /coach|struggling|knee|stiffness|stuck|cannot walk|unable to/i.test(params.barrierReported))
+  ) {
     return {
       id: `int-${Date.now()}`,
       patientId: params.patientId,
       triggeredAt: now,
-      triggerRule: 'Deterministic Rule L4: ≥ 2 consecutive missed weekly check-ins',
+      triggerRule: 'Deterministic Rule L4: Escalation to assigned health worker / VHN coach for barriers',
       ladderStep: 4,
       actionType: 'coach_escalation',
       recommendedMessage:

@@ -58,6 +58,7 @@ export interface PatientRecord {
 
 export interface LifestyleInput {
   age: number;
+  sex?: 'Female' | 'Male' | 'Other';
   dietQuality: 'balanced_traditional' | 'moderate_refined' | 'high_refined_sugars';
   sleepHours: number;
   dailySteps: number;
@@ -115,6 +116,9 @@ export interface WeeklyLesson {
   category: 'Indian Nutrition' | 'Physical Activity' | 'Sleep & Stress' | 'Monitoring';
   durationMinutes: number;
   summary: string;
+  summaryTa?: string;
+  practicalActivity?: string;
+  measurableHabitTarget?: string;
   completed: boolean;
   completedAt?: string;
 }
@@ -146,6 +150,28 @@ export interface InterventionRecord {
   status: 'active' | 'resolved' | 'escalated';
 }
 
+export interface CheckpointRecord {
+  day: 30 | 60 | 90 | 180 | 365;
+  title: string;
+  label?: string; // backward compatibility
+  dueDate: string;
+  completed: boolean;
+  completedAt?: string;
+  status: 'upcoming' | 'due' | 'completed' | 'missed';
+  notes?: string;
+  measurements?: {
+    weightKg?: number;
+    waistCm?: number;
+    notes?: string;
+  };
+  baselineComparison?: {
+    weightChangeKg?: number;
+    waistChangeCm?: number;
+    scoreChange?: number;
+    summary?: string;
+  };
+}
+
 export interface PreventionProgramme {
   id: string;
   patientId: string;
@@ -157,12 +183,7 @@ export interface PreventionProgramme {
   currentWeightKg: number;
   baselineWaistCm: number;
   currentWaistCm: number;
-  checkpoints: {
-    day: 30 | 60 | 90 | 180 | 365;
-    label: string;
-    status: 'completed' | 'upcoming' | 'due';
-    notes: string;
-  }[];
+  checkpoints: CheckpointRecord[];
   lessons: WeeklyLesson[];
 }
 
@@ -264,6 +285,15 @@ export interface AppointmentRecord {
   escalated?: boolean;
 }
 
+export interface ContactAttempt {
+  id: string;
+  date: string;
+  type: 'Phone Call' | 'Home Visit';
+  notes: string;
+  outcome: 'reached' | 'unreachable' | 'declined' | 'rescheduled';
+  performedBy: string;
+}
+
 export interface FollowUpRecord {
   id: string;
   patientId: string;
@@ -273,6 +303,12 @@ export interface FollowUpRecord {
   status: 'Scheduled' | 'Completed' | 'Escalated';
   outcomeNotes: string;
   nextScreeningDate?: string;
+  source?: 'prevent_barrier' | 'prevent_checkpoint_missed' | 'missed_visit' | 'clinical_review' | 'manual';
+  priority?: 'Routine' | 'Priority' | 'Urgent';
+  createdAt?: string;
+  contactAttempts?: ContactAttempt[];
+  structuredOutcome?: 'barrier_resolved' | 'referred_to_doctor' | 'unable_to_contact' | 'patient_declined' | 'ongoing';
+  referralId?: string;
 }
 
 export interface NotificationItem {

@@ -336,6 +336,81 @@ export default function App() {
     if (token) await fetchBootstrap(token);
   };
 
+  const handleCompleteCheckpoint = async (payload: {
+    patientId: string;
+    day: number;
+    weightKg?: number;
+    waistCm?: number;
+    notes?: string;
+  }) => {
+    if (!isOnline) {
+      const idempotencyKey = createIdempotencyKey('cp');
+      await enqueueOfflineAction({
+        idempotencyKey,
+        type: 'CHECKPOINT_COMPLETE',
+        patientId: payload.patientId,
+        summary: `Completed ${payload.day}-Day Checkpoint offline`,
+        payload,
+        createdAt: new Date().toISOString(),
+      });
+      setData((prev) =>
+        prev
+          ? {
+              ...prev,
+              programmes: prev.programmes.map((pr) => {
+                if (pr.patientId !== payload.patientId) return pr;
+                return {
+                  ...pr,
+                  currentWeightKg: payload.weightKg ?? pr.currentWeightKg,
+                  currentWaistCm: payload.waistCm ?? pr.currentWaistCm,
+                  checkpoints: pr.checkpoints.map((cp) => {
+                    if (cp.day !== payload.day) return cp;
+                    const weightChangeKg =
+                      payload.weightKg !== undefined
+                        ? Math.round((payload.weightKg - pr.baselineWeightKg) * 10) / 10
+                        : undefined;
+                    const waistChangeCm =
+                      payload.waistCm !== undefined
+                        ? Math.round((payload.waistCm - pr.baselineWaistCm) * 10) / 10
+                        : undefined;
+                    const parts: string[] = [];
+                    if (weightChangeKg !== undefined) parts.push(weightChangeKg <= 0 ? `Weight reduced by ${Math.abs(weightChangeKg)} kg` : `Weight increased by ${weightChangeKg} kg`);
+                    if (waistChangeCm !== undefined) parts.push(waistChangeCm <= 0 ? `Waist reduced by ${Math.abs(waistChangeCm)} cm` : `Waist increased by ${waistChangeCm} cm`);
+                    return {
+                      ...cp,
+                      completed: true,
+                      completedAt: new Date().toISOString(),
+                      status: 'completed',
+                      measurements: {
+                        weightKg: payload.weightKg,
+                        waistCm: payload.waistCm,
+                        notes: payload.notes,
+                      },
+                      baselineComparison: {
+                        weightChangeKg,
+                        waistChangeCm,
+                        summary: parts.join('; ') || 'Checkpoint completed offline.',
+                      },
+                    };
+                  }),
+                };
+              }),
+            }
+          : prev
+      );
+      await refreshPendingCount();
+      showToast('Checkpoint completion queued offline.');
+      return;
+    }
+
+    await apiFetch(`/api/prevent/checkpoints/${payload.day}/complete`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+    if (token) await fetchBootstrap(token);
+    showToast(`${payload.day}-Day Checkpoint recorded successfully.`);
+  };
+
   const handleToggleLesson = async (patientId: string, lessonId: string) => {
     if (!isOnline) {
       const idempotencyKey = createIdempotencyKey('les');
@@ -513,6 +588,43 @@ export default function App() {
     if (token) await fetchBootstrap(token);
   };
 
+  const handleLogFollowUpAttempt = async (
+    followUpId: string,
+    payload: {
+      date: string;
+      type: 'Phone Call' | 'Home Visit';
+      notes: string;
+      outcome: 'reached' | 'unreachable' | 'declined' | 'rescheduled';
+    }
+  ) => {
+    await apiFetch(`/api/protect/followups/${followUpId}/attempts`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+    if (token) await fetchBootstrap(token);
+    showToast('Contact attempt logged.');
+  };
+
+  const handleUpdateFollowUp = async (
+    followUpId: string,
+    payload: {
+      status?: FollowUpRecord['status'];
+      channel?: FollowUpRecord['channel'];
+      dueDate?: string;
+      outcomeNotes?: string;
+      nextScreeningDate?: string;
+      priority?: FollowUpRecord['priority'];
+      structuredOutcome?: FollowUpRecord['structuredOutcome'];
+    }
+  ) => {
+    await apiFetch(`/api/protect/followups/${followUpId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    });
+    if (token) await fetchBootstrap(token);
+    showToast('Follow-up record updated.');
+  };
+
   const handleMarkNotificationRead = async (id: string) => {
     setData((prev) =>
       prev
@@ -669,6 +781,7 @@ export default function App() {
               onSubmitAssessment={handleSubmitAssessment}
               onSubmitHabit={handleSubmitHabit}
               onToggleLesson={handleToggleLesson}
+              onCompleteCheckpoint={handleCompleteCheckpoint}
               onRegisterPatient={handleRegisterPatient}
               onRecordLab={handleRecordLab}
             />
@@ -706,6 +819,8 @@ export default function App() {
               onCreateAppointment={handleCreateAppointment}
               onUpdateAppointment={handleUpdateAppointment}
               onCreateFollowUp={handleCreateFollowUp}
+              onLogFollowUpAttempt={handleLogFollowUpAttempt}
+              onUpdateFollowUp={handleUpdateFollowUp}
             />
           )}
 

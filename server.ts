@@ -9,10 +9,12 @@ import {
   evaluateExperimentalLifestyleRisk,
   interpretLaboratoryResult,
 } from './server/clinicalLogic.ts';
-import { hashPassword, store, verifyPassword, type StoredUser } from './server/store.ts';
+import { hashPassword, store, verifyPassword, buildDefaultLessons, type StoredUser } from './server/store.ts';
 import type {
   AppointmentRecord,
   BootstrapPayload,
+  CheckpointRecord,
+  ContactAttempt,
   DoctorReview,
   FollowUpRecord,
   HabitLog,
@@ -81,6 +83,7 @@ const patientRegistrationSchema = z.object({
 const lifestyleInputSchema = z.object({
   patientId: z.string().min(1),
   age: z.number().int().min(12).max(110),
+  sex: z.enum(['Female', 'Male', 'Other']).optional(),
   dietQuality: z.enum(['balanced_traditional', 'moderate_refined', 'high_refined_sugars']),
   sleepHours: z.number().min(2).max(16),
   dailySteps: z.number().int().min(0).max(50000),
@@ -225,13 +228,41 @@ const followUpCreateSchema = z.object({
   status: z.enum(['Scheduled', 'Completed', 'Escalated']),
   outcomeNotes: z.string().max(500),
   nextScreeningDate: z.string().optional(),
+  source: z.enum(['prevent_barrier', 'prevent_checkpoint_missed', 'missed_visit', 'clinical_review', 'manual']).optional(),
+  priority: z.enum(['Routine', 'Priority', 'Urgent']).optional(),
+  createdAt: z.string().optional(),
+});
+
+const checkpointCompleteSchema = z.object({
+  patientId: z.string().min(1),
+  weightKg: z.number().min(25).max(250).optional(),
+  waistCm: z.number().min(45).max(180).optional(),
+  notes: z.string().max(500).optional(),
+});
+
+const contactAttemptSchema = z.object({
+  date: z.string().min(4),
+  type: z.enum(['Phone Call', 'Home Visit']),
+  notes: z.string().max(500),
+  outcome: z.enum(['reached', 'unreachable', 'declined', 'rescheduled']),
+  performedBy: z.string().min(2).max(100).optional(),
+});
+
+const followUpPatchSchema = z.object({
+  status: z.enum(['Scheduled', 'Completed', 'Escalated']).optional(),
+  channel: z.enum(['In-Person PHC', 'Phone Call', 'Home Visit']).optional(),
+  dueDate: z.string().optional(),
+  outcomeNotes: z.string().max(500).optional(),
+  nextScreeningDate: z.string().optional(),
+  priority: z.enum(['Routine', 'Priority', 'Urgent']).optional(),
+  structuredOutcome: z.enum(['barrier_resolved', 'referred_to_doctor', 'unable_to_contact', 'patient_declined', 'ongoing']).optional(),
 });
 
 const syncBatchSchema = z.object({
   actions: z.array(
     z.object({
       idempotencyKey: z.string().min(4).max(140),
-      type: z.enum(['LIFESTYLE_ASSESSMENT', 'HABIT_LOG', 'LESSON_COMPLETE']),
+      type: z.enum(['LIFESTYLE_ASSESSMENT', 'HABIT_LOG', 'LESSON_COMPLETE', 'CHECKPOINT_COMPLETE']),
       createdAt: z.string(),
       payload: z.record(z.string(), z.unknown()),
     })
@@ -299,8 +330,12 @@ function canAccessPatient(user: StoredUser, patientId: string): boolean {
 }
 
 function createAssessmentRecord(user: StoredUser, parsed: z.infer<typeof lifestyleInputSchema>): LifestyleAssessment {
+  const patient = store.data.patients.find((p) => p.id === parsed.patientId);
+  const resolvedSex = parsed.sex || patient?.sex;
+
   const result = evaluateExperimentalLifestyleRisk({
     age: parsed.age,
+    sex: resolvedSex,
     dietQuality: parsed.dietQuality,
     sleepHours: parsed.sleepHours,
     dailySteps: parsed.dailySteps,
@@ -318,6 +353,7 @@ function createAssessmentRecord(user: StoredUser, parsed: z.infer<typeof lifesty
     assessedAt: new Date().toISOString(),
     inputs: {
       age: parsed.age,
+      sex: resolvedSex,
       dietQuality: parsed.dietQuality,
       sleepHours: parsed.sleepHours,
       dailySteps: parsed.dailySteps,
@@ -402,7 +438,40 @@ function createHabitRecord(user: StoredUser, parsed: z.infer<typeof habitLogSche
 
   if (intervention) {
     store.data.interventions.unshift(intervention);
-    if (intervention.actionType === 'clinician_escalation') {
+    const patient = store.data.patients.find((p) => p.id === parsed.patientId);
+    const vhn = patient?.assignedHealthWorker || 'Anitha K (VHN)';
+
+    if (intervention.actionType === 'coach_escalation') {
+      const fu: FollowUpRecord = {
+        id: `fu-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+        patientId: parsed.patientId,
+        healthWorkerName: vhn,
+        dueDate: new Date(Date.now() + 3 * 86400000).toISOString().split('T')[0],
+        channel: 'Phone Call',
+        status: 'Scheduled',
+        priority: 'Priority',
+        source: 'prevent_barrier',
+        outcomeNotes: `Prevention barrier reported: "${parsed.barrierReported || 'Adherence struggle'}". VHN coaching follow-up assigned.`,
+        createdAt: new Date().toISOString(),
+        contactAttempts: [],
+      };
+      store.data.followUps.unshift(fu);
+    } else if (intervention.actionType === 'clinician_escalation') {
+      const fu: FollowUpRecord = {
+        id: `fu-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+        patientId: parsed.patientId,
+        healthWorkerName: vhn,
+        dueDate: new Date(Date.now() + 1 * 86400000).toISOString().split('T')[0],
+        channel: 'In-Person PHC',
+        status: 'Escalated',
+        priority: 'Urgent',
+        source: 'prevent_barrier',
+        outcomeNotes: `Urgent clinician review recommended from prevention habit check-in: "${parsed.barrierReported}".`,
+        createdAt: new Date().toISOString(),
+        contactAttempts: [],
+      };
+      store.data.followUps.unshift(fu);
+
       store.data.notifications.unshift({
         id: `not-${Date.now()}`,
         roleTargets: ['doctor'],
@@ -429,6 +498,46 @@ function createHabitRecord(user: StoredUser, parsed: z.infer<typeof habitLogSche
   });
   store.persist();
   return { log, intervention };
+}
+
+function checkAndEscalateMissedCheckpoints(): void {
+  const now = Date.now();
+  for (const prog of store.data.programmes) {
+    const patient = store.data.patients.find((p) => p.id === prog.patientId);
+    const vhn = patient?.assignedHealthWorker || 'Anitha K (VHN)';
+    for (const cp of prog.checkpoints) {
+      if (!cp.completed && cp.dueDate) {
+        const dueTime = new Date(cp.dueDate).getTime();
+        if (now > dueTime + 14 * 86400000) {
+          cp.status = 'missed';
+          const existingFu = store.data.followUps.find(
+            (f) =>
+              f.patientId === prog.patientId &&
+              f.source === 'prevent_checkpoint_missed' &&
+              f.outcomeNotes.includes(`${cp.day}-Day`)
+          );
+          if (!existingFu) {
+            const fu: FollowUpRecord = {
+              id: `fu-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+              patientId: prog.patientId,
+              healthWorkerName: vhn,
+              dueDate: new Date().toISOString().split('T')[0],
+              channel: 'Home Visit',
+              status: 'Scheduled',
+              priority: 'Priority',
+              source: 'prevent_checkpoint_missed',
+              outcomeNotes: `Patient missed ${cp.day}-Day Checkpoint (${cp.title || cp.label}). Home visit / phone outreach required to re-engage.`,
+              createdAt: new Date().toISOString(),
+              contactAttempts: [],
+            };
+            store.data.followUps.unshift(fu);
+          }
+        } else if (now >= dueTime && cp.status !== 'completed') {
+          cp.status = 'due';
+        }
+      }
+    }
+  }
 }
 
 // In-memory Sliding Window Rate Limiter for Login Endpoint
@@ -596,13 +705,13 @@ export async function createMritidhristiApp(options: { skipFrontend?: boolean } 
       baselineWaistCm: 84,
       currentWaistCm: 84,
       checkpoints: [
-        { day: 30, label: '30-Day Checkpoint', status: 'upcoming', notes: 'Complete initial lifestyle assessment and weekly lessons.' },
-        { day: 60, label: '60-Day Checkpoint', status: 'upcoming', notes: 'Habit adherence review.' },
-        { day: 90, label: '90-Day Checkpoint', status: 'upcoming', notes: 'Waist and clinical lab guidance review.' },
-        { day: 180, label: 'Month 6 Transition', status: 'upcoming', notes: 'Transition to Phase 2 Maintenance.' },
-        { day: 365, label: '12-Month Outcome', status: 'upcoming', notes: 'Annual review.' },
+        { day: 30, title: '30-Day Checkpoint', label: '30-Day Checkpoint', dueDate: new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0], completed: false, status: 'upcoming', notes: 'Complete initial lifestyle assessment and weekly lessons.' },
+        { day: 60, title: '60-Day Checkpoint', label: '60-Day Checkpoint', dueDate: new Date(Date.now() + 60 * 86400000).toISOString().split('T')[0], completed: false, status: 'upcoming', notes: 'Habit adherence review.' },
+        { day: 90, title: '90-Day Checkpoint', label: '90-Day Checkpoint', dueDate: new Date(Date.now() + 90 * 86400000).toISOString().split('T')[0], completed: false, status: 'upcoming', notes: 'Waist and clinical lab guidance review.' },
+        { day: 180, title: 'Month 6 Transition', label: 'Month 6 Transition', dueDate: new Date(Date.now() + 180 * 86400000).toISOString().split('T')[0], completed: false, status: 'upcoming', notes: 'Transition to Phase 2 Maintenance.' },
+        { day: 365, title: '12-Month Outcome', label: '12-Month Outcome', dueDate: new Date(Date.now() + 365 * 86400000).toISOString().split('T')[0], completed: false, status: 'upcoming', notes: 'Annual review.' },
       ],
-      lessons: store.data.programmes[0]?.lessons.map((l) => ({ ...l, completed: false })) ?? [],
+      lessons: buildDefaultLessons().map((l) => ({ ...l, completed: false, completedAt: undefined })),
     });
 
     const newUser: StoredUser = {
@@ -770,6 +879,7 @@ export async function createMritidhristiApp(options: { skipFrontend?: boolean } 
 
   // --- ROLE-SCOPED BOOTSTRAP DATA ---
   app.get('/api/bootstrap', requireAuth, (req: AuthRequest, res) => {
+    checkAndEscalateMissedCheckpoints();
     const user = req.authUser!;
     const db = store.data;
     const isPatient = user.role === 'patient';
@@ -861,13 +971,13 @@ export async function createMritidhristiApp(options: { skipFrontend?: boolean } 
       baselineWaistCm: 84,
       currentWaistCm: 84,
       checkpoints: [
-        { day: 30, label: '30-Day Checkpoint', status: 'upcoming', notes: 'Complete baseline assessment and Week 1–4 nutrition modules.' },
-        { day: 60, label: '60-Day Checkpoint', status: 'upcoming', notes: 'Review step consistency and waist trend.' },
-        { day: 90, label: '90-Day Checkpoint', status: 'upcoming', notes: 'Clinical HbA1c/FPG testing discussion.' },
-        { day: 180, label: 'Month 6 Transition', status: 'upcoming', notes: 'Enter Phase 2 Maintenance.' },
-        { day: 365, label: '12-Month Outcome', status: 'upcoming', notes: 'Annual continuity evaluation.' },
+        { day: 30, title: '30-Day Checkpoint', label: '30-Day Checkpoint', dueDate: new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0], completed: false, status: 'upcoming', notes: 'Complete baseline assessment and Week 1–4 nutrition modules.' },
+        { day: 60, title: '60-Day Checkpoint', label: '60-Day Checkpoint', dueDate: new Date(Date.now() + 60 * 86400000).toISOString().split('T')[0], completed: false, status: 'upcoming', notes: 'Review step consistency and waist trend.' },
+        { day: 90, title: '90-Day Checkpoint', label: '90-Day Checkpoint', dueDate: new Date(Date.now() + 90 * 86400000).toISOString().split('T')[0], completed: false, status: 'upcoming', notes: 'Clinical HbA1c/FPG testing discussion.' },
+        { day: 180, title: 'Month 6 Transition', label: 'Month 6 Transition', dueDate: new Date(Date.now() + 180 * 86400000).toISOString().split('T')[0], completed: false, status: 'upcoming', notes: 'Enter Phase 2 Maintenance.' },
+        { day: 365, title: '12-Month Outcome', label: '12-Month Outcome', dueDate: new Date(Date.now() + 365 * 86400000).toISOString().split('T')[0], completed: false, status: 'upcoming', notes: 'Annual continuity evaluation.' },
       ],
-      lessons: store.data.programmes[0]?.lessons.map((l) => ({ ...l, completed: false })) ?? [],
+      lessons: buildDefaultLessons().map((l) => ({ ...l, completed: false, completedAt: undefined })),
     });
 
     store.appendAudit({
@@ -937,6 +1047,138 @@ export async function createMritidhristiApp(options: { skipFrontend?: boolean } 
     lesson.completedAt = lesson.completed ? new Date().toISOString() : undefined;
     store.persist();
     res.json({ lesson, programme: prog });
+  });
+
+  // --- PREVENT CHECKPOINT COMPLETION ---
+  app.post('/api/prevent/checkpoints/:day/complete', requireAuth, (req: AuthRequest, res) => {
+    const user = req.authUser!;
+    const day = Number(req.params.day);
+    if (![30, 60, 90, 180, 365].includes(day)) {
+      res.status(400).json({ error: 'Invalid checkpoint day. Must be 30, 60, 90, 180, or 365.' });
+      return;
+    }
+
+    const parsed = checkpointCompleteSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: 'Invalid checkpoint completion data', details: parsed.error.flatten() });
+      return;
+    }
+
+    const targetPatientId = parsed.data.patientId || user.patientId;
+    if (!targetPatientId || !canAccessPatient(user, targetPatientId)) {
+      res.status(403).json({ error: 'Access denied for this patient record.' });
+      return;
+    }
+
+    const prog = store.data.programmes.find((p) => p.patientId === targetPatientId);
+    if (!prog) {
+      res.status(404).json({ error: 'Prevention programme not found.' });
+      return;
+    }
+
+    const cp = prog.checkpoints.find((c) => c.day === day);
+    if (!cp) {
+      res.status(404).json({ error: 'Checkpoint not found.' });
+      return;
+    }
+
+    const { weightKg, waistCm, notes } = parsed.data;
+    cp.completed = true;
+    cp.completedAt = new Date().toISOString();
+    cp.status = 'completed';
+    cp.measurements = {
+      weightKg,
+      waistCm,
+      notes: notes || cp.notes,
+    };
+
+    const weightChangeKg =
+      typeof weightKg === 'number'
+        ? Math.round((weightKg - prog.baselineWeightKg) * 10) / 10
+        : undefined;
+    const waistChangeCm =
+      typeof waistCm === 'number'
+        ? Math.round((waistCm - prog.baselineWaistCm) * 10) / 10
+        : undefined;
+
+    const assessments = store.data.assessments.filter((a) => a.patientId === targetPatientId);
+    const baselineScore = assessments[assessments.length - 1]?.experimentalScore;
+    const latestScore = assessments[0]?.experimentalScore;
+    const scoreChange =
+      baselineScore !== undefined && latestScore !== undefined
+        ? latestScore - baselineScore
+        : undefined;
+
+    const summaryParts: string[] = [];
+    if (weightChangeKg !== undefined) {
+      summaryParts.push(
+        weightChangeKg <= 0
+          ? `Weight reduced by ${Math.abs(weightChangeKg)} kg`
+          : `Weight increased by ${weightChangeKg} kg`
+      );
+    }
+    if (waistChangeCm !== undefined) {
+      summaryParts.push(
+        waistChangeCm <= 0
+          ? `Waist reduced by ${Math.abs(waistChangeCm)} cm`
+          : `Waist increased by ${waistChangeCm} cm`
+      );
+    }
+    if (scoreChange !== undefined) {
+      summaryParts.push(
+        scoreChange <= 0
+          ? `Risk score improved by ${Math.abs(scoreChange)} pts`
+          : `Risk score changed by +${scoreChange} pts`
+      );
+    }
+
+    cp.baselineComparison = {
+      weightChangeKg,
+      waistChangeCm,
+      scoreChange,
+      summary: summaryParts.join('; ') || 'Checkpoint completed successfully.',
+    };
+
+    if (typeof weightKg === 'number') prog.currentWeightKg = weightKg;
+    if (typeof waistCm === 'number') prog.currentWaistCm = waistCm;
+
+    if (typeof weightKg === 'number' || typeof waistCm === 'number') {
+      const today = new Date().toISOString().split('T')[0];
+      const todayHabit = store.data.habitLogs.find(
+        (h) => h.patientId === targetPatientId && h.date === today
+      );
+      if (todayHabit) {
+        if (typeof weightKg === 'number') todayHabit.weightKg = weightKg;
+        if (typeof waistCm === 'number') todayHabit.waistCm = waistCm;
+      } else {
+        store.data.habitLogs.unshift({
+          id: `hab-cp-${Date.now()}`,
+          patientId: targetPatientId,
+          date: today,
+          healthyIndianDiet: true,
+          stepsAchieved: 7500,
+          sleepHours: 7.5,
+          weightKg,
+          waistCm,
+          recordedOffline: false,
+          syncStatus: 'synced',
+        });
+      }
+    }
+
+    store.appendAudit({
+      userId: user.id,
+      userName: user.name,
+      role: user.role,
+      action: 'CHECKPOINT_COMPLETED',
+      resourceType: 'PreventionProgramme',
+      resourceId: `${prog.id}-${cp.day}`,
+      outcome: 'SUCCESS',
+      details: `Completed ${cp.day}-Day Checkpoint (${cp.title || cp.label}): ${cp.baselineComparison.summary}`,
+    });
+
+    store.persist();
+    res.json({ programme: prog, checkpoint: cp });
   });
 
   // --- CLINICAL LAB ENTRY (DOCTOR/ADMIN ONLY) ---
@@ -1300,6 +1542,8 @@ export async function createMritidhristiApp(options: { skipFrontend?: boolean } 
     }
     const fu: FollowUpRecord = {
       id: `fu-${Date.now()}`,
+      createdAt: new Date().toISOString(),
+      contactAttempts: [],
       ...parsed.data,
     };
     store.data.followUps.unshift(fu);
@@ -1315,6 +1559,96 @@ export async function createMritidhristiApp(options: { skipFrontend?: boolean } 
     });
     store.persist();
     res.status(201).json(fu);
+  });
+
+  app.post('/api/protect/followups/:id/attempts', requireAuth, requireRole(['doctor', 'admin']), (req: AuthRequest, res) => {
+    const user = req.authUser!;
+    const parsed = contactAttemptSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: 'Invalid contact attempt details', details: parsed.error.flatten() });
+      return;
+    }
+    const fu = store.data.followUps.find((f) => f.id === req.params.id);
+    if (!fu) {
+      res.status(404).json({ error: 'Follow-up record not found.' });
+      return;
+    }
+    const attempt: ContactAttempt = {
+      id: `att-${Date.now()}`,
+      date: parsed.data.date,
+      type: parsed.data.type,
+      notes: parsed.data.notes,
+      outcome: parsed.data.outcome,
+      performedBy: parsed.data.performedBy || user.name,
+    };
+    if (!fu.contactAttempts) fu.contactAttempts = [];
+    fu.contactAttempts.unshift(attempt);
+
+    store.appendAudit({
+      userId: user.id,
+      userName: user.name,
+      role: user.role,
+      action: 'FOLLOWUP_ATTEMPT_LOGGED',
+      resourceType: 'FollowUp',
+      resourceId: fu.id,
+      outcome: 'SUCCESS',
+      details: `${attempt.type} by ${attempt.performedBy}: outcome ${attempt.outcome}.`,
+    });
+    store.persist();
+    res.status(201).json({ followUp: fu, attempt });
+  });
+
+  app.patch('/api/protect/followups/:id', requireAuth, requireRole(['doctor', 'admin']), (req: AuthRequest, res) => {
+    const user = req.authUser!;
+    const parsed = followUpPatchSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: 'Invalid follow-up update data', details: parsed.error.flatten() });
+      return;
+    }
+    const fu = store.data.followUps.find((f) => f.id === req.params.id);
+    if (!fu) {
+      res.status(404).json({ error: 'Follow-up record not found.' });
+      return;
+    }
+
+    if (parsed.data.status) fu.status = parsed.data.status;
+    if (parsed.data.channel) fu.channel = parsed.data.channel;
+    if (parsed.data.dueDate) fu.dueDate = parsed.data.dueDate;
+    if (parsed.data.outcomeNotes !== undefined) fu.outcomeNotes = parsed.data.outcomeNotes;
+    if (parsed.data.nextScreeningDate !== undefined) fu.nextScreeningDate = parsed.data.nextScreeningDate;
+    if (parsed.data.priority) fu.priority = parsed.data.priority;
+    if (parsed.data.structuredOutcome) {
+      fu.structuredOutcome = parsed.data.structuredOutcome;
+      if (parsed.data.structuredOutcome === 'referred_to_doctor' && !fu.referralId) {
+        const ref: ReferralRecord = {
+          id: `ref-${Date.now()}`,
+          patientId: fu.patientId,
+          createdByDoctorId: user.id,
+          createdByDoctorName: user.name,
+          createdAt: new Date().toISOString(),
+          targetFacility: 'Primary Health Centre / District Hospital',
+          specialty: 'Primary Health Centre',
+          urgency: fu.priority === 'Urgent' ? 'Urgent' : 'Priority',
+          reason: `Clinician referral initiated from VHN follow-up: ${fu.outcomeNotes || 'Care escalation'}`,
+          status: 'Pending',
+        };
+        store.data.referrals.unshift(ref);
+        fu.referralId = ref.id;
+      }
+    }
+
+    store.appendAudit({
+      userId: user.id,
+      userName: user.name,
+      role: user.role,
+      action: 'FOLLOWUP_UPDATED',
+      resourceType: 'FollowUp',
+      resourceId: fu.id,
+      outcome: 'SUCCESS',
+      details: `Updated follow-up status to ${fu.status}${fu.structuredOutcome ? `, outcome: ${fu.structuredOutcome}` : ''}.`,
+    });
+    store.persist();
+    res.json(fu);
   });
 
   // --- NOTIFICATIONS (ROLE-TARGETED & PATIENT-OWNED ACCESS CONTROL) ---
@@ -1484,6 +1818,57 @@ export async function createMritidhristiApp(options: { skipFrontend?: boolean } 
           status: 'synced',
           resourceId: lesson.id,
           message: 'Offline lesson completion synchronized.',
+        });
+      } else if (action.type === 'CHECKPOINT_COMPLETE') {
+        const day = Number(action.payload.day);
+        const patientId = String(action.payload.patientId || user.patientId || '');
+        if (!canAccessPatient(user, patientId) || ![30, 60, 90, 180, 365].includes(day)) {
+          results.push({
+            idempotencyKey: action.idempotencyKey,
+            status: 'rejected',
+            message: 'Validation or permission error on queued checkpoint completion.',
+          });
+          continue;
+        }
+        const prog = store.data.programmes.find((p) => p.patientId === patientId);
+        const cp = prog?.checkpoints.find((c) => c.day === day);
+        if (!cp || !prog) {
+          results.push({
+            idempotencyKey: action.idempotencyKey,
+            status: 'rejected',
+            message: 'Programme or checkpoint not found during offline sync.',
+          });
+          continue;
+        }
+
+        const weightKg = typeof action.payload.weightKg === 'number' ? action.payload.weightKg : undefined;
+        const waistCm = typeof action.payload.waistCm === 'number' ? action.payload.waistCm : undefined;
+        const notes = typeof action.payload.notes === 'string' ? action.payload.notes : '';
+
+        cp.completed = true;
+        cp.completedAt = action.createdAt || new Date().toISOString();
+        cp.status = 'completed';
+        cp.measurements = { weightKg, waistCm, notes };
+
+        const weightChangeKg = weightKg !== undefined ? Math.round((weightKg - prog.baselineWeightKg) * 10) / 10 : undefined;
+        const waistChangeCm = waistCm !== undefined ? Math.round((waistCm - prog.baselineWaistCm) * 10) / 10 : undefined;
+        const parts: string[] = [];
+        if (weightChangeKg !== undefined) parts.push(weightChangeKg <= 0 ? `Weight reduced by ${Math.abs(weightChangeKg)} kg` : `Weight increased by ${weightChangeKg} kg`);
+        if (waistChangeCm !== undefined) parts.push(waistChangeCm <= 0 ? `Waist reduced by ${Math.abs(waistChangeCm)} cm` : `Waist increased by ${waistChangeCm} cm`);
+        cp.baselineComparison = { weightChangeKg, waistChangeCm, summary: parts.join('; ') || 'Checkpoint completed.' };
+
+        if (weightKg !== undefined) prog.currentWeightKg = weightKg;
+        if (waistCm !== undefined) prog.currentWaistCm = waistCm;
+
+        store.data.processedIdempotencyKeys[action.idempotencyKey] = {
+          syncedAt: new Date().toISOString(),
+          resourceId: `${prog.id}-${cp.day}`,
+        };
+        results.push({
+          idempotencyKey: action.idempotencyKey,
+          status: 'synced',
+          resourceId: `${prog.id}-${cp.day}`,
+          message: `Offline checkpoint (${cp.day}-Day) synchronized.`,
         });
       }
     }
