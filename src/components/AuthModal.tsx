@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Building2, Lock, Shield, Stethoscope, User, X } from 'lucide-react';
+import { Building2, Lock, Shield, ShieldCheck, Stethoscope, User, X } from 'lucide-react';
 import type { LanguageCode, UserAccount, UserRole } from '../types/domain';
 
 interface AuthModalProps {
@@ -32,7 +32,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
-  const [regRole, setRegRole] = useState<UserRole>('patient');
   const [regLang, setRegLang] = useState<LanguageCode>('en');
 
   if (!open) return null;
@@ -69,7 +68,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     setError(null);
     setLoading(true);
     try {
-      await onRegister({ name, email, password, role: regRole, language: regLang });
+      await onRegister({ name, email, password, role: 'patient', language: regLang });
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed.');
@@ -275,16 +274,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Role</label>
-                  <select
-                    value={regRole}
-                    onChange={(e) => setRegRole(e.target.value as UserRole)}
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm bg-white focus:border-[#0D9488] focus:outline-none"
-                  >
-                    <option value="patient">Patient</option>
-                    <option value="doctor">Doctor / Healthcare Worker</option>
-                    <option value="admin">District Administrator</option>
-                  </select>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Account Role</label>
+                  <div className="flex items-center gap-2 rounded-lg border border-teal-200 bg-teal-50/70 px-3 py-2 text-xs font-semibold text-teal-900">
+                    <ShieldCheck className="h-4 w-4 text-teal-600 shrink-0" />
+                    <span>Patient (Public Self-Registration)</span>
+                  </div>
                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -325,6 +319,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   placeholder="Create a strong password"
                   className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#0D9488] focus:outline-none"
                 />
+              </div>
+              <div className="rounded-lg border border-slate-200 bg-slate-50/90 p-2.5 text-[11px] text-slate-600 flex items-start gap-2">
+                <ShieldCheck className="h-4 w-4 text-[#0D9488] mt-0.5 shrink-0" />
+                <span className="leading-relaxed">
+                  Public self-registration creates Patient accounts with full Prevent, Detect, and Protect health record features. Clinician (Doctor) and District Administrator accounts are provisioned exclusively through authorized administrative onboarding.
+                </span>
               </div>
               <button
                 type="submit"

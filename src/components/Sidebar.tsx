@@ -270,8 +270,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
       >
         <div className="sticky top-0 h-screen">{sidebarContent}</div>
       </aside>
-        <div className="sticky top-0 h-screen">{sidebarContent}</div>
-      </aside>
 
       {/* Mobile Drawer */}
       {mobileOpen && (

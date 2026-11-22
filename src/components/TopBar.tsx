@@ -240,8 +240,6 @@ export const TopBar: React.FC<TopBarProps> = ({
           </div>
         </div>
       </header>
-        </div>
-      </header>
 
       {/* iOS Install Modal */}
       {showIOSGuide && (

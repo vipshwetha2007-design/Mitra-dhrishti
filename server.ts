@@ -38,7 +38,17 @@ const registerAccountSchema = z.object({
   name: z.string().min(2).max(100),
   email: z.string().email().max(120),
   password: z.string().min(8).max(100),
-  role: z.enum(['patient', 'doctor', 'admin']),
+  role: z.literal('patient').default('patient'),
+  language: z.enum(['en', 'ta', 'hi']).default('en'),
+});
+
+const staffProvisionSchema = z.object({
+  name: z.string().min(2).max(100),
+  email: z.string().email().max(120),
+  password: z.string().min(8).max(100),
+  role: z.enum(['doctor', 'admin']),
+  facility: z.string().min(2).max(140).optional(),
+  title: z.string().max(100).optional(),
   language: z.enum(['en', 'ta', 'hi']).default('en'),
 });
 
@@ -421,14 +431,59 @@ function createHabitRecord(user: StoredUser, parsed: z.infer<typeof habitLogSche
   return { log, intervention };
 }
 
-async function startServer() {
+// In-memory Sliding Window Rate Limiter for Login Endpoint
+interface RateLimitEntry {
+  count: number;
+  resetAt: number;
+}
+const loginRateLimitMap = new Map<string, RateLimitEntry>();
+const LOGIN_RATE_LIMIT_WINDOW_MS = 5 * 60 * 1000; // 5 minutes
+const MAX_LOGIN_ATTEMPTS = 10; // max 10 failed attempts
+
+function checkLoginRateLimit(key: string): { allowed: boolean; remainingAttempts: number; retryAfterSec?: number } {
+  const now = Date.now();
+  const record = loginRateLimitMap.get(key);
+  if (!record || now > record.resetAt) {
+    return { allowed: true, remainingAttempts: MAX_LOGIN_ATTEMPTS };
+  }
+  if (record.count >= MAX_LOGIN_ATTEMPTS) {
+    const retryAfterSec = Math.ceil((record.resetAt - now) / 1000);
+    return { allowed: false, remainingAttempts: 0, retryAfterSec };
+  }
+  return { allowed: true, remainingAttempts: MAX_LOGIN_ATTEMPTS - record.count };
+}
+
+function recordFailedLoginAttempt(key: string) {
+  const now = Date.now();
+  const record = loginRateLimitMap.get(key);
+  if (!record || now > record.resetAt) {
+    loginRateLimitMap.set(key, { count: 1, resetAt: now + LOGIN_RATE_LIMIT_WINDOW_MS });
+  } else {
+    record.count += 1;
+  }
+}
+
+function clearLoginRateLimit(key: string) {
+  loginRateLimitMap.delete(key);
+}
+
+export async function createMritidhristiApp(options: { skipFrontend?: boolean } = {}) {
   const app = express();
   app.use(express.json({ limit: '6mb' }));
 
-  // Basic security headers appropriate for iframe preview
+  // Comprehensive security headers compatible with iframe preview and secure operations
   app.use((_req, res, next) => {
     res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+    res.setHeader('X-XSS-Protection', '1; mode=block');
     res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+    res.setHeader(
+      'Content-Security-Policy',
+      "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https:; img-src 'self' data: blob: https:; frame-ancestors 'self' *;"
+    );
+    if (IS_PROD) {
+      res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+    }
     next();
   });
 
@@ -468,6 +523,24 @@ async function startServer() {
   });
 
   app.post('/api/auth/register', (req, res) => {
+    // SECURITY REQUIREMENT: Reject any public attempt to register with privileged roles (doctor or admin)
+    if (req.body?.role && req.body.role !== 'patient') {
+      store.appendAudit({
+        userId: 'anonymous',
+        userName: typeof req.body?.name === 'string' ? req.body.name : 'Anonymous Registration',
+        role: 'patient',
+        action: 'PRIVILEGE_ESCALATION_ATTEMPT',
+        resourceType: 'UserRegistration',
+        resourceId: typeof req.body?.email === 'string' ? req.body.email : 'unknown',
+        outcome: 'DENIED',
+        details: `Rejected attempt to register publicly with privileged role '${req.body.role}'. Clinical staff and administrator accounts must be provisioned through authorized administrative onboarding.`,
+      });
+      res.status(403).json({
+        error: 'Public registration is restricted to patient accounts only. Clinical staff and administrator accounts must be provisioned through authorized administrative onboarding.',
+      });
+      return;
+    }
+
     const parsed = registerAccountSchema.safeParse(req.body);
     if (!parsed.success) {
       res.status(400).json({ error: 'Invalid registration data', details: parsed.error.flatten() });
@@ -482,71 +555,62 @@ async function startServer() {
     }
 
     const { salt, hash } = hashPassword(parsed.data.password);
-    let patientId: string | undefined;
-
-    if (parsed.data.role === 'patient') {
-      patientId = `pat-${Date.now()}`;
-      const now = new Date().toISOString();
-      const newPatient: PatientRecord = {
-        id: patientId,
-        mrn: `MRD-TN-${Math.floor(10000 + Math.random() * 89999)}`,
-        name: parsed.data.name,
-        age: 35,
-        sex: 'Other',
-        phone: 'Not yet provided',
-        district: 'Chennai South',
-        villageOrWard: 'Urban PHC',
-        language: parsed.data.language,
-        diabetesStatus: 'at_risk',
-        assignedHealthWorker: 'Anitha K (VHN)',
-        assignedDoctorId: 'usr-doctor-1',
-        registeredAt: now,
-        consent: {
-          id: `con-${Date.now()}`,
-          patientId,
-          screeningConsent: true,
-          dataStorageConsent: true,
-          offlineCacheConsent: true,
-          clinicalBoundaryAcknowledged: true,
-          consentedAt: now,
-          language: parsed.data.language,
-        },
-        isSynthetic: false,
-      };
-      store.data.patients.unshift(newPatient);
-      store.data.programmes.unshift({
-        id: `prog-${Date.now()}`,
+    const patientId = `pat-${Date.now()}`;
+    const now = new Date().toISOString();
+    const newPatient: PatientRecord = {
+      id: patientId,
+      mrn: `MRD-TN-${Math.floor(10000 + Math.random() * 89999)}`,
+      name: parsed.data.name,
+      age: 35,
+      sex: 'Other',
+      phone: 'Not yet provided',
+      district: 'Chennai South',
+      villageOrWard: 'Urban PHC',
+      language: parsed.data.language,
+      diabetesStatus: 'at_risk',
+      assignedHealthWorker: 'Anitha K (VHN)',
+      assignedDoctorId: 'usr-doctor-1',
+      registeredAt: now,
+      consent: {
+        id: `con-${Date.now()}`,
         patientId,
-        startedAt: now,
-        currentMonth: 1,
-        phase: 'PHASE 1: LEARNING (Months 1-6)',
-        adherencePercent: 50,
-        baselineWeightKg: 68,
-        currentWeightKg: 68,
-        baselineWaistCm: 84,
-        currentWaistCm: 84,
-        checkpoints: [
-          { day: 30, label: '30-Day Checkpoint', status: 'upcoming', notes: 'Complete initial lifestyle assessment and weekly lessons.' },
-          { day: 60, label: '60-Day Checkpoint', status: 'upcoming', notes: 'Habit adherence review.' },
-          { day: 90, label: '90-Day Checkpoint', status: 'upcoming', notes: 'Waist and clinical lab guidance review.' },
-          { day: 180, label: 'Month 6 Transition', status: 'upcoming', notes: 'Transition to Phase 2 Maintenance.' },
-          { day: 365, label: '12-Month Outcome', status: 'upcoming', notes: 'Annual review.' },
-        ],
-        lessons: store.data.programmes[0]?.lessons.map((l) => ({ ...l, completed: false })) ?? [],
-      });
-    }
+        screeningConsent: true,
+        dataStorageConsent: true,
+        offlineCacheConsent: true,
+        clinicalBoundaryAcknowledged: true,
+        consentedAt: now,
+        language: parsed.data.language,
+      },
+      isSynthetic: false,
+    };
+    store.data.patients.unshift(newPatient);
+    store.data.programmes.unshift({
+      id: `prog-${Date.now()}`,
+      patientId,
+      startedAt: now,
+      currentMonth: 1,
+      phase: 'PHASE 1: LEARNING (Months 1-6)',
+      adherencePercent: 50,
+      baselineWeightKg: 68,
+      currentWeightKg: 68,
+      baselineWaistCm: 84,
+      currentWaistCm: 84,
+      checkpoints: [
+        { day: 30, label: '30-Day Checkpoint', status: 'upcoming', notes: 'Complete initial lifestyle assessment and weekly lessons.' },
+        { day: 60, label: '60-Day Checkpoint', status: 'upcoming', notes: 'Habit adherence review.' },
+        { day: 90, label: '90-Day Checkpoint', status: 'upcoming', notes: 'Waist and clinical lab guidance review.' },
+        { day: 180, label: 'Month 6 Transition', status: 'upcoming', notes: 'Transition to Phase 2 Maintenance.' },
+        { day: 365, label: '12-Month Outcome', status: 'upcoming', notes: 'Annual review.' },
+      ],
+      lessons: store.data.programmes[0]?.lessons.map((l) => ({ ...l, completed: false })) ?? [],
+    });
 
     const newUser: StoredUser = {
       id: `usr-${Date.now()}`,
       email: parsed.data.email.toLowerCase(),
       name: parsed.data.name,
-      role: parsed.data.role,
-      title:
-        parsed.data.role === 'doctor'
-          ? 'Registered Clinician'
-          : parsed.data.role === 'admin'
-          ? 'District Health Administrator'
-          : 'Registered Patient',
+      role: 'patient',
+      title: 'Registered Patient',
       patientId,
       language: parsed.data.language,
       isSynthetic: false,
@@ -564,7 +628,7 @@ async function startServer() {
       resourceType: 'User',
       resourceId: newUser.id,
       outcome: 'SUCCESS',
-      details: `Registered new ${newUser.role} account with scrypt password hashing.`,
+      details: 'Registered new patient account with scrypt password hashing.',
     });
     store.persist();
 
@@ -576,8 +640,32 @@ async function startServer() {
   });
 
   app.post('/api/auth/login', (req, res) => {
+    const clientIp = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.socket.remoteAddress || '127.0.0.1';
+    const emailKey = typeof req.body?.email === 'string' ? req.body.email.toLowerCase() : 'unknown';
+    const rateKey = `${clientIp}:${emailKey}`;
+
+    const rateCheck = checkLoginRateLimit(rateKey);
+    if (!rateCheck.allowed) {
+      store.appendAudit({
+        userId: 'anonymous',
+        userName: emailKey,
+        role: 'patient',
+        action: 'LOGIN_RATE_LIMIT_EXCEEDED',
+        resourceType: 'Session',
+        resourceId: emailKey,
+        outcome: 'DENIED',
+        details: `Rate limit triggered: Exceeded 10 failed login attempts in 5 minutes for '${emailKey}'.`,
+      });
+      res.status(429).json({
+        error: 'Too many failed login attempts. Please wait 5 minutes before trying again.',
+        retryAfterSeconds: rateCheck.retryAfterSec,
+      });
+      return;
+    }
+
     const parsed = loginSchema.safeParse(req.body);
     if (!parsed.success) {
+      recordFailedLoginAttempt(rateKey);
       res.status(400).json({ error: 'Valid email and password are required.' });
       return;
     }
@@ -585,13 +673,16 @@ async function startServer() {
       (u) => u.email.toLowerCase() === parsed.data.email.toLowerCase()
     );
     if (!user || !user.passwordSalt || !user.passwordHash) {
+      recordFailedLoginAttempt(rateKey);
       res.status(401).json({ error: 'Invalid credentials. For synthetic demo accounts, use the Role Demo selector.' });
       return;
     }
     if (!verifyPassword(parsed.data.password, user.passwordSalt, user.passwordHash)) {
+      recordFailedLoginAttempt(rateKey);
       res.status(401).json({ error: 'Invalid email or password.' });
       return;
     }
+    clearLoginRateLimit(rateKey);
     const session = store.createSession(user);
     store.appendAudit({
       userId: user.id,
@@ -619,6 +710,62 @@ async function startServer() {
 
   app.get('/api/auth/me', requireAuth, (req: AuthRequest, res) => {
     res.json({ user: store.sanitizeUser(req.authUser!) });
+  });
+
+  // --- ADMIN STAFF PROVISIONING (DOCTOR & ADMIN ROLES STRICTLY VIA RBAC ADMIN) ---
+  app.post('/api/admin/staff-accounts', requireAuth, requireRole(['admin']), (req: AuthRequest, res) => {
+    const adminUser = req.authUser!;
+    const parsed = staffProvisionSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: 'Invalid staff provisioning data', details: parsed.error.flatten() });
+      return;
+    }
+
+    const existing = store.data.users.find(
+      (u) => u.email.toLowerCase() === parsed.data.email.toLowerCase()
+    );
+    if (existing) {
+      res.status(409).json({ error: 'An account with this email already exists.' });
+      return;
+    }
+
+    const { salt, hash } = hashPassword(parsed.data.password);
+    const staffRole = parsed.data.role;
+
+    const newStaff: StoredUser = {
+      id: `usr-${staffRole}-${Date.now()}`,
+      email: parsed.data.email.toLowerCase(),
+      name: parsed.data.name,
+      role: staffRole,
+      title:
+        parsed.data.title ||
+        (staffRole === 'doctor'
+          ? 'Registered Medical Officer / Clinician'
+          : 'District Health Administrator'),
+      facility: parsed.data.facility || 'District Health Headquarters',
+      language: parsed.data.language,
+      isSynthetic: false,
+      passwordSalt: salt,
+      passwordHash: hash,
+    };
+
+    store.data.users.push(newStaff);
+    store.appendAudit({
+      userId: adminUser.id,
+      userName: adminUser.name,
+      role: adminUser.role,
+      action: 'STAFF_ACCOUNT_PROVISIONED',
+      resourceType: 'User',
+      resourceId: newStaff.id,
+      outcome: 'SUCCESS',
+      details: `Administrator '${adminUser.name}' provisioned ${staffRole} account for '${newStaff.name}' (${newStaff.email}) at facility '${newStaff.facility}'.`,
+    });
+    store.persist();
+
+    res.status(201).json({
+      message: 'Staff account successfully provisioned.',
+      user: store.sanitizeUser(newStaff),
+    });
   });
 
   // --- ROLE-SCOPED BOOTSTRAP DATA ---
@@ -663,8 +810,8 @@ async function startServer() {
     res.json(payload);
   });
 
-  // --- PATIENT REGISTRATION (PREVENT A) ---
-  app.post('/api/patients', requireAuth, (req: AuthRequest, res) => {
+  // --- PATIENT REGISTRATION (PREVENT A — RESTRICTED TO AUTHORIZED CLINICAL/ADMIN STAFF) ---
+  app.post('/api/patients', requireAuth, requireRole(['doctor', 'admin']), (req: AuthRequest, res) => {
     const user = req.authUser!;
     const parsed = patientRegistrationSchema.safeParse(req.body);
     if (!parsed.success) {
@@ -1170,14 +1317,50 @@ async function startServer() {
     res.status(201).json(fu);
   });
 
-  // --- NOTIFICATIONS ---
+  // --- NOTIFICATIONS (ROLE-TARGETED & PATIENT-OWNED ACCESS CONTROL) ---
   app.post('/api/notifications/:id/read', requireAuth, (req: AuthRequest, res) => {
+    const user = req.authUser!;
     const item = store.data.notifications.find((n) => n.id === req.params.id);
-    if (item) {
-      item.read = true;
-      store.persist();
+    if (!item) {
+      res.status(404).json({ error: 'Notification not found' });
+      return;
     }
-    res.json({ ok: true });
+
+    // Role target check
+    if (!item.roleTargets.includes(user.role)) {
+      store.appendAudit({
+        userId: user.id,
+        userName: user.name,
+        role: user.role,
+        action: 'UNAUTHORIZED_NOTIFICATION_ACCESS',
+        resourceType: 'Notification',
+        resourceId: item.id,
+        outcome: 'DENIED',
+        details: `Role '${user.role}' attempted to access notification targeted for [${item.roleTargets.join(', ')}].`,
+      });
+      res.status(403).json({ error: 'Access denied to this notification' });
+      return;
+    }
+
+    // Patient isolation check: patients cannot mark notifications of other patients
+    if (user.role === 'patient' && item.patientId && item.patientId !== user.patientId) {
+      store.appendAudit({
+        userId: user.id,
+        userName: user.name,
+        role: user.role,
+        action: 'UNAUTHORIZED_NOTIFICATION_ACCESS',
+        resourceType: 'Notification',
+        resourceId: item.id,
+        outcome: 'DENIED',
+        details: `Patient '${user.patientId}' attempted to access notification belonging to patient '${item.patientId}'.`,
+      });
+      res.status(403).json({ error: "Access denied: You cannot view or modify another patient's notification." });
+      return;
+    }
+
+    item.read = true;
+    store.persist();
+    res.json({ ok: true, id: item.id, read: true });
   });
 
   // --- OFFLINE SYNCHRONISATION ENGINE ---
@@ -1390,26 +1573,42 @@ async function startServer() {
   });
 
   // --- VITE / STATIC FRONTEND SERVING ---
-  if (!IS_PROD) {
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: 'spa',
-    });
-    app.use(vite.middlewares);
-  } else {
-    const distDir = path.resolve(process.cwd(), 'dist');
-    app.use(express.static(distDir));
-    app.get('*', (_req, res) => {
-      res.sendFile(path.resolve(distDir, 'index.html'));
-    });
+  if (!options.skipFrontend) {
+    if (!IS_PROD) {
+      const vite = await createViteServer({
+        server: { middlewareMode: true },
+        appType: 'spa',
+      });
+      app.use(vite.middlewares);
+    } else {
+      const distDir = path.resolve(process.cwd(), 'dist');
+      app.use(express.static(distDir));
+      app.get('*', (_req, res) => {
+        res.sendFile(path.resolve(distDir, 'index.html'));
+      });
+    }
   }
 
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Mritidhristi server listening on http://0.0.0.0:${PORT}`);
+  return app;
+}
+
+export async function startServer() {
+  const app = await createMritidhristiApp({ skipFrontend: false });
+  return new Promise<ReturnType<typeof app.listen>>((resolve) => {
+    const server = app.listen(PORT, '0.0.0.0', () => {
+      console.log(`Mritidhristi server listening on http://0.0.0.0:${PORT}`);
+      resolve(server);
+    });
   });
 }
 
-startServer().catch((err) => {
-  console.error('Fatal server startup error:', err);
-  process.exit(1);
-});
+const isDirectRun =
+  process.env.MRITIDHRISTI_TEST !== 'true' &&
+  (!process.argv[1] || process.argv[1].endsWith('server.ts') || process.argv[1].endsWith('server.js'));
+
+if (isDirectRun) {
+  startServer().catch((err) => {
+    console.error('Fatal server startup error:', err);
+    process.exit(1);
+  });
+}

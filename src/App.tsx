@@ -649,7 +649,15 @@ export default function App() {
           )}
 
           {activeView === 'dashboard' && data.user.role === 'admin' && (
-            <AdminDashboard data={data} onNavigate={(v) => handleNavigate(v)} />
+            <AdminDashboard
+              data={data}
+              onNavigate={(v) => handleNavigate(v)}
+              token={token}
+              onRefresh={() => {
+                if (token) fetchBootstrap(token);
+              }}
+              onToast={showToast}
+            />
           )}
 
           {activeView === 'prevent' && (
