@@ -221,7 +221,6 @@ async function runOfflineSyncTests() {
       channel: 'Home Visit',
       status: 'Completed', // Doctor closed it
       outcomeNotes: 'Clinician signed off after full dilated eye exam at District Hospital.',
-      isSynthetic: false,
     });
 
     // Now an offline VHN sync comes in trying to revert/update status to 'Scheduled'

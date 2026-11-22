@@ -16,7 +16,9 @@
     "test:cnn": "tsx tests/cnnVerification.ts",
     "test:retinal": "python tests/retinalInferenceTest.py",
     "test:offline": "tsx tests/offlineSyncVerification.ts",
-    "test:simulink": "tsx tests/simulinkVerification.ts"
+    "test:simulink": "tsx tests/simulinkVerification.ts",
+    "test:postgres": "tsx tests/postgresVerification.ts",
+    "test": "npm run test:security && npm run test:prevent && npm run test:dataset && npm run test:cnn && npm run test:retinal && npm run test:offline && npm run test:simulink && npm run test:postgres"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",

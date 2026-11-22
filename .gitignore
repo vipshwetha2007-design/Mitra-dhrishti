@@ -13,4 +13,8 @@ datasets/raw/
 datasets/processed/
 *.arrow
 .cache/
+.keras/
+__pycache__/
+*.pyc
+
 

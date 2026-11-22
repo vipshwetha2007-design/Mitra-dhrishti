@@ -2198,7 +2198,6 @@ export async function createMritidhristiApp(options: { skipFrontend?: boolean } 
           type: check.data.type,
           status: 'Confirmed',
           reminderNote: check.data.reminderNote,
-          isSynthetic: false,
         };
         store.data.appointments.unshift(apt);
 
