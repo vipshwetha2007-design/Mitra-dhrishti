@@ -1,0 +1,1649 @@
+{
+  "users": [
+    {
+      "id": "usr-patient-1",
+      "email": "shwetha@mritidhristi.demo",
+      "name": "Shwetha V",
+      "role": "patient",
+      "title": "Patient (Synthetic Demo)",
+      "patientId": "pat-1",
+      "language": "en",
+      "isSynthetic": true
+    },
+    {
+      "id": "usr-doctor-1",
+      "email": "dr.arvind@mritidhristi.demo",
+      "name": "Dr. Arvind Raman",
+      "role": "doctor",
+      "title": "Medical Officer & Ophthalmology Liaison",
+      "facility": "Chennai District Hospital & PHC Network",
+      "language": "en",
+      "isSynthetic": true
+    },
+    {
+      "id": "usr-admin-1",
+      "email": "admin.chennai@mritidhristi.demo",
+      "name": "Meenakshi Sundaram",
+      "role": "admin",
+      "title": "District Health Programme Administrator",
+      "facility": "Kanchipuram–Chennai Health District",
+      "language": "en",
+      "isSynthetic": true
+    }
+  ],
+  "patients": [
+    {
+      "id": "pat-1",
+      "mrn": "MRD-TN-01042",
+      "name": "Shwetha V",
+      "age": 34,
+      "sex": "Female",
+      "phone": "+91 98400 00101",
+      "district": "Chennai South",
+      "villageOrWard": "Adyar Urban PHC Ward 173",
+      "language": "en",
+      "diabetesStatus": "diagnosed_t2d",
+      "assignedHealthWorker": "Anitha K (VHN)",
+      "assignedDoctorId": "usr-doctor-1",
+      "registeredAt": "2026-05-14T08:30:00Z",
+      "consent": {
+        "id": "con-1",
+        "patientId": "pat-1",
+        "screeningConsent": true,
+        "dataStorageConsent": true,
+        "offlineCacheConsent": true,
+        "clinicalBoundaryAcknowledged": true,
+        "consentedAt": "2026-05-14T08:30:00Z",
+        "language": "en"
+      },
+      "isSynthetic": true
+    },
+    {
+      "id": "pat-2",
+      "mrn": "MRD-TN-01089",
+      "name": "Karthik Subramanian",
+      "age": 52,
+      "sex": "Male",
+      "phone": "+91 98400 00202",
+      "district": "Kanchipuram",
+      "villageOrWard": "Sriperumbudur Block PHC",
+      "language": "ta",
+      "diabetesStatus": "diagnosed_t2d",
+      "assignedHealthWorker": "Selvi M (CHW)",
+      "assignedDoctorId": "usr-doctor-1",
+      "registeredAt": "2026-06-03T10:15:00Z",
+      "consent": {
+        "id": "con-2",
+        "patientId": "pat-2",
+        "screeningConsent": true,
+        "dataStorageConsent": true,
+        "offlineCacheConsent": true,
+        "clinicalBoundaryAcknowledged": true,
+        "consentedAt": "2026-06-03T10:15:00Z",
+        "language": "ta"
+      },
+      "isSynthetic": true
+    },
+    {
+      "id": "pat-3",
+      "mrn": "MRD-TN-01114",
+      "name": "Lakshmi Narayanan",
+      "age": 46,
+      "sex": "Female",
+      "phone": "+91 98400 00303",
+      "district": "Chengalpattu",
+      "villageOrWard": "Tambaram PHC",
+      "language": "ta",
+      "diabetesStatus": "prediabetes_lab",
+      "assignedHealthWorker": "Anitha K (VHN)",
+      "assignedDoctorId": "usr-doctor-1",
+      "registeredAt": "2026-08-21T09:10:00Z",
+      "consent": {
+        "id": "con-3",
+        "patientId": "pat-3",
+        "screeningConsent": true,
+        "dataStorageConsent": true,
+        "offlineCacheConsent": true,
+        "clinicalBoundaryAcknowledged": true,
+        "consentedAt": "2026-08-21T09:10:00Z",
+        "language": "ta"
+      },
+      "isSynthetic": true
+    }
+  ],
+  "assessments": [
+    {
+      "id": "asm-1",
+      "patientId": "pat-1",
+      "assessedAt": "2026-11-12T08:15:00Z",
+      "inputs": {
+        "age": 34,
+        "dietQuality": "balanced_traditional",
+        "sleepHours": 7.5,
+        "dailySteps": 8200,
+        "weightKg": 60,
+        "heightCm": 162,
+        "waistCm": 78,
+        "familyHistory": "one_parent",
+        "smokingStatus": "never",
+        "alcoholUse": "none"
+      },
+      "experimentalScore": 18,
+      "riskCategory": "Low",
+      "scoringModelLabel": "Experimental Rule-Based Lifestyle Screening Score (Prototype v0.1 — Non-Diagnostic)",
+      "contributions": [
+        {
+          "factor": "Dietary Pattern",
+          "points": 2,
+          "maxPoints": 16,
+          "modifiable": true,
+          "summary": "Whole grains, millets, pulses, and vegetables predominate."
+        },
+        {
+          "factor": "Physical Activity & Daily Steps",
+          "points": 2,
+          "maxPoints": 15,
+          "modifiable": true,
+          "summary": "8,200 steps/day (target ≥ 8,000 steps/day or 150 min/week brisk walking)."
+        },
+        {
+          "factor": "Body Weight (BMI)",
+          "points": 2,
+          "maxPoints": 14,
+          "modifiable": true,
+          "summary": "BMI 22.9 kg/m² (South Asian healthy screening reference < 23 kg/m²)."
+        },
+        {
+          "factor": "Waist Circumference",
+          "points": 2,
+          "maxPoints": 12,
+          "modifiable": true,
+          "summary": "78 cm central waist measurement."
+        },
+        {
+          "factor": "Sleep Duration & Quality",
+          "points": 2,
+          "maxPoints": 11,
+          "modifiable": true,
+          "summary": "7.5 hrs/night (target 7–8.5 hours consistent sleep)."
+        },
+        {
+          "factor": "Age",
+          "points": 2,
+          "maxPoints": 16,
+          "modifiable": false,
+          "summary": "34 years old."
+        },
+        {
+          "factor": "Family History of Diabetes",
+          "points": 6,
+          "maxPoints": 10,
+          "modifiable": false,
+          "summary": "One parent diagnosed with Type 2 diabetes."
+        },
+        {
+          "factor": "Tobacco / Smoking",
+          "points": 0,
+          "maxPoints": 4,
+          "modifiable": true,
+          "summary": "Smoking status: never."
+        },
+        {
+          "factor": "Alcohol Consumption",
+          "points": 0,
+          "maxPoints": 2,
+          "modifiable": true,
+          "summary": "Alcohol intake: none."
+        }
+      ],
+      "topModifiableFactors": [
+        "Sleep Duration & Quality",
+        "Waist Circumference",
+        "Body Weight (BMI)"
+      ],
+      "explanation": "Experimental rule-based lifestyle score is 18/100 (Low lifestyle risk tier). Primary modifiable focus areas: Sleep Duration & Quality, Waist Circumference, Body Weight (BMI). Important: Lifestyle inputs alone cannot diagnose diabetes; confirmed diagnosis requires clinician-interpreted laboratory testing (HbA1c or Fasting Plasma Glucose).",
+      "recommendations": [
+        "Maintain balanced traditional Indian meals with portion-controlled grains, dal, curd, and leafy greens."
+      ],
+      "recordedOffline": false,
+      "syncStatus": "synced"
+    },
+    {
+      "id": "asm-2",
+      "patientId": "pat-2",
+      "assessedAt": "2026-11-15T11:00:00Z",
+      "inputs": {
+        "age": 52,
+        "dietQuality": "high_refined_sugars",
+        "sleepHours": 5.5,
+        "dailySteps": 3100,
+        "weightKg": 84,
+        "heightCm": 170,
+        "waistCm": 99,
+        "familyHistory": "both_parents_or_sibling",
+        "smokingStatus": "former",
+        "alcoholUse": "occasional"
+      },
+      "experimentalScore": 93,
+      "riskCategory": "Elevated",
+      "scoringModelLabel": "Experimental Rule-Based Lifestyle Screening Score (Prototype v0.1 — Non-Diagnostic)",
+      "contributions": [
+        {
+          "factor": "Dietary Pattern",
+          "points": 16,
+          "maxPoints": 16,
+          "modifiable": true,
+          "summary": "High refined carbohydrates, sugary drinks, or frequent fried snacks."
+        },
+        {
+          "factor": "Physical Activity & Daily Steps",
+          "points": 15,
+          "maxPoints": 15,
+          "modifiable": true,
+          "summary": "3,100 steps/day (target ≥ 8,000 steps/day or 150 min/week brisk walking)."
+        },
+        {
+          "factor": "Body Weight (BMI)",
+          "points": 14,
+          "maxPoints": 14,
+          "modifiable": true,
+          "summary": "BMI 29.1 kg/m² (South Asian healthy screening reference < 23 kg/m²)."
+        },
+        {
+          "factor": "Waist Circumference",
+          "points": 12,
+          "maxPoints": 12,
+          "modifiable": true,
+          "summary": "99 cm central waist measurement."
+        },
+        {
+          "factor": "Sleep Duration & Quality",
+          "points": 11,
+          "maxPoints": 11,
+          "modifiable": true,
+          "summary": "5.5 hrs/night (target 7–8.5 hours consistent sleep)."
+        },
+        {
+          "factor": "Age",
+          "points": 12,
+          "maxPoints": 16,
+          "modifiable": false,
+          "summary": "52 years old."
+        },
+        {
+          "factor": "Family History of Diabetes",
+          "points": 10,
+          "maxPoints": 10,
+          "modifiable": false,
+          "summary": "Both parents or sibling diagnosed with Type 2 diabetes."
+        },
+        {
+          "factor": "Tobacco / Smoking",
+          "points": 2,
+          "maxPoints": 4,
+          "modifiable": true,
+          "summary": "Smoking status: former."
+        },
+        {
+          "factor": "Alcohol Consumption",
+          "points": 1,
+          "maxPoints": 2,
+          "modifiable": true,
+          "summary": "Alcohol intake: occasional."
+        }
+      ],
+      "topModifiableFactors": [
+        "Dietary Pattern",
+        "Physical Activity & Daily Steps",
+        "Body Weight (BMI)"
+      ],
+      "explanation": "Experimental rule-based lifestyle score is 93/100 (Elevated lifestyle risk tier). Primary modifiable focus areas: Dietary Pattern, Physical Activity & Daily Steps, Body Weight (BMI). Important: Lifestyle inputs alone cannot diagnose diabetes; confirmed diagnosis requires clinician-interpreted laboratory testing (HbA1c or Fasting Plasma Glucose).",
+      "recommendations": [
+        "Shift 50% of plate to non-starchy South Indian vegetables (poriyal/kootu), add sambar/dal protein, and swap polished rice portions with millets (ragi/thinai/kambu) or hand-pounded brown rice.",
+        "Build toward 7,500–8,500 daily steps using two 15-minute post-meal brisk walks (after lunch and dinner).",
+        "Aim for a consistent 7–8 hour sleep schedule and avoid screens or heavy meals 90 minutes before bedtime.",
+        "Focus on gradual 5–7% weight and waist reduction over 6 months through sustainable nutrition and resistance exercises.",
+        "Discuss laboratory blood glucose screening (Fasting Plasma Glucose and HbA1c) with an authorised clinician at your PHC or clinic."
+      ],
+      "recordedOffline": true,
+      "syncStatus": "synced"
+    },
+    {
+      "id": "asm-3",
+      "patientId": "pat-3",
+      "assessedAt": "2026-11-18T14:20:00Z",
+      "inputs": {
+        "age": 46,
+        "dietQuality": "moderate_refined",
+        "sleepHours": 6.5,
+        "dailySteps": 5400,
+        "weightKg": 71,
+        "heightCm": 158,
+        "waistCm": 88,
+        "familyHistory": "one_parent",
+        "smokingStatus": "never",
+        "alcoholUse": "none"
+      },
+      "experimentalScore": 62,
+      "riskCategory": "Elevated",
+      "scoringModelLabel": "Experimental Rule-Based Lifestyle Screening Score (Prototype v0.1 — Non-Diagnostic)",
+      "contributions": [
+        {
+          "factor": "Dietary Pattern",
+          "points": 9,
+          "maxPoints": 16,
+          "modifiable": true,
+          "summary": "Moderate refined white rice/maida and sweetened beverages."
+        },
+        {
+          "factor": "Physical Activity & Daily Steps",
+          "points": 8,
+          "maxPoints": 15,
+          "modifiable": true,
+          "summary": "5,400 steps/day (target ≥ 8,000 steps/day or 150 min/week brisk walking)."
+        },
+        {
+          "factor": "Body Weight (BMI)",
+          "points": 14,
+          "maxPoints": 14,
+          "modifiable": true,
+          "summary": "BMI 28.4 kg/m² (South Asian healthy screening reference < 23 kg/m²)."
+        },
+        {
+          "factor": "Waist Circumference",
+          "points": 7,
+          "maxPoints": 12,
+          "modifiable": true,
+          "summary": "88 cm central waist measurement."
+        },
+        {
+          "factor": "Sleep Duration & Quality",
+          "points": 6,
+          "maxPoints": 11,
+          "modifiable": true,
+          "summary": "6.5 hrs/night (target 7–8.5 hours consistent sleep)."
+        },
+        {
+          "factor": "Age",
+          "points": 12,
+          "maxPoints": 16,
+          "modifiable": false,
+          "summary": "46 years old."
+        },
+        {
+          "factor": "Family History of Diabetes",
+          "points": 6,
+          "maxPoints": 10,
+          "modifiable": false,
+          "summary": "One parent diagnosed with Type 2 diabetes."
+        },
+        {
+          "factor": "Tobacco / Smoking",
+          "points": 0,
+          "maxPoints": 4,
+          "modifiable": true,
+          "summary": "Smoking status: never."
+        },
+        {
+          "factor": "Alcohol Consumption",
+          "points": 0,
+          "maxPoints": 2,
+          "modifiable": true,
+          "summary": "Alcohol intake: none."
+        }
+      ],
+      "topModifiableFactors": [
+        "Body Weight (BMI)",
+        "Waist Circumference",
+        "Dietary Pattern"
+      ],
+      "explanation": "Experimental rule-based lifestyle score is 62/100 (Elevated lifestyle risk tier). Primary modifiable focus areas: Body Weight (BMI), Waist Circumference, Dietary Pattern. Important: Lifestyle inputs alone cannot diagnose diabetes; confirmed diagnosis requires clinician-interpreted laboratory testing (HbA1c or Fasting Plasma Glucose).",
+      "recommendations": [
+        "Shift 50% of plate to non-starchy South Indian vegetables (poriyal/kootu), add sambar/dal protein, and swap polished rice portions with millets (ragi/thinai/kambu) or hand-pounded brown rice.",
+        "Build toward 7,500–8,500 daily steps using two 15-minute post-meal brisk walks (after lunch and dinner).",
+        "Aim for a consistent 7–8 hour sleep schedule and avoid screens or heavy meals 90 minutes before bedtime.",
+        "Focus on gradual 5–7% weight and waist reduction over 6 months through sustainable nutrition and resistance exercises.",
+        "Discuss laboratory blood glucose screening (Fasting Plasma Glucose and HbA1c) with an authorised clinician at your PHC or clinic."
+      ],
+      "recordedOffline": false,
+      "syncStatus": "synced"
+    }
+  ],
+  "labs": [
+    {
+      "id": "lab-1",
+      "patientId": "pat-1",
+      "recordedByDoctorId": "usr-doctor-1",
+      "recordedByName": "Dr. Arvind Raman",
+      "testedAt": "2026-10-28T07:45:00Z",
+      "hba1cPercent": 6.6,
+      "fastingGlucoseMgDl": 118,
+      "guidelineInterpretation": "HbA1c 6.6%: Meets diabetes threshold (≥ 6.5%) — requires physician confirmation and eligibility check for annual retinal screening. FPG 118 mg/dL: Impaired fasting glucose range (100–125 mg/dL).",
+      "clinicalNotes": "Well-managed early Type 2 diabetes on lifestyle therapy; eligible for annual retinal screening."
+    },
+    {
+      "id": "lab-2",
+      "patientId": "pat-2",
+      "recordedByDoctorId": "usr-doctor-1",
+      "recordedByName": "Dr. Arvind Raman",
+      "testedAt": "2026-11-05T08:10:00Z",
+      "hba1cPercent": 8.4,
+      "fastingGlucoseMgDl": 168,
+      "guidelineInterpretation": "HbA1c 8.4%: Meets diabetes threshold (≥ 6.5%) — requires physician confirmation and eligibility check for annual retinal screening. FPG 168 mg/dL: Meets diabetes threshold (≥ 126 mg/dL) — confirm with physician per ICMR/ADA protocol.",
+      "clinicalNotes": "Suboptimal glycaemic control; prioritized for retinal imaging and diabetology medication review."
+    },
+    {
+      "id": "lab-3",
+      "patientId": "pat-3",
+      "recordedByDoctorId": "usr-doctor-1",
+      "recordedByName": "Dr. Arvind Raman",
+      "testedAt": "2026-11-10T08:00:00Z",
+      "hba1cPercent": 6.1,
+      "fastingGlucoseMgDl": 112,
+      "guidelineInterpretation": "HbA1c 6.1%: Prediabetes reference range (5.7%–6.4%) — clinician counselling & prevention programme advised. FPG 112 mg/dL: Impaired fasting glucose range (100–125 mg/dL).",
+      "clinicalNotes": "Prediabetes range confirmed on lab panel; enrolled in 12-month lifestyle prevention programme."
+    }
+  ],
+  "programmes": [
+    {
+      "id": "prog-1",
+      "patientId": "pat-1",
+      "startedAt": "2026-05-20T09:00:00Z",
+      "currentMonth": 6,
+      "phase": "PHASE 1: LEARNING (Months 1-6)",
+      "adherencePercent": 89,
+      "baselineWeightKg": 63.5,
+      "currentWeightKg": 60,
+      "baselineWaistCm": 83,
+      "currentWaistCm": 78,
+      "checkpoints": [
+        {
+          "day": 30,
+          "label": "30-Day Checkpoint",
+          "status": "completed",
+          "notes": "Established post-dinner walking and millet breakfast swaps."
+        },
+        {
+          "day": 60,
+          "label": "60-Day Checkpoint",
+          "status": "completed",
+          "notes": "Weight -1.4 kg; consistent 7.5h sleep achieved."
+        },
+        {
+          "day": 90,
+          "label": "90-Day Checkpoint",
+          "status": "completed",
+          "notes": "Waist reduced by 3 cm; lab review scheduled."
+        },
+        {
+          "day": 180,
+          "label": "Month 6 Transition",
+          "status": "due",
+          "notes": "Ready to transition from Phase 1 (Learning) to Phase 2 (Maintenance)."
+        },
+        {
+          "day": 365,
+          "label": "12-Month Outcome",
+          "status": "upcoming",
+          "notes": "Annual longitudinal review & HbA1c re-evaluation."
+        }
+      ],
+      "lessons": [
+        {
+          "id": "les-1",
+          "week": 1,
+          "phase": 1,
+          "title": "Balanced South Indian Plate (Thali Proportions)",
+          "titleTa": "சமச்சீரான தென்னிந்திய உணவுத் தட்டு",
+          "category": "Indian Nutrition",
+          "durationMinutes": 6,
+          "summary": "Fill half your plate with poriyal/kootu greens, one quarter with sambar/dal or sprouts, and one quarter with hand-pounded rice or millets.",
+          "completed": true,
+          "completedAt": "2026-10-02T09:00:00Z"
+        },
+        {
+          "id": "les-2",
+          "week": 2,
+          "phase": 1,
+          "title": "15-Minute Post-Meal Walking for Glucose Stability",
+          "titleTa": "உணவுக்குப் பின் 15 நிமிட நடைப்பயிற்சி",
+          "category": "Physical Activity",
+          "durationMinutes": 5,
+          "summary": "Light brisk walking 15–20 minutes after lunch and dinner gently lowers post-meal blood glucose spikes.",
+          "completed": true,
+          "completedAt": "2026-10-10T10:15:00Z"
+        },
+        {
+          "id": "les-3",
+          "week": 3,
+          "phase": 1,
+          "title": "Millet Swaps: Ragi, Thinai & Kambu in Daily Meals",
+          "titleTa": "தினசரி உணவில் சிறுதானிய மாற்றங்கள்",
+          "category": "Indian Nutrition",
+          "durationMinutes": 7,
+          "summary": "Practical ways to blend ragi dosa, thinai upma, and vegetable dalia without losing family meal enjoyment.",
+          "completed": true,
+          "completedAt": "2026-10-18T11:30:00Z"
+        },
+        {
+          "id": "les-4",
+          "week": 4,
+          "phase": 1,
+          "title": "Restorative Sleep & Stress Cortisol Balance",
+          "titleTa": "நல்ல தூக்கம் மற்றும் மன அழுத்த சமநிலை",
+          "category": "Sleep & Stress",
+          "durationMinutes": 6,
+          "summary": "Consistent 7–8 hour sleep routines support insulin sensitivity and reduce late-night cravings.",
+          "completed": false
+        },
+        {
+          "id": "les-5",
+          "week": 12,
+          "phase": 1,
+          "title": "90-Day Checkpoint: Understanding HbA1c & Fasting Glucose",
+          "titleTa": "90-நாள் சோதனை: HbA1c மற்றும் சர்க்கரை அளவு வழிகாட்டி",
+          "category": "Monitoring",
+          "durationMinutes": 8,
+          "summary": "How laboratory blood tests complement lifestyle tracking — and why clinical interpretation belongs to your doctor.",
+          "completed": false
+        },
+        {
+          "id": "les-6",
+          "week": 28,
+          "phase": 2,
+          "title": "Maintenance Phase: Festival Meals & Travel Continuity",
+          "titleTa": "பராமரிப்பு கட்டம்: பண்டிகை உணவு மற்றும் பயண வழிகாட்டி",
+          "category": "Indian Nutrition",
+          "durationMinutes": 6,
+          "summary": "Long-term maintenance strategies for Months 7–12 to sustain waist and step habits during celebrations.",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "id": "prog-2",
+      "patientId": "pat-2",
+      "startedAt": "2026-09-01T09:00:00Z",
+      "currentMonth": 3,
+      "phase": "PHASE 1: LEARNING (Months 1-6)",
+      "adherencePercent": 48,
+      "baselineWeightKg": 86,
+      "currentWeightKg": 84,
+      "baselineWaistCm": 101,
+      "currentWaistCm": 99,
+      "checkpoints": [
+        {
+          "day": 30,
+          "label": "30-Day Checkpoint",
+          "status": "completed",
+          "notes": "Reduced sweetened tea frequency."
+        },
+        {
+          "day": 60,
+          "label": "60-Day Checkpoint",
+          "status": "completed",
+          "notes": "Shift work barrier noted for evening walks."
+        },
+        {
+          "day": 90,
+          "label": "90-Day Checkpoint",
+          "status": "due",
+          "notes": "Health worker coaching follow-up scheduled."
+        },
+        {
+          "day": 180,
+          "label": "Month 6 Transition",
+          "status": "upcoming",
+          "notes": "Pending Phase 1 completion."
+        },
+        {
+          "day": 365,
+          "label": "12-Month Outcome",
+          "status": "upcoming",
+          "notes": "Annual review."
+        }
+      ],
+      "lessons": [
+        {
+          "id": "les-1",
+          "week": 1,
+          "phase": 1,
+          "title": "Balanced South Indian Plate (Thali Proportions)",
+          "titleTa": "சமச்சீரான தென்னிந்திய உணவுத் தட்டு",
+          "category": "Indian Nutrition",
+          "durationMinutes": 6,
+          "summary": "Fill half your plate with poriyal/kootu greens, one quarter with sambar/dal or sprouts, and one quarter with hand-pounded rice or millets.",
+          "completed": true,
+          "completedAt": "2026-10-02T09:00:00Z"
+        },
+        {
+          "id": "les-2",
+          "week": 2,
+          "phase": 1,
+          "title": "15-Minute Post-Meal Walking for Glucose Stability",
+          "titleTa": "உணவுக்குப் பின் 15 நிமிட நடைப்பயிற்சி",
+          "category": "Physical Activity",
+          "durationMinutes": 5,
+          "summary": "Light brisk walking 15–20 minutes after lunch and dinner gently lowers post-meal blood glucose spikes.",
+          "completed": false,
+          "completedAt": "2026-10-10T10:15:00Z"
+        },
+        {
+          "id": "les-3",
+          "week": 3,
+          "phase": 1,
+          "title": "Millet Swaps: Ragi, Thinai & Kambu in Daily Meals",
+          "titleTa": "தினசரி உணவில் சிறுதானிய மாற்றங்கள்",
+          "category": "Indian Nutrition",
+          "durationMinutes": 7,
+          "summary": "Practical ways to blend ragi dosa, thinai upma, and vegetable dalia without losing family meal enjoyment.",
+          "completed": false,
+          "completedAt": "2026-10-18T11:30:00Z"
+        },
+        {
+          "id": "les-4",
+          "week": 4,
+          "phase": 1,
+          "title": "Restorative Sleep & Stress Cortisol Balance",
+          "titleTa": "நல்ல தூக்கம் மற்றும் மன அழுத்த சமநிலை",
+          "category": "Sleep & Stress",
+          "durationMinutes": 6,
+          "summary": "Consistent 7–8 hour sleep routines support insulin sensitivity and reduce late-night cravings.",
+          "completed": false
+        },
+        {
+          "id": "les-5",
+          "week": 12,
+          "phase": 1,
+          "title": "90-Day Checkpoint: Understanding HbA1c & Fasting Glucose",
+          "titleTa": "90-நாள் சோதனை: HbA1c மற்றும் சர்க்கரை அளவு வழிகாட்டி",
+          "category": "Monitoring",
+          "durationMinutes": 8,
+          "summary": "How laboratory blood tests complement lifestyle tracking — and why clinical interpretation belongs to your doctor.",
+          "completed": false
+        },
+        {
+          "id": "les-6",
+          "week": 28,
+          "phase": 2,
+          "title": "Maintenance Phase: Festival Meals & Travel Continuity",
+          "titleTa": "பராமரிப்பு கட்டம்: பண்டிகை உணவு மற்றும் பயண வழிகாட்டி",
+          "category": "Indian Nutrition",
+          "durationMinutes": 6,
+          "summary": "Long-term maintenance strategies for Months 7–12 to sustain waist and step habits during celebrations.",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "id": "prog-3",
+      "patientId": "pat-3",
+      "startedAt": "2026-09-15T09:00:00Z",
+      "currentMonth": 2,
+      "phase": "PHASE 1: LEARNING (Months 1-6)",
+      "adherencePercent": 64,
+      "baselineWeightKg": 72.5,
+      "currentWeightKg": 71,
+      "baselineWaistCm": 90,
+      "currentWaistCm": 88,
+      "checkpoints": [
+        {
+          "day": 30,
+          "label": "30-Day Checkpoint",
+          "status": "completed",
+          "notes": "Consistent morning walk group attendance."
+        },
+        {
+          "day": 60,
+          "label": "60-Day Checkpoint",
+          "status": "due",
+          "notes": "Review portion sizes and waist tracking."
+        },
+        {
+          "day": 90,
+          "label": "90-Day Checkpoint",
+          "status": "upcoming",
+          "notes": "Repeat FPG/HbA1c discussion."
+        },
+        {
+          "day": 180,
+          "label": "Month 6 Transition",
+          "status": "upcoming",
+          "notes": "Phase 2 entry."
+        },
+        {
+          "day": 365,
+          "label": "12-Month Outcome",
+          "status": "upcoming",
+          "notes": "Annual review."
+        }
+      ],
+      "lessons": [
+        {
+          "id": "les-1",
+          "week": 1,
+          "phase": 1,
+          "title": "Balanced South Indian Plate (Thali Proportions)",
+          "titleTa": "சமச்சீரான தென்னிந்திய உணவுத் தட்டு",
+          "category": "Indian Nutrition",
+          "durationMinutes": 6,
+          "summary": "Fill half your plate with poriyal/kootu greens, one quarter with sambar/dal or sprouts, and one quarter with hand-pounded rice or millets.",
+          "completed": true,
+          "completedAt": "2026-10-02T09:00:00Z"
+        },
+        {
+          "id": "les-2",
+          "week": 2,
+          "phase": 1,
+          "title": "15-Minute Post-Meal Walking for Glucose Stability",
+          "titleTa": "உணவுக்குப் பின் 15 நிமிட நடைப்பயிற்சி",
+          "category": "Physical Activity",
+          "durationMinutes": 5,
+          "summary": "Light brisk walking 15–20 minutes after lunch and dinner gently lowers post-meal blood glucose spikes.",
+          "completed": true,
+          "completedAt": "2026-10-10T10:15:00Z"
+        },
+        {
+          "id": "les-3",
+          "week": 3,
+          "phase": 1,
+          "title": "Millet Swaps: Ragi, Thinai & Kambu in Daily Meals",
+          "titleTa": "தினசரி உணவில் சிறுதானிய மாற்றங்கள்",
+          "category": "Indian Nutrition",
+          "durationMinutes": 7,
+          "summary": "Practical ways to blend ragi dosa, thinai upma, and vegetable dalia without losing family meal enjoyment.",
+          "completed": false,
+          "completedAt": "2026-10-18T11:30:00Z"
+        },
+        {
+          "id": "les-4",
+          "week": 4,
+          "phase": 1,
+          "title": "Restorative Sleep & Stress Cortisol Balance",
+          "titleTa": "நல்ல தூக்கம் மற்றும் மன அழுத்த சமநிலை",
+          "category": "Sleep & Stress",
+          "durationMinutes": 6,
+          "summary": "Consistent 7–8 hour sleep routines support insulin sensitivity and reduce late-night cravings.",
+          "completed": false
+        },
+        {
+          "id": "les-5",
+          "week": 12,
+          "phase": 1,
+          "title": "90-Day Checkpoint: Understanding HbA1c & Fasting Glucose",
+          "titleTa": "90-நாள் சோதனை: HbA1c மற்றும் சர்க்கரை அளவு வழிகாட்டி",
+          "category": "Monitoring",
+          "durationMinutes": 8,
+          "summary": "How laboratory blood tests complement lifestyle tracking — and why clinical interpretation belongs to your doctor.",
+          "completed": false
+        },
+        {
+          "id": "les-6",
+          "week": 28,
+          "phase": 2,
+          "title": "Maintenance Phase: Festival Meals & Travel Continuity",
+          "titleTa": "பராமரிப்பு கட்டம்: பண்டிகை உணவு மற்றும் பயண வழிகாட்டி",
+          "category": "Indian Nutrition",
+          "durationMinutes": 6,
+          "summary": "Long-term maintenance strategies for Months 7–12 to sustain waist and step habits during celebrations.",
+          "completed": false
+        }
+      ]
+    }
+  ],
+  "habitLogs": [
+    {
+      "id": "hab-1795346260273-499",
+      "patientId": "pat-1",
+      "date": "2026-11-22",
+      "healthyIndianDiet": true,
+      "stepsAchieved": 7600,
+      "sleepHours": 7.5,
+      "recordedOffline": true,
+      "syncStatus": "synced",
+      "idempotencyKey": "verify-idem-1795346260264"
+    },
+    {
+      "id": "hab-1",
+      "patientId": "pat-1",
+      "date": "2026-11-17",
+      "healthyIndianDiet": true,
+      "stepsAchieved": 7800,
+      "sleepHours": 7.5,
+      "weightKg": 60.4,
+      "waistCm": 78.5,
+      "recordedOffline": false,
+      "syncStatus": "synced"
+    },
+    {
+      "id": "hab-2",
+      "patientId": "pat-1",
+      "date": "2026-11-18",
+      "healthyIndianDiet": true,
+      "stepsAchieved": 8450,
+      "sleepHours": 7.8,
+      "weightKg": 60.2,
+      "waistCm": 78.2,
+      "recordedOffline": false,
+      "syncStatus": "synced"
+    },
+    {
+      "id": "hab-3",
+      "patientId": "pat-1",
+      "date": "2026-11-19",
+      "healthyIndianDiet": true,
+      "stepsAchieved": 8120,
+      "sleepHours": 7.2,
+      "weightKg": 60.1,
+      "waistCm": 78,
+      "recordedOffline": true,
+      "syncStatus": "synced"
+    },
+    {
+      "id": "hab-4",
+      "patientId": "pat-1",
+      "date": "2026-11-20",
+      "healthyIndianDiet": false,
+      "stepsAchieved": 6200,
+      "sleepHours": 6.8,
+      "weightKg": 60,
+      "waistCm": 78,
+      "barrierReported": "Heavy rain prevented outdoor evening walk",
+      "recordedOffline": false,
+      "syncStatus": "synced"
+    },
+    {
+      "id": "hab-5",
+      "patientId": "pat-1",
+      "date": "2026-11-21",
+      "healthyIndianDiet": true,
+      "stepsAchieved": 8600,
+      "sleepHours": 7.6,
+      "weightKg": 60,
+      "waistCm": 78,
+      "recordedOffline": false,
+      "syncStatus": "synced"
+    },
+    {
+      "id": "hab-6",
+      "patientId": "pat-2",
+      "date": "2026-11-19",
+      "healthyIndianDiet": false,
+      "stepsAchieved": 2900,
+      "sleepHours": 5.5,
+      "weightKg": 84.2,
+      "waistCm": 99,
+      "barrierReported": "Late night shift fatigue",
+      "recordedOffline": true,
+      "syncStatus": "synced"
+    }
+  ],
+  "interventions": [
+    {
+      "id": "int-1",
+      "patientId": "pat-2",
+      "triggeredAt": "2026-11-19T19:00:00Z",
+      "triggerRule": "Deterministic Rule L2: Daily steps below 4,000 threshold",
+      "ladderStep": 2,
+      "actionType": "simpler_activity",
+      "recommendedMessage": "Offer simpler indoor 10-minute post-meal walking alternative due to late-shift fatigue.",
+      "experimentalBanditArm": "Experimental Educational Selector (Pre-Approved Only) → Arm C (Micro-Habit Start): Begin with just 5 minutes of gentle indoor walking after lunch for 3 days.",
+      "status": "active"
+    }
+  ],
+  "screenings": [
+    {
+      "id": "scr-1",
+      "patientId": "pat-1",
+      "capturedAt": "2026-11-16T09:40:00Z",
+      "eye": "Right (OD)",
+      "cameraSource": "Remidio FOP Non-Mydriatic Fundus Camera (Synthetic Demo Capture)",
+      "imagePreset": "normal_demo",
+      "quality": {
+        "sharpnessScore": 88,
+        "brightnessMean": 124,
+        "exposureClipPercent": 1.4,
+        "width": 512,
+        "height": 512,
+        "gradable": true
+      },
+      "anatomicalStructures": {
+        "opticDiscDetected": true,
+        "vesselDensityIndex": 0.78,
+        "maculaCentered": true
+      },
+      "lesionFindings": {
+        "hardExudatesFlag": false,
+        "haemorrhagesFlag": false,
+        "microaneurysmsExperimentalNote": "Microaneurysm detection is marked as an experimental/advanced research capability requiring high-resolution IDRiD-calibrated models.",
+        "implementationStatus": "Illustrative / Prototype Heuristic"
+      },
+      "modelPrediction": {
+        "modelVersion": "mritidhristi-prototype-icdr-v0.1 (Illustrative)",
+        "architectureReference": "EfficientNet-B3 / ResNet-50 Pipeline Interface (No Clinical Weights Loaded)",
+        "icdrGrade": 0,
+        "gradeLabel": "ICDR Grade 0 — No Apparent DR (Illustrative Screening Assist)",
+        "confidence": 0.91,
+        "uncertainty": 0.09,
+        "oodFlag": false,
+        "gradeWithheld": false,
+        "isIllustrativeOutput": true
+      },
+      "gradCam": {
+        "available": true,
+        "hotspots": [
+          {
+            "x": 0.66,
+            "y": 0.48,
+            "radius": 0.16,
+            "intensity": 0.45
+          },
+          {
+            "x": 0.45,
+            "y": 0.5,
+            "radius": 0.18,
+            "intensity": 0.35
+          }
+        ],
+        "limitationNotice": "Grad-CAM highlights coarse spatial regions influencing model activation; it does not localize exact micro-lesion boundaries or confirm clinical diagnosis."
+      },
+      "humanReviewStatus": "confirmed",
+      "summaryText": "Gradable fundus capture. Illustrative screening output indicates ICDR Grade 0; reviewed and confirmed by Dr. Arvind Raman for routine 12-month follow-up."
+    },
+    {
+      "id": "scr-2",
+      "patientId": "pat-2",
+      "capturedAt": "2026-11-21T10:15:00Z",
+      "eye": "Left (OS)",
+      "cameraSource": "Forus 3nethra Classic Fundus Camera (Synthetic Demo Capture)",
+      "imagePreset": "moderate_npdr_demo",
+      "quality": {
+        "sharpnessScore": 81,
+        "brightnessMean": 118,
+        "exposureClipPercent": 2.1,
+        "width": 512,
+        "height": 512,
+        "gradable": true
+      },
+      "anatomicalStructures": {
+        "opticDiscDetected": true,
+        "vesselDensityIndex": 0.74,
+        "maculaCentered": true
+      },
+      "lesionFindings": {
+        "hardExudatesFlag": true,
+        "haemorrhagesFlag": true,
+        "microaneurysmsExperimentalNote": "Microaneurysm candidates require ophthalmologist slit-lamp / OCT confirmation (experimental module).",
+        "implementationStatus": "Illustrative / Prototype Heuristic"
+      },
+      "modelPrediction": {
+        "modelVersion": "mritidhristi-prototype-icdr-v0.1 (Illustrative)",
+        "architectureReference": "EfficientNet-B3 / ResNet-50 Pipeline Interface (No Clinical Weights Loaded)",
+        "icdrGrade": 2,
+        "gradeLabel": "ICDR Grade 2 — Moderate NPDR Suspected (Illustrative Screening Assist)",
+        "confidence": 0.82,
+        "uncertainty": 0.18,
+        "oodFlag": false,
+        "gradeWithheld": false,
+        "isIllustrativeOutput": true
+      },
+      "gradCam": {
+        "available": true,
+        "hotspots": [
+          {
+            "x": 0.38,
+            "y": 0.42,
+            "radius": 0.15,
+            "intensity": 0.88
+          },
+          {
+            "x": 0.54,
+            "y": 0.62,
+            "radius": 0.14,
+            "intensity": 0.79
+          },
+          {
+            "x": 0.46,
+            "y": 0.49,
+            "radius": 0.12,
+            "intensity": 0.65
+          }
+        ],
+        "limitationNotice": "Grad-CAM highlights coarse spatial regions influencing model activation; it does not localize exact micro-lesion boundaries or confirm clinical diagnosis."
+      },
+      "humanReviewStatus": "pending_review",
+      "summaryText": "Gradable fundus capture showing illustrative lesion candidates near posterior pole. Awaiting mandatory doctor clinical review and triage decision."
+    }
+  ],
+  "doctorReviews": [
+    {
+      "id": "rev-1",
+      "screeningId": "scr-1",
+      "patientId": "pat-1",
+      "doctorId": "usr-doctor-1",
+      "doctorName": "Dr. Arvind Raman",
+      "reviewedAt": "2026-11-16T14:20:00Z",
+      "decision": "confirmed",
+      "clinicianGrade": "No Apparent Diabetic Retinopathy (Clinician Confirmed)",
+      "triageCategory": "Routine (12 months)",
+      "clinicalNotes": "Clear optic disc margins and healthy macular reflex. No exudates or haemorrhages identified on review.",
+      "recommendedNextSteps": "Continue 12-month prevention programme and repeat retinal screening in 12 months (or 6 months if HbA1c rises)."
+    }
+  ],
+  "referrals": [
+    {
+      "id": "ref-1",
+      "patientId": "pat-2",
+      "screeningId": "scr-2",
+      "createdByDoctorId": "usr-doctor-1",
+      "createdByDoctorName": "Dr. Arvind Raman",
+      "createdAt": "2026-11-21T12:00:00Z",
+      "targetFacility": "Regional Institute of Ophthalmology, Egmore",
+      "specialty": "Ophthalmology",
+      "urgency": "Priority",
+      "reason": "Pending clinician confirmation of suspected Moderate NPDR with HbA1c 8.4% — dilated fundus exam and OCT evaluation.",
+      "status": "Pending"
+    }
+  ],
+  "appointments": [
+    {
+      "id": "apt-1",
+      "patientId": "pat-1",
+      "title": "Follow-up Consultation & Month-6 Checkpoint",
+      "facility": "Adyar Urban PHC / City Hospital",
+      "clinicianName": "Dr. Arvind Raman",
+      "scheduledDate": "2026-11-28",
+      "scheduledTime": "10:30 AM",
+      "type": "Follow-up Consultation",
+      "status": "Confirmed",
+      "reminderNote": "Bring latest home step log and waist measurement record."
+    },
+    {
+      "id": "apt-2",
+      "patientId": "pat-2",
+      "title": "Ophthalmology Dilated Exam & Diabetology Review",
+      "facility": "Regional Institute of Ophthalmology",
+      "clinicianName": "Dr. Priya Natarajan (Ophthalmologist)",
+      "scheduledDate": "2026-11-25",
+      "scheduledTime": "09:15 AM",
+      "type": "Ophthalmology Referral",
+      "status": "Pending Confirmation",
+      "reminderNote": "Requires online hospital slot confirmation; bring PHC referral slip."
+    },
+    {
+      "id": "apt-3",
+      "patientId": "pat-3",
+      "title": "90-Day HbA1c & Fasting Glucose Lab Test",
+      "facility": "Tambaram Primary Health Centre",
+      "clinicianName": "Dr. Arvind Raman",
+      "scheduledDate": "2026-11-19",
+      "scheduledTime": "08:00 AM",
+      "type": "Lab Testing (HbA1c/FPG)",
+      "status": "Missed",
+      "reminderNote": "8-hour overnight fasting required prior to blood draw.",
+      "escalated": true
+    }
+  ],
+  "followUps": [
+    {
+      "id": "fu-1",
+      "patientId": "pat-1",
+      "healthWorkerName": "Anitha K (VHN)",
+      "dueDate": "2026-12-05",
+      "channel": "In-Person PHC",
+      "status": "Scheduled",
+      "outcomeNotes": "Transition counselling from Phase 1 Learning to Phase 2 Maintenance.",
+      "nextScreeningDate": "2027-05-16"
+    },
+    {
+      "id": "fu-2",
+      "patientId": "pat-3",
+      "healthWorkerName": "Anitha K (VHN)",
+      "dueDate": "2026-11-23",
+      "channel": "Phone Call",
+      "status": "Escalated",
+      "outcomeNotes": "Escalated due to missed 2026-11-19 lab appointment. Reschedule fasting glucose draw."
+    }
+  ],
+  "notifications": [
+    {
+      "id": "not-1",
+      "roleTargets": [
+        "doctor",
+        "admin"
+      ],
+      "patientId": "pat-2",
+      "severity": "urgent",
+      "title": "Doctor Review Required",
+      "message": "Retinal screening for Karthik Subramanian (MRD-TN-01089) awaits clinical confirmation & triage.",
+      "createdAt": "2026-11-21T10:20:00Z",
+      "read": false,
+      "actionView": "protect"
+    },
+    {
+      "id": "not-2",
+      "roleTargets": [
+        "patient",
+        "doctor"
+      ],
+      "patientId": "pat-1",
+      "severity": "info",
+      "title": "Upcoming Follow-up Consultation",
+      "message": "Follow-up consultation confirmed for 28 Nov at 10:30 AM · Adyar Urban PHC / City Hospital.",
+      "createdAt": "2026-11-21T16:00:00Z",
+      "read": false,
+      "actionView": "appointments"
+    },
+    {
+      "id": "not-3",
+      "roleTargets": [
+        "patient",
+        "doctor",
+        "admin"
+      ],
+      "patientId": "pat-1",
+      "severity": "success",
+      "title": "Offline Sync Ready",
+      "message": "IndexedDB offline queue is initialized and synchronized with backend records.",
+      "createdAt": "2026-11-22T01:00:00Z",
+      "read": false,
+      "actionView": "offline"
+    },
+    {
+      "id": "not-4",
+      "roleTargets": [
+        "doctor",
+        "admin"
+      ],
+      "patientId": "pat-3",
+      "severity": "warning",
+      "title": "Missed Lab Appointment Escalated",
+      "message": "Lakshmi Narayanan missed 19 Nov HbA1c test; VHN phone follow-up assigned.",
+      "createdAt": "2026-11-20T12:30:00Z",
+      "read": false,
+      "actionView": "protect"
+    }
+  ],
+  "districtResources": [
+    {
+      "id": "res-1",
+      "facilityName": "Adyar Urban PHC",
+      "type": "PHC",
+      "fundusCameras": 2,
+      "ophthalmologists": 0,
+      "healthWorkers": 6,
+      "dailyCapacity": 45,
+      "currentUtilizationPct": 76,
+      "connectivityProfile": "Stable Broadband"
+    },
+    {
+      "id": "res-2",
+      "facilityName": "Sriperumbudur Block PHC",
+      "type": "PHC",
+      "fundusCameras": 1,
+      "ophthalmologists": 0,
+      "healthWorkers": 5,
+      "dailyCapacity": 30,
+      "currentUtilizationPct": 88,
+      "connectivityProfile": "Offline-First Rural"
+    },
+    {
+      "id": "res-3",
+      "facilityName": "Tambaram Taluk Hospital",
+      "type": "District Hospital",
+      "fundusCameras": 2,
+      "ophthalmologists": 2,
+      "healthWorkers": 9,
+      "dailyCapacity": 55,
+      "currentUtilizationPct": 71,
+      "connectivityProfile": "Stable Broadband"
+    },
+    {
+      "id": "res-4",
+      "facilityName": "Chengalpattu Mobile Eye Van #1",
+      "type": "Mobile Screening Unit",
+      "fundusCameras": 1,
+      "ophthalmologists": 1,
+      "healthWorkers": 4,
+      "dailyCapacity": 25,
+      "currentUtilizationPct": 82,
+      "connectivityProfile": "Intermittent 4G"
+    }
+  ],
+  "simulations": [
+    {
+      "id": "sim-1",
+      "scenarioKey": "normal",
+      "name": "1. Normal Conditions",
+      "description": "Baseline district screening load across 4 PHCs and 1 District Hospital with full fundus camera and specialist staffing.",
+      "source": "Illustrative Analytical Simulation (Not MATLAB Execution)",
+      "dailyPatientArrivals": 120,
+      "camerasAvailable": 6,
+      "screeningCapacityPerDay": 150,
+      "imageThroughputPerHour": 24,
+      "ophthalmologistsAvailable": 3,
+      "healthWorkerWorkloadPct": 68,
+      "referralDemandPerWeek": 42,
+      "avgQueueLength": 6,
+      "avgWaitTimeMinutes": 18,
+      "resourceUtilizationPct": 74,
+      "estimatedMonthlyCostInr": 485000,
+      "bottleneck": "None — operating within planned capacity buffer",
+      "hourlyQueueCurve": [
+        {
+          "hour": "08:00",
+          "queueLength": 2,
+          "waitMinutes": 7
+        },
+        {
+          "hour": "10:00",
+          "queueLength": 6,
+          "waitMinutes": 17
+        },
+        {
+          "hour": "12:00",
+          "queueLength": 9,
+          "waitMinutes": 22
+        },
+        {
+          "hour": "14:00",
+          "queueLength": 7,
+          "waitMinutes": 19
+        },
+        {
+          "hour": "16:00",
+          "queueLength": 4,
+          "waitMinutes": 11
+        },
+        {
+          "hour": "18:00",
+          "queueLength": 2,
+          "waitMinutes": 5
+        }
+      ]
+    },
+    {
+      "id": "sim-2",
+      "scenarioKey": "high_volume",
+      "name": "2. High Patient Volume",
+      "description": "District-wide diabetes awareness camp increases daily screening arrivals by 85% without additional camera deployment.",
+      "source": "Illustrative Analytical Simulation (Not MATLAB Execution)",
+      "dailyPatientArrivals": 222,
+      "camerasAvailable": 6,
+      "screeningCapacityPerDay": 165,
+      "imageThroughputPerHour": 26,
+      "ophthalmologistsAvailable": 3,
+      "healthWorkerWorkloadPct": 96,
+      "referralDemandPerWeek": 78,
+      "avgQueueLength": 29,
+      "avgWaitTimeMinutes": 54,
+      "resourceUtilizationPct": 97,
+      "estimatedMonthlyCostInr": 612000,
+      "bottleneck": "Fundus capture desks & PHC health worker triage",
+      "hourlyQueueCurve": [
+        {
+          "hour": "08:00",
+          "queueLength": 10,
+          "waitMinutes": 20
+        },
+        {
+          "hour": "10:00",
+          "queueLength": 27,
+          "waitMinutes": 51
+        },
+        {
+          "hour": "12:00",
+          "queueLength": 38,
+          "waitMinutes": 68
+        },
+        {
+          "hour": "14:00",
+          "queueLength": 30,
+          "waitMinutes": 58
+        },
+        {
+          "hour": "16:00",
+          "queueLength": 17,
+          "waitMinutes": 34
+        },
+        {
+          "hour": "18:00",
+          "queueLength": 7,
+          "waitMinutes": 15
+        }
+      ]
+    },
+    {
+      "id": "sim-3",
+      "scenarioKey": "limited_connectivity",
+      "name": "3. Limited Connectivity",
+      "description": "Rural blocks experience 6-hour intermittent 4G blackouts; PWA offline capture continues locally while remote doctor review batches sync.",
+      "source": "Illustrative Analytical Simulation (Not MATLAB Execution)",
+      "dailyPatientArrivals": 120,
+      "camerasAvailable": 6,
+      "screeningCapacityPerDay": 142,
+      "imageThroughputPerHour": 15,
+      "ophthalmologistsAvailable": 3,
+      "healthWorkerWorkloadPct": 76,
+      "referralDemandPerWeek": 42,
+      "avgQueueLength": 11,
+      "avgWaitTimeMinutes": 27,
+      "resourceUtilizationPct": 79,
+      "estimatedMonthlyCostInr": 505000,
+      "bottleneck": "Asynchronous upload backlog for remote clinical review",
+      "hourlyQueueCurve": [
+        {
+          "hour": "08:00",
+          "queueLength": 4,
+          "waitMinutes": 10
+        },
+        {
+          "hour": "10:00",
+          "queueLength": 11,
+          "waitMinutes": 26
+        },
+        {
+          "hour": "12:00",
+          "queueLength": 15,
+          "waitMinutes": 34
+        },
+        {
+          "hour": "14:00",
+          "queueLength": 12,
+          "waitMinutes": 29
+        },
+        {
+          "hour": "16:00",
+          "queueLength": 7,
+          "waitMinutes": 17
+        },
+        {
+          "hour": "18:00",
+          "queueLength": 3,
+          "waitMinutes": 7
+        }
+      ]
+    },
+    {
+      "id": "sim-4",
+      "scenarioKey": "camera_shortage",
+      "name": "4. Camera Shortage",
+      "description": "Two of six fundus cameras undergo calibration maintenance, reducing district imaging capacity by 33%.",
+      "source": "Illustrative Analytical Simulation (Not MATLAB Execution)",
+      "dailyPatientArrivals": 120,
+      "camerasAvailable": 4,
+      "screeningCapacityPerDay": 100,
+      "imageThroughputPerHour": 16,
+      "ophthalmologistsAvailable": 3,
+      "healthWorkerWorkloadPct": 84,
+      "referralDemandPerWeek": 36,
+      "avgQueueLength": 24,
+      "avgWaitTimeMinutes": 49,
+      "resourceUtilizationPct": 95,
+      "estimatedMonthlyCostInr": 452000,
+      "bottleneck": "Fundus camera availability (1.2x arrival-to-service ratio)",
+      "hourlyQueueCurve": [
+        {
+          "hour": "08:00",
+          "queueLength": 8,
+          "waitMinutes": 18
+        },
+        {
+          "hour": "10:00",
+          "queueLength": 22,
+          "waitMinutes": 46
+        },
+        {
+          "hour": "12:00",
+          "queueLength": 31,
+          "waitMinutes": 61
+        },
+        {
+          "hour": "14:00",
+          "queueLength": 25,
+          "waitMinutes": 52
+        },
+        {
+          "hour": "16:00",
+          "queueLength": 14,
+          "waitMinutes": 31
+        },
+        {
+          "hour": "18:00",
+          "queueLength": 6,
+          "waitMinutes": 13
+        }
+      ]
+    },
+    {
+      "id": "sim-5",
+      "scenarioKey": "ophthalmologist_shortage",
+      "name": "5. Ophthalmologist Shortage",
+      "description": "Only 1 district ophthalmologist available during leave period; screening capture continues while specialist review queue grows.",
+      "source": "Illustrative Analytical Simulation (Not MATLAB Execution)",
+      "dailyPatientArrivals": 120,
+      "camerasAvailable": 6,
+      "screeningCapacityPerDay": 150,
+      "imageThroughputPerHour": 24,
+      "ophthalmologistsAvailable": 1,
+      "healthWorkerWorkloadPct": 82,
+      "referralDemandPerWeek": 46,
+      "avgQueueLength": 34,
+      "avgWaitTimeMinutes": 72,
+      "resourceUtilizationPct": 98,
+      "estimatedMonthlyCostInr": 438000,
+      "bottleneck": "Ophthalmologist clinical review & referral backlog",
+      "hourlyQueueCurve": [
+        {
+          "hour": "08:00",
+          "queueLength": 11,
+          "waitMinutes": 26
+        },
+        {
+          "hour": "10:00",
+          "queueLength": 30,
+          "waitMinutes": 65
+        },
+        {
+          "hour": "12:00",
+          "queueLength": 42,
+          "waitMinutes": 86
+        },
+        {
+          "hour": "14:00",
+          "queueLength": 34,
+          "waitMinutes": 73
+        },
+        {
+          "hour": "16:00",
+          "queueLength": 19,
+          "waitMinutes": 43
+        },
+        {
+          "hour": "18:00",
+          "queueLength": 8,
+          "waitMinutes": 19
+        }
+      ]
+    },
+    {
+      "id": "sim-6",
+      "scenarioKey": "increased_referral",
+      "name": "6. Increased Referral Demand",
+      "description": "Higher proportion of long-duration diabetes patients raises referable findings by 65%, straining tertiary ophthalmology slots.",
+      "source": "Illustrative Analytical Simulation (Not MATLAB Execution)",
+      "dailyPatientArrivals": 145,
+      "camerasAvailable": 6,
+      "screeningCapacityPerDay": 150,
+      "imageThroughputPerHour": 23,
+      "ophthalmologistsAvailable": 2,
+      "healthWorkerWorkloadPct": 89,
+      "referralDemandPerWeek": 92,
+      "avgQueueLength": 26,
+      "avgWaitTimeMinutes": 58,
+      "resourceUtilizationPct": 93,
+      "estimatedMonthlyCostInr": 675000,
+      "bottleneck": "Tertiary ophthalmology referral slot capacity",
+      "hourlyQueueCurve": [
+        {
+          "hour": "08:00",
+          "queueLength": 8,
+          "waitMinutes": 21
+        },
+        {
+          "hour": "10:00",
+          "queueLength": 24,
+          "waitMinutes": 53
+        },
+        {
+          "hour": "12:00",
+          "queueLength": 33,
+          "waitMinutes": 70
+        },
+        {
+          "hour": "14:00",
+          "queueLength": 26,
+          "waitMinutes": 60
+        },
+        {
+          "hour": "16:00",
+          "queueLength": 15,
+          "waitMinutes": 35
+        },
+        {
+          "hour": "18:00",
+          "queueLength": 6,
+          "waitMinutes": 15
+        }
+      ]
+    }
+  ],
+  "auditLogs": [
+    {
+      "id": "aud-1795346260282-ccc11a",
+      "timestamp": "2026-11-22T11:17:40.282Z",
+      "userId": "usr-patient-1",
+      "userName": "Shwetha V",
+      "role": "patient",
+      "action": "OFFLINE_SYNC_DUPLICATE_SKIPPED",
+      "resourceType": "HABIT_LOG",
+      "resourceId": "hab-1795346260273-499",
+      "outcome": "CONFLICT",
+      "details": "Duplicate offline submission detected (verify-idem-1795346260264); preserved server record."
+    },
+    {
+      "id": "aud-1795346260273-a036f9",
+      "timestamp": "2026-11-22T11:17:40.273Z",
+      "userId": "usr-patient-1",
+      "userName": "Shwetha V",
+      "role": "patient",
+      "action": "HABIT_LOG_RECORDED",
+      "resourceType": "HabitLog",
+      "resourceId": "hab-1795346260273-499",
+      "outcome": "SUCCESS",
+      "details": "Steps: 7600, Sleep: 7.5h [Synced from Offline Queue]."
+    },
+    {
+      "id": "aud-1795346260251-ffc28d",
+      "timestamp": "2026-11-22T11:17:40.251Z",
+      "userId": "usr-admin-1",
+      "userName": "Meenakshi Sundaram",
+      "role": "admin",
+      "action": "DEMO_SESSION_STARTED",
+      "resourceType": "Session",
+      "resourceId": "usr-admin-1",
+      "outcome": "SUCCESS",
+      "details": "Authenticated synthetic prototype session as admin."
+    },
+    {
+      "id": "aud-1795346260235-3f0c6a",
+      "timestamp": "2026-11-22T11:17:40.235Z",
+      "userId": "usr-patient-1",
+      "userName": "Shwetha V",
+      "role": "patient",
+      "action": "DEMO_SESSION_STARTED",
+      "resourceType": "Session",
+      "resourceId": "usr-patient-1",
+      "outcome": "SUCCESS",
+      "details": "Authenticated synthetic prototype session as patient."
+    },
+    {
+      "id": "aud-1795346049460-57da60",
+      "timestamp": "2026-11-22T11:14:09.460Z",
+      "userId": "usr-doctor-1",
+      "userName": "Dr. Arvind Raman",
+      "role": "doctor",
+      "action": "DEMO_SESSION_STARTED",
+      "resourceType": "Session",
+      "resourceId": "usr-doctor-1",
+      "outcome": "SUCCESS",
+      "details": "Authenticated synthetic prototype session as doctor."
+    },
+    {
+      "id": "aud-1795346049454-4be359",
+      "timestamp": "2026-11-22T11:14:09.454Z",
+      "userId": "usr-patient-1",
+      "userName": "Shwetha V",
+      "role": "patient",
+      "action": "RBAC_ACCESS_DENIED",
+      "resourceType": "API",
+      "resourceId": "GET /api/audit-logs",
+      "outcome": "DENIED",
+      "details": "Role 'patient' attempted restricted operation requiring [doctor, admin]."
+    },
+    {
+      "id": "aud-1795346049440-74b1e9",
+      "timestamp": "2026-11-22T11:14:09.440Z",
+      "userId": "usr-patient-1",
+      "userName": "Shwetha V",
+      "role": "patient",
+      "action": "DEMO_SESSION_STARTED",
+      "resourceType": "Session",
+      "resourceId": "usr-patient-1",
+      "outcome": "SUCCESS",
+      "details": "Authenticated synthetic prototype session as patient."
+    },
+    {
+      "id": "aud-1",
+      "timestamp": "2026-11-16T14:20:00Z",
+      "userId": "usr-doctor-1",
+      "userName": "Dr. Arvind Raman",
+      "role": "doctor",
+      "action": "DOCTOR_REVIEW_SUBMITTED",
+      "resourceType": "RetinalScreening",
+      "resourceId": "scr-1",
+      "outcome": "SUCCESS",
+      "details": "Confirmed ICDR Grade 0 screening assist and set Routine 12-month triage."
+    },
+    {
+      "id": "aud-2",
+      "timestamp": "2026-11-21T10:15:00Z",
+      "userId": "usr-doctor-1",
+      "userName": "Dr. Arvind Raman",
+      "role": "doctor",
+      "action": "RETINAL_SCREENING_CREATED",
+      "resourceType": "RetinalScreening",
+      "resourceId": "scr-2",
+      "outcome": "SUCCESS",
+      "details": "Uploaded gradable fundus capture for pat-2 (synthetic demo); pending clinical review."
+    },
+    {
+      "id": "aud-3",
+      "timestamp": "2026-11-21T12:00:00Z",
+      "userId": "usr-doctor-1",
+      "userName": "Dr. Arvind Raman",
+      "role": "doctor",
+      "action": "REFERRAL_CREATED",
+      "resourceType": "Referral",
+      "resourceId": "ref-1",
+      "outcome": "SUCCESS",
+      "details": "Generated Priority Ophthalmology referral to RIO Egmore."
+    }
+  ],
+  "processedIdempotencyKeys": {
+    "verify-idem-1795346260264": {
+      "syncedAt": "2026-11-22T11:17:40.274Z",
+      "resourceId": "hab-1795346260273-499"
+    }
+  }
+}
