@@ -14,7 +14,8 @@
     "test:prevent": "tsx tests/preventLogicVerification.ts",
     "test:dataset": "tsx tests/datasetVerification.ts",
     "test:cnn": "tsx tests/cnnVerification.ts",
-    "test:retinal": "python tests/retinalInferenceTest.py"
+    "test:retinal": "python tests/retinalInferenceTest.py",
+    "test:offline": "tsx tests/offlineSyncVerification.ts"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",

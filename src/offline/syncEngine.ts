@@ -88,7 +88,7 @@ export async function synchronizePendingQueue(token: string): Promise<{
     syncedAt: string;
     results: {
       idempotencyKey: string;
-      status: 'synced' | 'duplicate_skipped' | 'rejected';
+      status: 'synced' | 'duplicate_skipped' | 'conflict_resolved' | 'rejected';
       resourceId?: string;
       message: string;
     }[];
@@ -96,6 +96,7 @@ export async function synchronizePendingQueue(token: string): Promise<{
 
   let syncedCount = 0;
   let duplicateCount = 0;
+  let conflictCount = 0;
   let errorCount = 0;
 
   for (const res of data.results) {
@@ -115,6 +116,9 @@ export async function synchronizePendingQueue(token: string): Promise<{
       } else if (res.status === 'duplicate_skipped') {
         duplicateCount++;
         await offlineDb.pendingActions.delete(matched.id);
+      } else if (res.status === 'conflict_resolved') {
+        conflictCount++;
+        await offlineDb.pendingActions.delete(matched.id);
       } else {
         errorCount++;
         await offlineDb.pendingActions.update(matched.id, {
@@ -129,6 +133,6 @@ export async function synchronizePendingQueue(token: string): Promise<{
     syncedCount,
     duplicateCount,
     errorCount,
-    message: `Synced ${syncedCount} item(s), skipped ${duplicateCount} duplicate(s), ${errorCount} error(s).`,
+    message: `Synced ${syncedCount} item(s), skipped ${duplicateCount} duplicate(s), resolved ${conflictCount} conflict(s), ${errorCount} error(s).`,
   };
 }

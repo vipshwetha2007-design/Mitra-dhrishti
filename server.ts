@@ -264,7 +264,15 @@ const syncBatchSchema = z.object({
   actions: z.array(
     z.object({
       idempotencyKey: z.string().min(4).max(140),
-      type: z.enum(['LIFESTYLE_ASSESSMENT', 'HABIT_LOG', 'LESSON_COMPLETE', 'CHECKPOINT_COMPLETE']),
+      type: z.enum([
+        'LIFESTYLE_ASSESSMENT',
+        'HABIT_LOG',
+        'LESSON_COMPLETE',
+        'CHECKPOINT_COMPLETE',
+        'VHN_PATIENT_REGISTER',
+        'VHN_FOLLOWUP_UPDATE',
+        'APPOINTMENT_REQUEST',
+      ]),
       createdAt: z.string(),
       payload: z.record(z.string(), z.unknown()),
     })
@@ -1830,7 +1838,7 @@ export async function createMritidhristiApp(options: { skipFrontend?: boolean } 
 
     const results: {
       idempotencyKey: string;
-      status: 'synced' | 'duplicate_skipped' | 'rejected';
+      status: 'synced' | 'duplicate_skipped' | 'conflict_resolved' | 'rejected';
       resourceId?: string;
       message: string;
     }[] = [];
@@ -1991,6 +1999,218 @@ export async function createMritidhristiApp(options: { skipFrontend?: boolean } 
           status: 'synced',
           resourceId: `${prog.id}-${cp.day}`,
           message: `Offline checkpoint (${cp.day}-Day) synchronized.`,
+        });
+      } else if (action.type === 'VHN_PATIENT_REGISTER') {
+        if (user.role !== 'doctor' && user.role !== 'admin') {
+          results.push({
+            idempotencyKey: action.idempotencyKey,
+            status: 'rejected',
+            message: 'Only authorized staff (doctor/admin/VHN supervisor) may register rural beneficiaries.',
+          });
+          continue;
+        }
+
+        const check = patientRegistrationSchema.safeParse(action.payload);
+        if (!check.success) {
+          results.push({
+            idempotencyKey: action.idempotencyKey,
+            status: 'rejected',
+            message: 'Validation error on queued rural patient registration.',
+          });
+          continue;
+        }
+
+        const newPatient: PatientRecord = {
+          id: `pat-vhn-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+          mrn: `MRN-${Math.floor(100000 + Math.random() * 900000)}`,
+          name: check.data.name,
+          age: check.data.age,
+          sex: check.data.sex,
+          phone: check.data.phone,
+          district: check.data.district,
+          villageOrWard: check.data.villageOrWard,
+          language: check.data.language,
+          diabetesStatus: check.data.diabetesStatus,
+          assignedHealthWorker: user.name || 'Anitha K (VHN)',
+          assignedDoctorId: 'usr-doctor-01',
+          registeredAt: action.createdAt || new Date().toISOString(),
+          consent: {
+            id: `con-${Date.now()}`,
+            patientId: '',
+            screeningConsent: check.data.screeningConsent,
+            dataStorageConsent: check.data.dataStorageConsent,
+            offlineCacheConsent: check.data.offlineCacheConsent,
+            clinicalBoundaryAcknowledged: check.data.clinicalBoundaryAcknowledged,
+            consentedAt: action.createdAt || new Date().toISOString(),
+            language: check.data.language,
+          },
+          isSynthetic: false,
+        };
+        newPatient.consent.patientId = newPatient.id;
+        store.data.patients.unshift(newPatient);
+
+        store.data.programmes.push({
+          id: `prog-${newPatient.id}`,
+          patientId: newPatient.id,
+          startedAt: newPatient.registeredAt,
+          currentMonth: 1,
+          phase: 'PHASE 1: LEARNING (Months 1-6)',
+          adherencePercent: 0,
+          baselineWeightKg: 65,
+          currentWeightKg: 65,
+          baselineWaistCm: 85,
+          currentWaistCm: 85,
+          checkpoints: [
+            { day: 30, title: '30-Day Checkpoint: Lifestyle Initiation & Barrier Review', dueDate: new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10), completed: false, status: 'upcoming' },
+            { day: 60, title: '60-Day Checkpoint: Early Habit Reinforcement', dueDate: new Date(Date.now() + 60 * 86400000).toISOString().slice(0, 10), completed: false, status: 'upcoming' },
+            { day: 90, title: '90-Day Checkpoint: Mid-Phase Anthropometric Re-Check', dueDate: new Date(Date.now() + 90 * 86400000).toISOString().slice(0, 10), completed: false, status: 'upcoming' },
+            { day: 180, title: '180-Day Checkpoint: Transition to Phase 2 Maintenance', dueDate: new Date(Date.now() + 180 * 86400000).toISOString().slice(0, 10), completed: false, status: 'upcoming' },
+            { day: 365, title: '365-Day Annual Milestone: Prevention Cohort Completion', dueDate: new Date(Date.now() + 365 * 86400000).toISOString().slice(0, 10), completed: false, status: 'upcoming' },
+          ],
+          lessons: buildDefaultLessons(),
+        });
+
+        store.appendAudit({
+          userId: user.id,
+          userName: user.name,
+          role: user.role,
+          action: 'OFFLINE_PATIENT_REGISTERED',
+          resourceType: 'PatientRecord',
+          resourceId: newPatient.id,
+          outcome: 'SUCCESS',
+          details: `Enrolled rural beneficiary ${newPatient.name} (${newPatient.villageOrWard}) via offline sync.`,
+        });
+
+        store.data.processedIdempotencyKeys[action.idempotencyKey] = {
+          syncedAt: new Date().toISOString(),
+          resourceId: newPatient.id,
+        };
+        results.push({
+          idempotencyKey: action.idempotencyKey,
+          status: 'synced',
+          resourceId: newPatient.id,
+          message: 'Offline rural beneficiary registered and synchronized.',
+        });
+      } else if (action.type === 'VHN_FOLLOWUP_UPDATE') {
+        const followUpId = String(action.payload.followUpId || action.payload.id || '');
+        const fu = store.data.followUps.find((f) => f.id === followUpId);
+        if (!fu) {
+          results.push({
+            idempotencyKey: action.idempotencyKey,
+            status: 'rejected',
+            message: 'Follow-up record not found for offline sync update.',
+          });
+          continue;
+        }
+
+        // CLINICAL CONFLICT RESOLUTION:
+        // Rule: If a doctor or specialist has already marked this follow-up Completed or Escalated on the server,
+        // an offline field update cannot overwrite the doctor's clinical disposition.
+        if (fu.status === 'Completed' || fu.status === 'Escalated') {
+          // Log contact attempt notes without overturning clinical status
+          if (action.payload.attempt && typeof action.payload.attempt === 'object') {
+            const att = action.payload.attempt as any;
+            if (!fu.contactAttempts) fu.contactAttempts = [];
+            fu.contactAttempts.push({
+              id: `att-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+              date: att.date || action.createdAt.slice(0, 10),
+              type: att.type || 'Home Visit',
+              notes: `${att.notes || ''} [Logged via offline sync]`,
+              outcome: att.outcome || 'reached',
+              performedBy: user.name || 'ASHA/VHN Worker',
+            });
+          }
+          store.appendAudit({
+            userId: user.id,
+            userName: user.name,
+            role: user.role,
+            action: 'CLINICAL_OVERRIDE_PRESERVED',
+            resourceType: 'FollowUpRecord',
+            resourceId: fu.id,
+            outcome: 'CONFLICT',
+            details: `Doctor disposition '${fu.status}' preserved over offline field update. Contact attempt recorded in history.`,
+          });
+          store.data.processedIdempotencyKeys[action.idempotencyKey] = {
+            syncedAt: new Date().toISOString(),
+            resourceId: fu.id,
+          };
+          results.push({
+            idempotencyKey: action.idempotencyKey,
+            status: 'conflict_resolved',
+            resourceId: fu.id,
+            message: 'CLINICAL_OVERRIDE_PRESERVED: Clinician disposition takes precedence; field notes recorded in continuity history.',
+          });
+          continue;
+        }
+
+        // Apply normal field update
+        if (typeof action.payload.status === 'string') {
+          fu.status = action.payload.status as any;
+        }
+        if (typeof action.payload.outcomeNotes === 'string') {
+          fu.outcomeNotes = action.payload.outcomeNotes;
+        }
+        if (typeof action.payload.dueDate === 'string') {
+          fu.dueDate = action.payload.dueDate;
+        }
+        if (action.payload.attempt && typeof action.payload.attempt === 'object') {
+          const att = action.payload.attempt as any;
+          if (!fu.contactAttempts) fu.contactAttempts = [];
+          fu.contactAttempts.push({
+            id: `att-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+            date: att.date || action.createdAt.slice(0, 10),
+            type: att.type || 'Home Visit',
+            notes: att.notes || 'Home visit conducted.',
+            outcome: att.outcome || 'reached',
+            performedBy: user.name || 'ASHA/VHN Worker',
+          });
+        }
+
+        store.data.processedIdempotencyKeys[action.idempotencyKey] = {
+          syncedAt: new Date().toISOString(),
+          resourceId: fu.id,
+        };
+        results.push({
+          idempotencyKey: action.idempotencyKey,
+          status: 'synced',
+          resourceId: fu.id,
+          message: 'Offline follow-up update synchronized.',
+        });
+      } else if (action.type === 'APPOINTMENT_REQUEST') {
+        const check = appointmentCreateSchema.safeParse(action.payload);
+        if (!check.success || !canAccessPatient(user, check.data.patientId)) {
+          results.push({
+            idempotencyKey: action.idempotencyKey,
+            status: 'rejected',
+            message: 'Validation or access error on queued appointment request.',
+          });
+          continue;
+        }
+
+        const apt: AppointmentRecord = {
+          id: `apt-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+          patientId: check.data.patientId,
+          title: check.data.title,
+          facility: check.data.facility,
+          clinicianName: check.data.clinicianName,
+          scheduledDate: check.data.scheduledDate,
+          scheduledTime: check.data.scheduledTime,
+          type: check.data.type,
+          status: 'Confirmed',
+          reminderNote: check.data.reminderNote,
+          isSynthetic: false,
+        };
+        store.data.appointments.unshift(apt);
+
+        store.data.processedIdempotencyKeys[action.idempotencyKey] = {
+          syncedAt: new Date().toISOString(),
+          resourceId: apt.id,
+        };
+        results.push({
+          idempotencyKey: action.idempotencyKey,
+          status: 'synced',
+          resourceId: apt.id,
+          message: 'Offline appointment request validated and synchronized.',
         });
       }
     }

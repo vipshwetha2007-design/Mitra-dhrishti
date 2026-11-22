@@ -9,7 +9,14 @@ import type {
 export interface PendingOfflineAction {
   id?: number;
   idempotencyKey: string;
-  type: 'LIFESTYLE_ASSESSMENT' | 'HABIT_LOG' | 'LESSON_COMPLETE' | 'CHECKPOINT_COMPLETE';
+  type:
+    | 'LIFESTYLE_ASSESSMENT'
+    | 'HABIT_LOG'
+    | 'LESSON_COMPLETE'
+    | 'CHECKPOINT_COMPLETE'
+    | 'VHN_PATIENT_REGISTER'
+    | 'VHN_FOLLOWUP_UPDATE'
+    | 'APPOINTMENT_REQUEST';
   patientId: string;
   summary: string;
   payload: Record<string, unknown>;
@@ -23,7 +30,7 @@ export interface SyncHistoryRecord {
   syncedAt: string;
   idempotencyKey: string;
   actionType: string;
-  outcome: 'synced' | 'duplicate_skipped' | 'rejected';
+  outcome: 'synced' | 'duplicate_skipped' | 'conflict_resolved' | 'rejected';
   message: string;
 }
 
