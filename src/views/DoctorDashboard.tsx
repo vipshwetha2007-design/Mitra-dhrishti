@@ -39,18 +39,19 @@ export const DoctorDashboard: React.FC<DoctorDashboardProps> = ({
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 lg:space-y-5">
       {/* Clinician Header Banner */}
-      <section className="rounded-2xl border border-slate-200 bg-gradient-to-r from-[#0B2540] to-[#0F4C5C] p-6 text-white">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <section className="relative overflow-hidden rounded-3xl border border-blue-100/70 bg-gradient-to-r from-[#061727] via-[#0B2540] to-[#0D5C75] p-6 text-white shadow-xs">
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <p className="text-xs font-medium text-teal-200">
-              Clinician &amp; Healthcare Worker Workspace · {data.user.facility || 'District Care Network'}
-            </p>
-            <h1 className="mt-1 font-display text-2xl font-bold tracking-tight">
+            <div className="inline-flex items-center gap-1.5 rounded-full bg-teal-400/15 border border-teal-300/30 px-3 py-0.5 text-xs font-semibold text-teal-200 mb-2">
+              <Stethoscope className="h-3.5 w-3.5" />
+              <span>Clinician &amp; Healthcare Worker Workspace · {data.user.facility || 'District Care Network'}</span>
+            </div>
+            <h1 className="font-display text-2xl sm:text-3xl font-extrabold tracking-tight">
               Welcome, {data.user.name}
             </h1>
-            <p className="mt-1 text-sm text-slate-200 max-w-2xl">
+            <p className="mt-1 text-xs sm:text-sm text-slate-200 max-w-2xl leading-relaxed">
               Review AI-assisted retinal screenings, validate Grad-CAM explanations, record laboratory HbA1c/FPG values, and coordinate ophthalmology referrals.
             </p>
           </div>
@@ -58,29 +59,31 @@ export const DoctorDashboard: React.FC<DoctorDashboardProps> = ({
             <button
               type="button"
               onClick={() => onNavigate('protect')}
-              className="rounded-xl bg-[#0D9488] px-4 py-2.5 text-xs font-semibold text-white hover:bg-[#14B8A6] transition-colors whitespace-nowrap"
+              className="inline-flex items-center gap-2 rounded-xl bg-[#0D9488] px-4 py-2.5 text-xs font-semibold text-white hover:bg-[#14B8A6] shadow-sm transition-all whitespace-nowrap cursor-pointer"
             >
-              Open Clinical Review Queue ({pendingScreenings.length})
+              <span>Open Clinical Review Queue ({pendingScreenings.length})</span>
             </button>
             <button
               type="button"
               onClick={() => onNavigate('detect')}
-              className="rounded-xl border border-white/25 bg-white/10 px-4 py-2.5 text-xs font-semibold text-white hover:bg-white/20 transition-colors whitespace-nowrap"
+              className="inline-flex items-center gap-2 rounded-xl border border-white/25 bg-white/10 px-4 py-2.5 text-xs font-semibold text-white hover:bg-white/20 transition-all whitespace-nowrap cursor-pointer"
             >
-              New Retinal Screening
+              <span>New Retinal Screening</span>
             </button>
           </div>
         </div>
       </section>
 
       {/* 4 KPI Summary Strip */}
-      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="rounded-2xl border border-slate-200 bg-white p-5">
+      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 lg:gap-4.5">
+        <div className="rounded-2xl border border-blue-100/70 bg-white p-4.5 shadow-xs flex flex-col justify-between">
           <div className="flex items-center justify-between text-slate-500">
-            <span className="text-xs font-semibold">Assigned Cohort</span>
-            <Users className="h-4 w-4 text-[#0D9488]" />
+            <span className="text-xs font-semibold text-slate-700">Assigned Cohort</span>
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-teal-50 text-[#0D9488]">
+              <Users className="h-4 w-4" />
+            </div>
           </div>
-          <div className="mt-2 font-display text-2xl font-bold text-[#0B2540] tabular-nums">
+          <div className="mt-3 font-display text-2xl font-extrabold text-[#0B2540] tabular-nums">
             {data.patients.length}
           </div>
           <div className="mt-1 text-xs text-slate-500">
@@ -88,12 +91,14 @@ export const DoctorDashboard: React.FC<DoctorDashboardProps> = ({
           </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-5">
+        <div className="rounded-2xl border border-blue-100/70 bg-white p-4.5 shadow-xs flex flex-col justify-between">
           <div className="flex items-center justify-between text-slate-500">
-            <span className="text-xs font-semibold">Unreviewed Screenings</span>
-            <Eye className="h-4 w-4 text-rose-600" />
+            <span className="text-xs font-semibold text-slate-700">Unreviewed Screenings</span>
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-rose-50 text-rose-600">
+              <Eye className="h-4 w-4" />
+            </div>
           </div>
-          <div className="mt-2 font-display text-2xl font-bold text-rose-700 tabular-nums">
+          <div className="mt-3 font-display text-2xl font-extrabold text-rose-700 tabular-nums">
             {pendingScreenings.length}
           </div>
           <div className="mt-1 text-xs text-slate-500">
@@ -101,12 +106,14 @@ export const DoctorDashboard: React.FC<DoctorDashboardProps> = ({
           </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-5">
+        <div className="rounded-2xl border border-blue-100/70 bg-white p-4.5 shadow-xs flex flex-col justify-between">
           <div className="flex items-center justify-between text-slate-500">
-            <span className="text-xs font-semibold">Active Referrals</span>
-            <Send className="h-4 w-4 text-sky-600" />
+            <span className="text-xs font-semibold text-slate-700">Active Referrals</span>
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-sky-50 text-sky-600">
+              <Send className="h-4 w-4" />
+            </div>
           </div>
-          <div className="mt-2 font-display text-2xl font-bold text-[#0B2540] tabular-nums">
+          <div className="mt-3 font-display text-2xl font-extrabold text-[#0B2540] tabular-nums">
             {openReferrals.length}
           </div>
           <div className="mt-1 text-xs text-slate-500">
@@ -114,23 +121,25 @@ export const DoctorDashboard: React.FC<DoctorDashboardProps> = ({
           </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-5">
+        <div className="rounded-2xl border border-blue-100/70 bg-white p-4.5 shadow-xs flex flex-col justify-between">
           <div className="flex items-center justify-between text-slate-500">
-            <span className="text-xs font-semibold">Missed / Escalated</span>
-            <CalendarClock className="h-4 w-4 text-amber-600" />
+            <span className="text-xs font-semibold text-slate-700">Missed / Escalated</span>
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
+              <CalendarClock className="h-4 w-4" />
+            </div>
           </div>
-          <div className="mt-2 font-display text-2xl font-bold text-amber-700 tabular-nums">
+          <div className="mt-3 font-display text-2xl font-extrabold text-amber-700 tabular-nums">
             {missedAppointments.length + activeEscalations.length}
           </div>
           <div className="mt-1 text-xs text-slate-500">
-            {missedAppointments.length} missed appointments · {activeEscalations.length} VHN escalations
+            {missedAppointments.length} missed visits · {activeEscalations.length} escalations
           </div>
         </div>
       </section>
 
       {/* Pending Clinical Review Cards */}
-      <section className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-        <div className="lg:col-span-7 rounded-2xl border border-slate-200 bg-white p-5">
+      <section className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-5">
+        <div className="lg:col-span-7 rounded-2xl border border-blue-100/70 bg-white p-4.5 lg:p-5 shadow-xs">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="font-display text-base font-bold text-[#0B2540]">
@@ -206,7 +215,7 @@ export const DoctorDashboard: React.FC<DoctorDashboardProps> = ({
         </div>
 
         {/* Missed Appointments & Escalations */}
-        <div className="lg:col-span-5 rounded-2xl border border-slate-200 bg-white p-5">
+        <div className="lg:col-span-5 rounded-2xl border border-blue-100/70 bg-white p-4.5 lg:p-5 shadow-xs">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-display text-base font-bold text-[#0B2540]">
               Follow-up Escalations &amp; Missed Visits
@@ -267,8 +276,8 @@ export const DoctorDashboard: React.FC<DoctorDashboardProps> = ({
       </section>
 
       {/* Shared Patient Cohort Table */}
-      <section className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-200 px-5 py-4">
+      <section className="rounded-2xl border border-blue-100/70 bg-white shadow-xs overflow-hidden">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-blue-100/60 px-5 py-4 bg-slate-50/50">
           <div>
             <h2 className="font-display text-base font-bold text-[#0B2540]">
               Shared Patient Registry (Prevent · Detect · Protect)

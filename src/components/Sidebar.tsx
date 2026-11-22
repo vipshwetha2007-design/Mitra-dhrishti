@@ -124,7 +124,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       id: 'simulink',
       label: t.nav.simulink,
       icon: Cpu,
-      roles: ['admin', 'doctor'],
+      roles: ['patient', 'doctor', 'admin'],
     },
     {
       id: 'settings',

@@ -101,9 +101,97 @@
       "isSynthetic": false,
       "passwordSalt": "08a6e238536dea891542ff062680f09c",
       "passwordHash": "09c3035e3faffb1c7d2a2d9791ef0398499d0874d5720421330ddeab3b10e899d1beebe0a9c6151853cb0440ca4e7f6cddb65585649f15863a242981dfa5859f"
+    },
+    {
+      "id": "usr-1795360575861",
+      "email": "legit_pat_1795360575833@test.local",
+      "name": "Legit Patient A",
+      "role": "patient",
+      "title": "Registered Patient",
+      "patientId": "pat-1795360575861",
+      "language": "en",
+      "isSynthetic": false,
+      "passwordSalt": "3dfacb2d1a97cfef4fff76390ac44bd1",
+      "passwordHash": "e26a3e302aa607224ce4635ad882c60c2cf3a3a47acf90a164fa6189179e002aac407bc5db4f2e80edb470d7e8f4dbb52d427158aba11c8ba1c7a222cea40962"
+    },
+    {
+      "id": "usr-1795360575890",
+      "email": "legit_pat_b_1795360575864@test.local",
+      "name": "Legit Patient B",
+      "role": "patient",
+      "title": "Registered Patient",
+      "patientId": "pat-1795360575890",
+      "language": "en",
+      "isSynthetic": false,
+      "passwordSalt": "a92a7b288d6fbcd297ad997988012ff2",
+      "passwordHash": "313b7f242715d9b909f6b3cd09298824e15a524e306ba45ad10db80d174373b906525508dc3229dbe6847987f6aacfc462558504b81a8494355265dc723f2fbd"
+    },
+    {
+      "id": "usr-doctor-1795360575934",
+      "email": "dr_anita_1795360575907@hospital.local",
+      "name": "Dr. Anita Selvaraj",
+      "role": "doctor",
+      "title": "Senior Medical Officer",
+      "facility": "Thanjavur Medical College",
+      "language": "ta",
+      "isSynthetic": false,
+      "passwordSalt": "233ed42ef7afbf120a4854f960ea36d6",
+      "passwordHash": "f23d8271149f137d9177e04913a22ed5d783e67416e05506ed438617ccb34098b94e37237661c408948053c204b0f0306f11e0356f864d6b41271df72f0147bb"
     }
   ],
   "patients": [
+    {
+      "id": "pat-1795360575890",
+      "mrn": "MRD-TN-99511",
+      "name": "Legit Patient B",
+      "age": 35,
+      "sex": "Other",
+      "phone": "Not yet provided",
+      "district": "Chennai South",
+      "villageOrWard": "Urban PHC",
+      "language": "en",
+      "diabetesStatus": "at_risk",
+      "assignedHealthWorker": "Anitha K (VHN)",
+      "assignedDoctorId": "usr-doctor-1",
+      "registeredAt": "2026-11-22T15:16:15.890Z",
+      "consent": {
+        "id": "con-1795360575890",
+        "patientId": "pat-1795360575890",
+        "screeningConsent": true,
+        "dataStorageConsent": true,
+        "offlineCacheConsent": true,
+        "clinicalBoundaryAcknowledged": true,
+        "consentedAt": "2026-11-22T15:16:15.890Z",
+        "language": "en"
+      },
+      "isSynthetic": false
+    },
+    {
+      "id": "pat-1795360575861",
+      "mrn": "MRD-TN-22041",
+      "name": "Legit Patient A",
+      "age": 35,
+      "sex": "Other",
+      "phone": "Not yet provided",
+      "district": "Chennai South",
+      "villageOrWard": "Urban PHC",
+      "language": "en",
+      "diabetesStatus": "at_risk",
+      "assignedHealthWorker": "Anitha K (VHN)",
+      "assignedDoctorId": "usr-doctor-1",
+      "registeredAt": "2026-11-22T15:16:15.861Z",
+      "consent": {
+        "id": "con-1795360575861",
+        "patientId": "pat-1795360575861",
+        "screeningConsent": true,
+        "dataStorageConsent": true,
+        "offlineCacheConsent": true,
+        "clinicalBoundaryAcknowledged": true,
+        "consentedAt": "2026-11-22T15:16:15.861Z",
+        "language": "en"
+      },
+      "isSynthetic": false
+    },
     {
       "id": "pat-1795358553404",
       "mrn": "MRD-TN-88990",
@@ -621,6 +709,236 @@
     }
   ],
   "programmes": [
+    {
+      "id": "prog-1795360575890",
+      "patientId": "pat-1795360575890",
+      "startedAt": "2026-11-22T15:16:15.890Z",
+      "currentMonth": 1,
+      "phase": "PHASE 1: LEARNING (Months 1-6)",
+      "adherencePercent": 50,
+      "baselineWeightKg": 68,
+      "currentWeightKg": 68,
+      "baselineWaistCm": 84,
+      "currentWaistCm": 84,
+      "checkpoints": [
+        {
+          "day": 30,
+          "label": "30-Day Checkpoint",
+          "status": "upcoming",
+          "notes": "Complete initial lifestyle assessment and weekly lessons."
+        },
+        {
+          "day": 60,
+          "label": "60-Day Checkpoint",
+          "status": "upcoming",
+          "notes": "Habit adherence review."
+        },
+        {
+          "day": 90,
+          "label": "90-Day Checkpoint",
+          "status": "upcoming",
+          "notes": "Waist and clinical lab guidance review."
+        },
+        {
+          "day": 180,
+          "label": "Month 6 Transition",
+          "status": "upcoming",
+          "notes": "Transition to Phase 2 Maintenance."
+        },
+        {
+          "day": 365,
+          "label": "12-Month Outcome",
+          "status": "upcoming",
+          "notes": "Annual review."
+        }
+      ],
+      "lessons": [
+        {
+          "id": "les-1",
+          "week": 1,
+          "phase": 1,
+          "title": "Balanced South Indian Plate (Thali Proportions)",
+          "titleTa": "சமச்சீரான தென்னிந்திய உணவுத் தட்டு",
+          "category": "Indian Nutrition",
+          "durationMinutes": 6,
+          "summary": "Fill half your plate with poriyal/kootu greens, one quarter with sambar/dal or sprouts, and one quarter with hand-pounded rice or millets.",
+          "completed": false,
+          "completedAt": "2026-10-02T09:00:00Z"
+        },
+        {
+          "id": "les-2",
+          "week": 2,
+          "phase": 1,
+          "title": "15-Minute Post-Meal Walking for Glucose Stability",
+          "titleTa": "உணவுக்குப் பின் 15 நிமிட நடைப்பயிற்சி",
+          "category": "Physical Activity",
+          "durationMinutes": 5,
+          "summary": "Light brisk walking 15–20 minutes after lunch and dinner gently lowers post-meal blood glucose spikes.",
+          "completed": false,
+          "completedAt": "2026-10-10T10:15:00Z"
+        },
+        {
+          "id": "les-3",
+          "week": 3,
+          "phase": 1,
+          "title": "Millet Swaps: Ragi, Thinai & Kambu in Daily Meals",
+          "titleTa": "தினசரி உணவில் சிறுதானிய மாற்றங்கள்",
+          "category": "Indian Nutrition",
+          "durationMinutes": 7,
+          "summary": "Practical ways to blend ragi dosa, thinai upma, and vegetable dalia without losing family meal enjoyment.",
+          "completed": false,
+          "completedAt": "2026-10-18T11:30:00Z"
+        },
+        {
+          "id": "les-4",
+          "week": 4,
+          "phase": 1,
+          "title": "Restorative Sleep & Stress Cortisol Balance",
+          "titleTa": "நல்ல தூக்கம் மற்றும் மன அழுத்த சமநிலை",
+          "category": "Sleep & Stress",
+          "durationMinutes": 6,
+          "summary": "Consistent 7–8 hour sleep routines support insulin sensitivity and reduce late-night cravings.",
+          "completed": false
+        },
+        {
+          "id": "les-5",
+          "week": 12,
+          "phase": 1,
+          "title": "90-Day Checkpoint: Understanding HbA1c & Fasting Glucose",
+          "titleTa": "90-நாள் சோதனை: HbA1c மற்றும் சர்க்கரை அளவு வழிகாட்டி",
+          "category": "Monitoring",
+          "durationMinutes": 8,
+          "summary": "How laboratory blood tests complement lifestyle tracking — and why clinical interpretation belongs to your doctor.",
+          "completed": false
+        },
+        {
+          "id": "les-6",
+          "week": 28,
+          "phase": 2,
+          "title": "Maintenance Phase: Festival Meals & Travel Continuity",
+          "titleTa": "பராமரிப்பு கட்டம்: பண்டிகை உணவு மற்றும் பயண வழிகாட்டி",
+          "category": "Indian Nutrition",
+          "durationMinutes": 6,
+          "summary": "Long-term maintenance strategies for Months 7–12 to sustain waist and step habits during celebrations.",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "id": "prog-1795360575861",
+      "patientId": "pat-1795360575861",
+      "startedAt": "2026-11-22T15:16:15.861Z",
+      "currentMonth": 1,
+      "phase": "PHASE 1: LEARNING (Months 1-6)",
+      "adherencePercent": 100,
+      "baselineWeightKg": 68,
+      "currentWeightKg": 68,
+      "baselineWaistCm": 84,
+      "currentWaistCm": 84,
+      "checkpoints": [
+        {
+          "day": 30,
+          "label": "30-Day Checkpoint",
+          "status": "upcoming",
+          "notes": "Complete initial lifestyle assessment and weekly lessons."
+        },
+        {
+          "day": 60,
+          "label": "60-Day Checkpoint",
+          "status": "upcoming",
+          "notes": "Habit adherence review."
+        },
+        {
+          "day": 90,
+          "label": "90-Day Checkpoint",
+          "status": "upcoming",
+          "notes": "Waist and clinical lab guidance review."
+        },
+        {
+          "day": 180,
+          "label": "Month 6 Transition",
+          "status": "upcoming",
+          "notes": "Transition to Phase 2 Maintenance."
+        },
+        {
+          "day": 365,
+          "label": "12-Month Outcome",
+          "status": "upcoming",
+          "notes": "Annual review."
+        }
+      ],
+      "lessons": [
+        {
+          "id": "les-1",
+          "week": 1,
+          "phase": 1,
+          "title": "Balanced South Indian Plate (Thali Proportions)",
+          "titleTa": "சமச்சீரான தென்னிந்திய உணவுத் தட்டு",
+          "category": "Indian Nutrition",
+          "durationMinutes": 6,
+          "summary": "Fill half your plate with poriyal/kootu greens, one quarter with sambar/dal or sprouts, and one quarter with hand-pounded rice or millets.",
+          "completed": false,
+          "completedAt": "2026-10-02T09:00:00Z"
+        },
+        {
+          "id": "les-2",
+          "week": 2,
+          "phase": 1,
+          "title": "15-Minute Post-Meal Walking for Glucose Stability",
+          "titleTa": "உணவுக்குப் பின் 15 நிமிட நடைப்பயிற்சி",
+          "category": "Physical Activity",
+          "durationMinutes": 5,
+          "summary": "Light brisk walking 15–20 minutes after lunch and dinner gently lowers post-meal blood glucose spikes.",
+          "completed": false,
+          "completedAt": "2026-10-10T10:15:00Z"
+        },
+        {
+          "id": "les-3",
+          "week": 3,
+          "phase": 1,
+          "title": "Millet Swaps: Ragi, Thinai & Kambu in Daily Meals",
+          "titleTa": "தினசரி உணவில் சிறுதானிய மாற்றங்கள்",
+          "category": "Indian Nutrition",
+          "durationMinutes": 7,
+          "summary": "Practical ways to blend ragi dosa, thinai upma, and vegetable dalia without losing family meal enjoyment.",
+          "completed": false,
+          "completedAt": "2026-10-18T11:30:00Z"
+        },
+        {
+          "id": "les-4",
+          "week": 4,
+          "phase": 1,
+          "title": "Restorative Sleep & Stress Cortisol Balance",
+          "titleTa": "நல்ல தூக்கம் மற்றும் மன அழுத்த சமநிலை",
+          "category": "Sleep & Stress",
+          "durationMinutes": 6,
+          "summary": "Consistent 7–8 hour sleep routines support insulin sensitivity and reduce late-night cravings.",
+          "completed": false
+        },
+        {
+          "id": "les-5",
+          "week": 12,
+          "phase": 1,
+          "title": "90-Day Checkpoint: Understanding HbA1c & Fasting Glucose",
+          "titleTa": "90-நாள் சோதனை: HbA1c மற்றும் சர்க்கரை அளவு வழிகாட்டி",
+          "category": "Monitoring",
+          "durationMinutes": 8,
+          "summary": "How laboratory blood tests complement lifestyle tracking — and why clinical interpretation belongs to your doctor.",
+          "completed": false
+        },
+        {
+          "id": "les-6",
+          "week": 28,
+          "phase": 2,
+          "title": "Maintenance Phase: Festival Meals & Travel Continuity",
+          "titleTa": "பராமரிப்பு கட்டம்: பண்டிகை உணவு மற்றும் பயண வழிகாட்டி",
+          "category": "Indian Nutrition",
+          "durationMinutes": 6,
+          "summary": "Long-term maintenance strategies for Months 7–12 to sustain waist and step habits during celebrations.",
+          "completed": false
+        }
+      ]
+    },
     {
       "id": "prog-1795358553404",
       "patientId": "pat-1795358553404",
@@ -1429,6 +1747,17 @@
   ],
   "habitLogs": [
     {
+      "id": "hab-1795360575970-976",
+      "patientId": "pat-1795360575861",
+      "date": "2026-11-22",
+      "healthyIndianDiet": true,
+      "stepsAchieved": 8500,
+      "sleepHours": 7.5,
+      "recordedOffline": true,
+      "syncStatus": "synced",
+      "idempotencyKey": "idemp-sync-1795360575968"
+    },
+    {
       "id": "hab-1795358553567-115",
       "patientId": "pat-1795358553371",
       "date": "2026-11-22",
@@ -1764,6 +2093,18 @@
     }
   ],
   "notifications": [
+    {
+      "id": "not-b-1795360575981",
+      "patientId": "pat-1795360575890",
+      "roleTargets": [
+        "patient"
+      ],
+      "severity": "info",
+      "title": "Confidential Notification for Patient B",
+      "message": "Private lab guidance.",
+      "createdAt": "2026-11-22T15:16:15.981Z",
+      "read": true
+    },
     {
       "id": "not-b-1795358553584",
       "patientId": "pat-1795358553404",
@@ -2201,6 +2542,282 @@
     }
   ],
   "auditLogs": [
+    {
+      "id": "aud-1795360824717-82bc28",
+      "timestamp": "2026-11-22T15:20:24.717Z",
+      "userId": "usr-patient-1",
+      "userName": "Shwetha V",
+      "role": "patient",
+      "action": "DEMO_SESSION_STARTED",
+      "resourceType": "Session",
+      "resourceId": "usr-patient-1",
+      "outcome": "SUCCESS",
+      "details": "Authenticated synthetic prototype session as patient."
+    },
+    {
+      "id": "aud-1795360708981-2c680a",
+      "timestamp": "2026-11-22T15:18:28.981Z",
+      "userId": "usr-admin-1",
+      "userName": "Meenakshi Sundaram",
+      "role": "admin",
+      "action": "DEMO_SESSION_STARTED",
+      "resourceType": "Session",
+      "resourceId": "usr-admin-1",
+      "outcome": "SUCCESS",
+      "details": "Authenticated synthetic prototype session as admin."
+    },
+    {
+      "id": "aud-1795360664837-e3a35b",
+      "timestamp": "2026-11-22T15:17:44.837Z",
+      "userId": "usr-doctor-1",
+      "userName": "Dr. Arvind Raman",
+      "role": "doctor",
+      "action": "DEMO_SESSION_STARTED",
+      "resourceType": "Session",
+      "resourceId": "usr-doctor-1",
+      "outcome": "SUCCESS",
+      "details": "Authenticated synthetic prototype session as doctor."
+    },
+    {
+      "id": "aud-1795360622768-22109b",
+      "timestamp": "2026-11-22T15:17:02.768Z",
+      "userId": "usr-patient-1",
+      "userName": "Shwetha V",
+      "role": "patient",
+      "action": "DEMO_SESSION_STARTED",
+      "resourceType": "Session",
+      "resourceId": "usr-patient-1",
+      "outcome": "SUCCESS",
+      "details": "Authenticated synthetic prototype session as patient."
+    },
+    {
+      "id": "aud-1795360575993-41f5d5",
+      "timestamp": "2026-11-22T15:16:15.993Z",
+      "userId": "anonymous",
+      "userName": "brute_target_1795360575985@test.local",
+      "role": "patient",
+      "action": "LOGIN_RATE_LIMIT_EXCEEDED",
+      "resourceType": "Session",
+      "resourceId": "brute_target_1795360575985@test.local",
+      "outcome": "DENIED",
+      "details": "Rate limit triggered: Exceeded 10 failed login attempts in 5 minutes for 'brute_target_1795360575985@test.local'."
+    },
+    {
+      "id": "aud-1795360575982-a706b2",
+      "timestamp": "2026-11-22T15:16:15.982Z",
+      "userId": "usr-1795360575861",
+      "userName": "Legit Patient A",
+      "role": "patient",
+      "action": "UNAUTHORIZED_NOTIFICATION_ACCESS",
+      "resourceType": "Notification",
+      "resourceId": "not-b-1795360575981",
+      "outcome": "DENIED",
+      "details": "Patient 'pat-1795360575861' attempted to access notification belonging to patient 'pat-1795360575890'."
+    },
+    {
+      "id": "aud-1795360575978-ca0630",
+      "timestamp": "2026-11-22T15:16:15.978Z",
+      "userId": "usr-doctor-1795360575934",
+      "userName": "Dr. Anita Selvaraj",
+      "role": "doctor",
+      "action": "RBAC_ACCESS_DENIED",
+      "resourceType": "API",
+      "resourceId": "POST /api/admin/simulink/import",
+      "outcome": "DENIED",
+      "details": "Role 'doctor' attempted restricted operation requiring [admin]."
+    },
+    {
+      "id": "aud-1795360575975-4bc2ea",
+      "timestamp": "2026-11-22T15:16:15.975Z",
+      "userId": "usr-1795360575861",
+      "userName": "Legit Patient A",
+      "role": "patient",
+      "action": "OFFLINE_SYNC_DUPLICATE_SKIPPED",
+      "resourceType": "HABIT_LOG",
+      "resourceId": "hab-1795360575970-976",
+      "outcome": "CONFLICT",
+      "details": "Duplicate offline submission detected (idemp-sync-1795360575968); preserved server record."
+    },
+    {
+      "id": "aud-1795360575970-19fbf2",
+      "timestamp": "2026-11-22T15:16:15.970Z",
+      "userId": "usr-1795360575861",
+      "userName": "Legit Patient A",
+      "role": "patient",
+      "action": "HABIT_LOG_RECORDED",
+      "resourceType": "HabitLog",
+      "resourceId": "hab-1795360575970-976",
+      "outcome": "SUCCESS",
+      "details": "Steps: 8500, Sleep: 7.5h [Synced from Offline Queue]."
+    },
+    {
+      "id": "aud-1795360575966-2f986d",
+      "timestamp": "2026-11-22T15:16:15.966Z",
+      "userId": "usr-doctor-1795360575934",
+      "userName": "Dr. Anita Selvaraj",
+      "role": "doctor",
+      "action": "PASSWORD_LOGIN",
+      "resourceType": "Session",
+      "resourceId": "usr-doctor-1795360575934",
+      "outcome": "SUCCESS",
+      "details": "Verified scrypt password hash and issued session token."
+    },
+    {
+      "id": "aud-1795360575937-7d7059",
+      "timestamp": "2026-11-22T15:16:15.937Z",
+      "userId": "usr-doctor-1",
+      "userName": "Dr. Arvind Raman",
+      "role": "doctor",
+      "action": "RBAC_ACCESS_DENIED",
+      "resourceType": "API",
+      "resourceId": "POST /api/admin/staff-accounts",
+      "outcome": "DENIED",
+      "details": "Role 'doctor' attempted restricted operation requiring [admin]."
+    },
+    {
+      "id": "aud-1795360575934-7b091a",
+      "timestamp": "2026-11-22T15:16:15.934Z",
+      "userId": "usr-admin-1",
+      "userName": "Meenakshi Sundaram",
+      "role": "admin",
+      "action": "STAFF_ACCOUNT_PROVISIONED",
+      "resourceType": "User",
+      "resourceId": "usr-doctor-1795360575934",
+      "outcome": "SUCCESS",
+      "details": "Administrator 'Meenakshi Sundaram' provisioned doctor account for 'Dr. Anita Selvaraj' (dr_anita_1795360575907@hospital.local) at facility 'Thanjavur Medical College'."
+    },
+    {
+      "id": "aud-1795360575905-a4e906",
+      "timestamp": "2026-11-22T15:16:15.905Z",
+      "userId": "usr-1795360575861",
+      "userName": "Legit Patient A",
+      "role": "patient",
+      "action": "RBAC_ACCESS_DENIED",
+      "resourceType": "API",
+      "resourceId": "POST /api/patients",
+      "outcome": "DENIED",
+      "details": "Role 'patient' attempted restricted operation requiring [doctor, admin]."
+    },
+    {
+      "id": "aud-1795360575903-ee17eb",
+      "timestamp": "2026-11-22T15:16:15.903Z",
+      "userId": "usr-1795360575861",
+      "userName": "Legit Patient A",
+      "role": "patient",
+      "action": "RBAC_ACCESS_DENIED",
+      "resourceType": "API",
+      "resourceId": "GET /api/audit-logs",
+      "outcome": "DENIED",
+      "details": "Role 'patient' attempted restricted operation requiring [doctor, admin]."
+    },
+    {
+      "id": "aud-1795360575901-25f80c",
+      "timestamp": "2026-11-22T15:16:15.901Z",
+      "userId": "usr-1795360575861",
+      "userName": "Legit Patient A",
+      "role": "patient",
+      "action": "RBAC_ACCESS_DENIED",
+      "resourceType": "API",
+      "resourceId": "POST /api/protect/reviews",
+      "outcome": "DENIED",
+      "details": "Role 'patient' attempted restricted operation requiring [doctor]."
+    },
+    {
+      "id": "aud-1795360575899-dba2fb",
+      "timestamp": "2026-11-22T15:16:15.899Z",
+      "userId": "usr-1795360575861",
+      "userName": "Legit Patient A",
+      "role": "patient",
+      "action": "RBAC_ACCESS_DENIED",
+      "resourceType": "API",
+      "resourceId": "POST /api/clinical/labs",
+      "outcome": "DENIED",
+      "details": "Role 'patient' attempted restricted operation requiring [doctor, admin]."
+    },
+    {
+      "id": "aud-1795360575891-82974d",
+      "timestamp": "2026-11-22T15:16:15.891Z",
+      "userId": "usr-1795360575890",
+      "userName": "Legit Patient B",
+      "role": "patient",
+      "action": "ACCOUNT_REGISTERED",
+      "resourceType": "User",
+      "resourceId": "usr-1795360575890",
+      "outcome": "SUCCESS",
+      "details": "Registered new patient account with scrypt password hashing."
+    },
+    {
+      "id": "aud-1795360575862-d93e86",
+      "timestamp": "2026-11-22T15:16:15.862Z",
+      "userId": "usr-1795360575861",
+      "userName": "Legit Patient A",
+      "role": "patient",
+      "action": "ACCOUNT_REGISTERED",
+      "resourceType": "User",
+      "resourceId": "usr-1795360575861",
+      "outcome": "SUCCESS",
+      "details": "Registered new patient account with scrypt password hashing."
+    },
+    {
+      "id": "aud-1795360575831-2fea53",
+      "timestamp": "2026-11-22T15:16:15.831Z",
+      "userId": "anonymous",
+      "userName": "Attacker Doctor",
+      "role": "patient",
+      "action": "PRIVILEGE_ESCALATION_ATTEMPT",
+      "resourceType": "UserRegistration",
+      "resourceId": "attacker_doctor@test.local",
+      "outcome": "DENIED",
+      "details": "Rejected attempt to register publicly with privileged role 'doctor'. Clinical staff and administrator accounts must be provisioned through authorized administrative onboarding."
+    },
+    {
+      "id": "aud-1795360575829-931ba1",
+      "timestamp": "2026-11-22T15:16:15.829Z",
+      "userId": "anonymous",
+      "userName": "Attacker Admin",
+      "role": "patient",
+      "action": "PRIVILEGE_ESCALATION_ATTEMPT",
+      "resourceType": "UserRegistration",
+      "resourceId": "attacker_admin@test.local",
+      "outcome": "DENIED",
+      "details": "Rejected attempt to register publicly with privileged role 'admin'. Clinical staff and administrator accounts must be provisioned through authorized administrative onboarding."
+    },
+    {
+      "id": "aud-1795360575824-1db835",
+      "timestamp": "2026-11-22T15:16:15.824Z",
+      "userId": "usr-patient-1",
+      "userName": "Shwetha V",
+      "role": "patient",
+      "action": "DEMO_SESSION_STARTED",
+      "resourceType": "Session",
+      "resourceId": "usr-patient-1",
+      "outcome": "SUCCESS",
+      "details": "Authenticated synthetic prototype session as patient."
+    },
+    {
+      "id": "aud-1795360575820-9e0df8",
+      "timestamp": "2026-11-22T15:16:15.820Z",
+      "userId": "usr-doctor-1",
+      "userName": "Dr. Arvind Raman",
+      "role": "doctor",
+      "action": "DEMO_SESSION_STARTED",
+      "resourceType": "Session",
+      "resourceId": "usr-doctor-1",
+      "outcome": "SUCCESS",
+      "details": "Authenticated synthetic prototype session as doctor."
+    },
+    {
+      "id": "aud-1795360575811-535154",
+      "timestamp": "2026-11-22T15:16:15.811Z",
+      "userId": "usr-admin-1",
+      "userName": "Meenakshi Sundaram",
+      "role": "admin",
+      "action": "DEMO_SESSION_STARTED",
+      "resourceType": "Session",
+      "resourceId": "usr-admin-1",
+      "outcome": "SUCCESS",
+      "details": "Authenticated synthetic prototype session as admin."
+    },
     {
       "id": "aud-1795358553598-ee936e",
       "timestamp": "2026-11-22T14:42:33.598Z",
@@ -2790,6 +3407,10 @@
     "idemp-sync-1795358553565": {
       "syncedAt": "2026-11-22T14:42:33.569Z",
       "resourceId": "hab-1795358553567-115"
+    },
+    "idemp-sync-1795360575968": {
+      "syncedAt": "2026-11-22T15:16:15.973Z",
+      "resourceId": "hab-1795360575970-976"
     }
   }
 }
