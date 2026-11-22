@@ -1,0 +1,31 @@
+{
+  "model_name": "Mritidhristi-MobileNetV2-ICDR5",
+  "architecture": "MobileNetV2 Transfer Learning",
+  "input_shape": [
+    224,
+    224,
+    3
+  ],
+  "num_classes": 5,
+  "class_mapping": {
+    "0": "No DR",
+    "1": "Mild NPDR",
+    "2": "Moderate NPDR",
+    "3": "Severe NPDR",
+    "4": "Proliferative DR"
+  },
+  "random_seed": 42,
+  "training_samples": 2629,
+  "validation_samples": 373,
+  "batch_size": 32,
+  "initial_lr": 0.001,
+  "class_weights": {
+    "0": 0.4073,
+    "1": 1.9474,
+    "2": 0.7354,
+    "3": 3.7291,
+    "4": 2.4802
+  },
+  "sha256": "216075bc09477a47846a3ad5ed26488bb4467fb40b838a6b679f0ff0995ba7e3",
+  "saved_at": "2026-11-22 19:18:55 UTC"
+}

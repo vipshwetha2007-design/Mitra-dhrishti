@@ -12,7 +12,8 @@
     "lint": "tsc --noEmit",
     "test:security": "tsx tests/securityVerification.ts",
     "test:prevent": "tsx tests/preventLogicVerification.ts",
-    "test:dataset": "tsx tests/datasetVerification.ts"
+    "test:dataset": "tsx tests/datasetVerification.ts",
+    "test:cnn": "tsx tests/cnnVerification.ts"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",

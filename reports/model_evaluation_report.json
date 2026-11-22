@@ -1,0 +1,93 @@
+{
+  "test_sample_count": 660,
+  "overall": {
+    "accuracy": 0.7758,
+    "quadratic_weighted_kappa": 0.8289,
+    "macro_precision": 0.5363,
+    "macro_recall_sensitivity": 0.5469,
+    "macro_f1_score": 0.5206,
+    "weighted_f1_score": 0.7802,
+    "macro_roc_auc_ovr": 0.9119,
+    "referable_dr_sensitivity": 0.8249,
+    "referable_dr_specificity": 0.9503
+  },
+  "per_class": {
+    "0": {
+      "name": "No DR",
+      "support": 396,
+      "precision": 0.9793,
+      "recall_sensitivity": 0.9545,
+      "specificity": 0.9697,
+      "f1_score": 0.9668
+    },
+    "1": {
+      "name": "Mild NPDR",
+      "support": 47,
+      "precision": 0.411,
+      "recall_sensitivity": 0.6383,
+      "specificity": 0.9299,
+      "f1_score": 0.5
+    },
+    "2": {
+      "name": "Moderate NPDR",
+      "support": 147,
+      "precision": 0.6466,
+      "recall_sensitivity": 0.585,
+      "specificity": 0.9084,
+      "f1_score": 0.6143
+    },
+    "3": {
+      "name": "Severe NPDR",
+      "support": 27,
+      "precision": 0.2,
+      "recall_sensitivity": 0.3704,
+      "specificity": 0.9368,
+      "f1_score": 0.2597
+    },
+    "4": {
+      "name": "Proliferative DR",
+      "support": 43,
+      "precision": 0.4444,
+      "recall_sensitivity": 0.186,
+      "specificity": 0.9838,
+      "f1_score": 0.2623
+    }
+  },
+  "confusion_matrix": [
+    [
+      378,
+      8,
+      8,
+      2,
+      0
+    ],
+    [
+      5,
+      30,
+      12,
+      0,
+      0
+    ],
+    [
+      3,
+      26,
+      86,
+      27,
+      5
+    ],
+    [
+      0,
+      2,
+      10,
+      10,
+      5
+    ],
+    [
+      0,
+      7,
+      17,
+      11,
+      8
+    ]
+  ]
+}
