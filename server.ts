@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import express from 'express';
 import type { Request, Response, NextFunction } from 'express';
+import { spawn } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import { createServer as createViteServer } from 'vite';
@@ -1243,6 +1244,79 @@ export async function createMritidhristiApp(options: { skipFrontend?: boolean } 
   });
 
   // --- PILLAR 2: DETECT (RETINAL SCREENING PIPELINE) ---
+  const detectPredictSchema = z.object({
+    imageDataUrl: z.string().min(20).max(10_000_000),
+  });
+
+  app.post('/api/detect/predict', requireAuth, (req: AuthRequest, res) => {
+    const parsed = detectPredictSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: 'Invalid prediction payload. imageDataUrl is required.', details: parsed.error.flatten() });
+      return;
+    }
+
+    if (!validateSafeImageDataUrl(parsed.data.imageDataUrl)) {
+      res.status(400).json({ error: 'Unsupported image format. Only PNG, JPEG, or WebP images are permitted.' });
+      return;
+    }
+
+    const pyProcess = spawn('python', ['scripts/retinal_inference_engine.py', '--stdin'], {
+      cwd: process.cwd(),
+      env: {
+        ...process.env,
+        KERAS_HOME: path.join(process.cwd(), '.keras'),
+        TF_CPP_MIN_LOG_LEVEL: '3',
+      },
+    });
+
+    let stdoutData = '';
+    let stderrData = '';
+
+    pyProcess.stdout.on('data', (chunk) => {
+      stdoutData += chunk.toString();
+    });
+
+    pyProcess.stderr.on('data', (chunk) => {
+      stderrData += chunk.toString();
+    });
+
+    const timeoutTimer = setTimeout(() => {
+      pyProcess.kill();
+      if (!res.headersSent) {
+        res.status(504).json({ error: 'Inference timed out after 30 seconds.' });
+      }
+    }, 30000);
+
+    pyProcess.on('close', (code) => {
+      clearTimeout(timeoutTimer);
+      if (res.headersSent) return;
+
+      if (code !== 0) {
+        res.status(500).json({
+          error: 'CNN inference process exited with error',
+          details: stderrData || stdoutData || `Exit code ${code}`,
+        });
+        return;
+      }
+
+      try {
+        const firstBrace = stdoutData.indexOf('{');
+        const lastBrace = stdoutData.lastIndexOf('}');
+        if (firstBrace === -1 || lastBrace === -1) {
+          throw new Error('No valid JSON output found from inference engine');
+        }
+        const jsonStr = stdoutData.slice(firstBrace, lastBrace + 1);
+        const parsedResult = JSON.parse(jsonStr);
+        res.json(parsedResult);
+      } catch (err: any) {
+        res.status(500).json({ error: 'Failed to parse inference output', details: err.message, raw: stdoutData });
+      }
+    });
+
+    pyProcess.stdin.write(parsed.data.imageDataUrl);
+    pyProcess.stdin.end();
+  });
+
   app.post('/api/detect/screenings', requireAuth, (req: AuthRequest, res) => {
     const user = req.authUser!;
     const parsed = retinalScreeningSchema.safeParse(req.body);
@@ -1330,6 +1404,8 @@ export async function createMritidhristiApp(options: { skipFrontend?: boolean } 
       const weightsPath = path.join(process.cwd(), 'datasets', 'metadata', 'class_weights.json');
       const qualityPath = path.join(process.cwd(), 'reports', 'dataset_quality_report.json');
       const prepConfigPath = path.join(process.cwd(), 'datasets', 'metadata', 'preprocessing_config.json');
+      const modelEvalPath = path.join(process.cwd(), 'reports', 'model_evaluation_report.json');
+      const modelConfigPath = path.join(process.cwd(), 'models', 'model_config.json');
 
       if (!fs.existsSync(manifestPath)) {
         res.status(404).json({ error: 'Dataset pipeline manifest not found. Run dataset manager first.' });
@@ -1340,6 +1416,8 @@ export async function createMritidhristiApp(options: { skipFrontend?: boolean } 
       const weights = fs.existsSync(weightsPath) ? JSON.parse(fs.readFileSync(weightsPath, 'utf-8')) : null;
       const quality = fs.existsSync(qualityPath) ? JSON.parse(fs.readFileSync(qualityPath, 'utf-8')) : null;
       const prepConfig = fs.existsSync(prepConfigPath) ? JSON.parse(fs.readFileSync(prepConfigPath, 'utf-8')) : null;
+      const modelEval = fs.existsSync(modelEvalPath) ? JSON.parse(fs.readFileSync(modelEvalPath, 'utf-8')) : null;
+      const modelConfig = fs.existsSync(modelConfigPath) ? JSON.parse(fs.readFileSync(modelConfigPath, 'utf-8')) : null;
 
       res.json({
         success: true,
@@ -1347,12 +1425,18 @@ export async function createMritidhristiApp(options: { skipFrontend?: boolean } 
         classWeights: weights,
         qualityReport: quality,
         preprocessingConfig: prepConfig,
+        modelEvaluation: modelEval,
+        modelConfig,
         pipelineStatus: {
-          phase: 'Phase 5: Retinal Dataset Preparation & Curation',
+          phase: 'Phases 6–8: Genuine MobileNetV2 CNN, Grad-CAM & Uncertainty Estimation',
           curationComplete: true,
           leakageFreeSplits: true,
           readyForCnnTraining: true,
-          cnnTrainingStatus: 'NOT_STARTED (Scheduled for Phase 6)',
+          cnnTrainingStatus: modelConfig ? 'COMPLETED (MobileNetV2 Transfer Learning)' : 'NOT_STARTED',
+          modelAccuracy: modelEval?.overall?.accuracy ? `${(modelEval.overall.accuracy * 100).toFixed(2)}%` : 'Pending',
+          quadraticWeightedKappa: modelEval?.overall?.quadratic_weighted_kappa ?? null,
+          referableSensitivity: modelEval?.overall?.referable_dr_sensitivity ? `${(modelEval.overall.referable_dr_sensitivity * 100).toFixed(2)}%` : null,
+          referableSpecificity: modelEval?.overall?.referable_dr_specificity ? `${(modelEval.overall.referable_dr_specificity * 100).toFixed(2)}%` : null,
           safetyStatement: 'Curated clinical retinal dataset is verified for genuine CNN training. Zero synthetic images; zero data leakage across train/val/test splits.',
         },
       });

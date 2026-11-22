@@ -178,6 +178,31 @@ export const DetectModule: React.FC<DetectModuleProps> = ({
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
         setAnalysis(analyzeRetinalCanvasPixels(canvas, 'uploaded_custom'));
+
+        if (isOnline) {
+          const token = localStorage.getItem('mritidhristi_token');
+          fetch('/api/detect/predict', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
+            body: JSON.stringify({ imageDataUrl: customDataUrl }),
+          })
+            .then((r) => (r.ok ? r.json() : null))
+            .then((res) => {
+              if (res?.success) {
+                setAnalysis({
+                  quality: res.quality,
+                  anatomicalStructures: res.anatomicalStructures,
+                  lesionFindings: res.lesionFindings,
+                  modelPrediction: res.modelPrediction,
+                  gradCam: res.gradCam,
+                });
+              }
+            })
+            .catch(() => undefined);
+        }
       };
       img.src = customDataUrl;
     } else {
