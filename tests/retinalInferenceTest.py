@@ -74,6 +74,19 @@ test_assert(res_real["modelPrediction"]["icdrGrade"] in [0, 1, 2, 3, 4], f"Predi
 test_assert(res_real["modelPrediction"]["confidence"] > 0.0, f"Calibrated confidence reported: {res_real['modelPrediction']['confidence']}")
 test_assert("predictiveEntropy" in res_real["modelPrediction"], f"Predictive entropy computed: {res_real['modelPrediction']['predictiveEntropy']} bits")
 test_assert("monteCarloVariance" in res_real["modelPrediction"], f"MC-Dropout epistemic variance computed: {res_real['modelPrediction']['monteCarloVariance']}")
+test_assert("pReferable" in res_real["modelPrediction"], f"Calibrated referable probability reported: {res_real['modelPrediction']['pReferable']}")
+test_assert(isinstance(res_real["modelPrediction"]["isReferable"], bool), f"Referable triage classification active: isReferable={res_real['modelPrediction']['isReferable']}")
+test_assert("triageRecommendation" in res_real["modelPrediction"], f"Actionable triage recommendation: {res_real['modelPrediction']['triageRecommendation']}")
+
+# Verify Temperature Scaling: probabilities sum to 1.0
+cal_probs = res_real["modelPrediction"]["calibratedProbabilities"]
+test_assert(abs(sum(cal_probs) - 1.0) < 0.01, f"Calibrated probabilities sum to 1.0: {sum(cal_probs):.4f}")
+
+# Verify Grad-CAM target layer
+from scripts.retinal_inference_engine import get_inference_models
+_, base_ext, head_mod = get_inference_models()
+test_assert(base_ext.layers[-1].name == "out_relu", f"Grad-CAM targets MobileNetV2 'out_relu' layer: {base_ext.layers[-1].name}")
+
 test_assert(res_real["gradCam"]["available"] is True, "Grad-CAM heatmap available")
 test_assert(res_real["gradCam"]["heatmapDataUrl"].startswith("data:image/png;base64,"), "Grad-CAM overlay synthesized as valid base64 PNG")
 test_assert(len(res_real["gradCam"]["hotspots"]) > 0, f"Grad-CAM hotspots identified ({len(res_real['gradCam']['hotspots'])} hotspots)")

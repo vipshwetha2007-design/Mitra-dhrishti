@@ -6,7 +6,7 @@
  * - Production Mode: When `DATABASE_URL` is configured and `pg` is available,
  *   connects to PostgreSQL connection pool, executing relational SQL queries.
  * - Standalone / Development / CI Mode: Gracefully falls back to the persistent
- *   atomic JSON file store (`server/data/db.json`), ensuring zero-downtime operation
+ *   atomic JSON file store (`data/mritidhristi_store.json`), ensuring zero-downtime operation
  *   in environments without a dedicated PostgreSQL server.
  */
 
@@ -59,7 +59,7 @@ export async function initializeDatabase(): Promise<DatabaseAdapter> {
       poolInstance = null;
     }
   } else {
-    console.log('[*] Mritidhristi Store: No DATABASE_URL defined. Using local atomic JSON store (server/data/db.json).');
+    console.log('[*] Mritidhristi Store: No DATABASE_URL defined. Using local atomic JSON store (data/mritidhristi_store.json).');
   }
 
   const adapter: DatabaseAdapter = {

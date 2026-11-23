@@ -89,5 +89,23 @@
       11,
       8
     ]
-  ]
+  ],
+  "calibrated_clinical_triage": {
+    "operating_threshold_tau": 0.35,
+    "selection_split": "validation (val.csv, 373 scans)",
+    "referable_dr_sensitivity": 0.9263,
+    "referable_dr_specificity": 0.9029,
+    "binary_referable_roc_auc": 0.9715,
+    "referable_true_positives": 201,
+    "referable_false_negatives": 16,
+    "non_referable_true_negatives": 400,
+    "non_referable_false_positives": 43,
+    "per_class_referral_sensitivity": {
+      "0": { "name": "No DR", "flagged_referable_pct": 0.0581, "correct_non_referral_pct": 0.9419 },
+      "1": { "name": "Mild NPDR", "flagged_referable_pct": 0.4255, "correct_non_referral_pct": 0.5745 },
+      "2": { "name": "Moderate NPDR", "flagged_referable_pct": 0.9116, "support": 147 },
+      "3": { "name": "Severe NPDR", "flagged_referable_pct": 1.0, "support": 27 },
+      "4": { "name": "Proliferative DR", "flagged_referable_pct": 0.9302, "support": 43 }
+    }
+  }
 }

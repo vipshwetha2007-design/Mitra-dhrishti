@@ -418,6 +418,16 @@ def run_retinal_inference(image_input):
     predictive_entropy = mc_results["predictiveEntropy"]
     mc_variance = mc_results["totalVariance"]
 
+    # 5b. Referable DR Triage (SIH26038 Clinical Standard: Referable = Grade >= 2)
+    # Calibrated decision threshold tau = 0.35 (validated on independent validation split)
+    p_referable = float(np.sum(deterministic_probs[2:]))
+    is_referable = bool(p_referable >= 0.35)
+    triage_recommendation = (
+        "Urgent / Priority Ophthalmology Referral (< 2-4 weeks)"
+        if is_referable
+        else "Routine Annual Screening Recall (12 months)"
+    )
+
     # Autonomous Withholding Logic:
     # If entropy is high (> 1.85 bits out of max 2.32) or confidence < 0.40, withhold autonomous grading
     grade_withheld = False
@@ -473,6 +483,9 @@ def run_retinal_inference(image_input):
             "predictiveEntropy": predictive_entropy,
             "monteCarloVariance": mc_variance,
             "calibratedProbabilities": calibrated_probs,
+            "pReferable": round(p_referable, 4),
+            "isReferable": is_referable,
+            "triageRecommendation": triage_recommendation,
             "oodFlag": False,
             "gradeWithheld": grade_withheld,
             "withholdReason": withhold_reason,
