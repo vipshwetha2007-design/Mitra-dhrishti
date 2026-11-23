@@ -20377,6 +20377,78 @@
   ],
   "auditLogs": [
     {
+      "id": "aud-1795467481703-fa084c",
+      "timestamp": "2026-11-23T20:58:01.703Z",
+      "userId": "usr-admin-1",
+      "userName": "Meenakshi Sundaram",
+      "role": "admin",
+      "action": "DEVICE_REVOCATION_EXECUTED",
+      "resourceType": "DeviceSecurity",
+      "resourceId": "dev-lost-tablet-01",
+      "outcome": "SUCCESS",
+      "details": "Administrator deactivated lost device dev-lost-tablet-01; offline access terminated."
+    },
+    {
+      "id": "aud-1795467481696-01029e",
+      "timestamp": "2026-11-23T20:58:01.696Z",
+      "userId": "usr-doctor-1",
+      "userName": "Dr. Arvind Raman",
+      "role": "doctor",
+      "action": "PATIENT_CONSENT_WITHDRAWN",
+      "resourceType": "PatientRecord",
+      "resourceId": "pat-vhn-1795465770040-2eqo",
+      "outcome": "SUCCESS",
+      "details": "Patient revoked offline cache and data storage consent."
+    },
+    {
+      "id": "aud-1795467481676-3c9e15",
+      "timestamp": "2026-11-23T20:58:01.676Z",
+      "userId": "usr-admin-1",
+      "userName": "Meenakshi Sundaram",
+      "role": "admin",
+      "action": "MODEL_ROLLBACK_EXECUTED",
+      "resourceType": "ModelGovernance",
+      "resourceId": "dr_classifier.keras",
+      "outcome": "SUCCESS",
+      "details": "Admin initiated rollback to best_dr_model.keras checkpoint."
+    },
+    {
+      "id": "aud-1795467481657-882b19",
+      "timestamp": "2026-11-23T20:58:01.657Z",
+      "userId": "usr-patient-1",
+      "userName": "Shwetha V",
+      "role": "patient",
+      "action": "DEMO_SESSION_STARTED",
+      "resourceType": "Session",
+      "resourceId": "usr-patient-1",
+      "outcome": "SUCCESS",
+      "details": "Authenticated synthetic prototype session as patient."
+    },
+    {
+      "id": "aud-1795467481647-8d1a2b",
+      "timestamp": "2026-11-23T20:58:01.647Z",
+      "userId": "usr-doctor-1",
+      "userName": "Dr. Arvind Raman",
+      "role": "doctor",
+      "action": "DEMO_SESSION_STARTED",
+      "resourceType": "Session",
+      "resourceId": "usr-doctor-1",
+      "outcome": "SUCCESS",
+      "details": "Authenticated synthetic prototype session as doctor."
+    },
+    {
+      "id": "aud-1795467481622-d2279f",
+      "timestamp": "2026-11-23T20:58:01.622Z",
+      "userId": "usr-admin-1",
+      "userName": "Meenakshi Sundaram",
+      "role": "admin",
+      "action": "DEMO_SESSION_STARTED",
+      "resourceType": "Session",
+      "resourceId": "usr-admin-1",
+      "outcome": "SUCCESS",
+      "details": "Authenticated synthetic prototype session as admin."
+    },
+    {
       "id": "aud-1795467381169-830b61",
       "timestamp": "2026-11-23T20:56:21.169Z",
       "userId": "usr-admin-1",
