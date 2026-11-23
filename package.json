@@ -18,7 +18,8 @@
     "test:offline": "tsx tests/offlineSyncVerification.ts",
     "test:simulink": "tsx tests/simulinkVerification.ts",
     "test:postgres": "tsx tests/postgresVerification.ts",
-    "test": "npm run test:security && npm run test:prevent && npm run test:dataset && npm run test:cnn && npm run test:retinal && npm run test:offline && npm run test:simulink && npm run test:postgres"
+    "test:sih": "tsx tests/sihFinalVerification.ts",
+    "test": "npm run test:security && npm run test:prevent && npm run test:dataset && npm run test:cnn && npm run test:retinal && npm run test:offline && npm run test:simulink && npm run test:postgres && npm run test:sih"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",

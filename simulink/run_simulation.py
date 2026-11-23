@@ -22,47 +22,69 @@ import sys
 SCENARIOS = [
     {
         "key": "normal",
-        "name": "Baseline District Operation",
+        "name": "Normal Screening Demand (Baseline)",
         "dailyArrivals": 135,
         "cameras": 6,
         "ophthalmologists": 3,
         "vhnsActive": 24,
         "referralRate": 0.22,
         "dropoutRate": 0.12,
-        "desc": "Balanced operations across 4 PHCs and 1 Mobile Van unit.",
+        "desc": "Balanced operations across 4 PHCs and 1 Mobile Van unit (40,500 annual screenings).",
     },
     {
-        "key": "rural_surge",
-        "name": "Rural Screening Surge Drive",
-        "dailyArrivals": 240,
+        "key": "high_demand",
+        "name": "High Screening Demand (Intensive Drive)",
+        "dailyArrivals": 340,
+        "cameras": 8,
+        "ophthalmologists": 4,
+        "vhnsActive": 48,
+        "referralRate": 0.25,
+        "dropoutRate": 0.14,
+        "desc": "District-wide mass screening campaign serving 102,000 rural citizens annually.",
+    },
+    {
+        "key": "limited_connectivity",
+        "name": "Limited Connectivity & Offline Queueing",
+        "dailyArrivals": 140,
         "cameras": 6,
         "ophthalmologists": 3,
-        "vhnsActive": 36,
-        "referralRate": 0.25,
-        "dropoutRate": 0.15,
-        "desc": "ASHA/VHN intensive village mobilization increases arrivals by 78%.",
+        "vhnsActive": 24,
+        "referralRate": 0.22,
+        "dropoutRate": 0.28,
+        "desc": "Intermittent 2G cellular connectivity throttles tele-sync, testing durable local cache.",
+    },
+    {
+        "key": "camera_shortage",
+        "name": "Fundus Camera Hardware Shortage",
+        "dailyArrivals": 135,
+        "cameras": 3,
+        "ophthalmologists": 3,
+        "vhnsActive": 24,
+        "referralRate": 0.22,
+        "dropoutRate": 0.16,
+        "desc": "Optical servicing downtime leaves only 3 active cameras, saturating capture desks.",
     },
     {
         "key": "ophthalmologist_shortage",
-        "name": "Specialist Staff Shortage",
+        "name": "Ophthalmologist Specialist Shortage",
         "dailyArrivals": 135,
-        "cameras": 5,
+        "cameras": 6,
         "ophthalmologists": 1,
         "vhnsActive": 24,
         "referralRate": 0.22,
         "dropoutRate": 0.25,
-        "desc": "Two ophthalmologist vacancies at District Hospital create review bottlenecks.",
+        "desc": "Two ophthalmologist vacancies at District Hospital create severe review backlog.",
     },
     {
-        "key": "transport_delay",
-        "name": "Rural Transport & Transit Delay",
-        "dailyArrivals": 140,
+        "key": "increased_referral_demand",
+        "name": "Increased Referral & Surgical Demand",
+        "dailyArrivals": 160,
         "cameras": 6,
         "ophthalmologists": 3,
-        "vhnsActive": 20,
-        "referralRate": 0.22,
-        "dropoutRate": 0.58,
-        "desc": "Monsoon flooding blocks rural transit causing severe referral dropouts.",
+        "vhnsActive": 28,
+        "referralRate": 0.38,
+        "dropoutRate": 0.15,
+        "desc": "High-risk diabetic cohort increases referable DR rate to 38%, stressing tertiary laser capacity.",
     },
 ]
 
@@ -129,8 +151,10 @@ def simulate_scenario(sc):
         bottleneck = "Specialist Ophthalmologist Review Backlog"
     elif rho_cam > 0.85:
         bottleneck = "Fundus Camera Capture Desk Saturation"
-    elif sc["dropoutRate"] > 0.30:
+    elif sc["dropoutRate"] > 0.25:
         bottleneck = "Rural Transit & Referral Dropout Failure"
+    elif sc["referralRate"] > 0.30:
+        bottleneck = "Tertiary Referral Surge & Laser Backlog"
     else:
         bottleneck = "Balanced Baseline Across Primary Health Centres"
 

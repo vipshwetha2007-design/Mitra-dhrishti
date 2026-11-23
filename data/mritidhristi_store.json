@@ -265,9 +265,9 @@
       "consent": {
         "id": "con-1795465770040",
         "patientId": "pat-vhn-1795465770040-2eqo",
-        "screeningConsent": true,
-        "dataStorageConsent": true,
-        "offlineCacheConsent": true,
+        "screeningConsent": false,
+        "dataStorageConsent": false,
+        "offlineCacheConsent": false,
         "clinicalBoundaryAcknowledged": true,
         "consentedAt": "2026-11-23T20:29:30.018Z",
         "language": "ta"
@@ -19763,10 +19763,10 @@
   ],
   "simulations": [
     {
-      "id": "sim-csv-1795465785201-1",
+      "id": "sim-csv-1795467022005-1",
       "scenarioKey": "normal",
-      "name": "Baseline District Operation",
-      "description": "Balanced operations across 4 PHCs and 1 Mobile Van unit.",
+      "name": "Normal Screening Demand (Baseline)",
+      "description": "\"Balanced operations across 4 PHCs and 1 Mobile Van unit (40",
       "source": "Imported MATLAB Simulink CSV",
       "dailyPatientArrivals": 135,
       "camerasAvailable": 6,
@@ -19778,8 +19778,8 @@
       "avgQueueLength": 2,
       "avgWaitTimeMinutes": 8,
       "resourceUtilizationPct": 80,
-      "estimatedMonthlyCostInr": 663000,
-      "bottleneck": "Balanced Baseline Across Primary Health Centres",
+      "estimatedMonthlyCostInr": 500000,
+      "bottleneck": "663000",
       "hourlyQueueCurve": [
         {
           "hour": "08:00",
@@ -19814,112 +19814,61 @@
       ]
     },
     {
-      "id": "sim-csv-1795465785201-2",
+      "id": "sim-csv-1795467022005-2",
       "scenarioKey": "normal",
-      "name": "Rural Screening Surge Drive",
-      "description": "ASHA/VHN intensive village mobilization increases arrivals by 78%.",
+      "name": "High Screening Demand (Intensive Drive)",
+      "description": "\"District-wide mass screening campaign serving 102",
       "source": "Imported MATLAB Simulink CSV",
-      "dailyPatientArrivals": 240,
-      "camerasAvailable": 6,
-      "screeningCapacityPerDay": 143,
-      "imageThroughputPerHour": 21,
-      "ophthalmologistsAvailable": 3,
+      "dailyPatientArrivals": 340,
+      "camerasAvailable": 8,
+      "screeningCapacityPerDay": 190,
+      "imageThroughputPerHour": 27,
+      "ophthalmologistsAvailable": 4,
       "healthWorkerWorkloadPct": 98,
-      "referralDemandPerWeek": 306,
+      "referralDemandPerWeek": 439,
       "avgQueueLength": 22,
-      "avgWaitTimeMinutes": 44,
+      "avgWaitTimeMinutes": 31,
       "resourceUtilizationPct": 98,
-      "estimatedMonthlyCostInr": 717000,
-      "bottleneck": "Fundus Camera Capture Desk Saturation",
+      "estimatedMonthlyCostInr": 500000,
+      "bottleneck": "941000",
       "hourlyQueueCurve": [
         {
           "hour": "08:00",
           "queueLength": 9,
-          "waitMinutes": 18
+          "waitMinutes": 12
         },
         {
           "hour": "10:00",
           "queueLength": 19,
-          "waitMinutes": 37
+          "waitMinutes": 26
         },
         {
           "hour": "12:00",
           "queueLength": 26,
-          "waitMinutes": 53
+          "waitMinutes": 37
         },
         {
           "hour": "14:00",
           "queueLength": 22,
-          "waitMinutes": 44
+          "waitMinutes": 31
         },
         {
           "hour": "16:00",
           "queueLength": 13,
-          "waitMinutes": 26
+          "waitMinutes": 19
         },
         {
           "hour": "18:00",
           "queueLength": 6,
-          "waitMinutes": 11
+          "waitMinutes": 8
         }
       ]
     },
     {
-      "id": "sim-csv-1795465785201-3",
-      "scenarioKey": "ophthalmologist_shortage",
-      "name": "Specialist Staff Shortage",
-      "description": "Two ophthalmologist vacancies at District Hospital create review bottlenecks.",
-      "source": "Imported MATLAB Simulink CSV",
-      "dailyPatientArrivals": 135,
-      "camerasAvailable": 5,
-      "screeningCapacityPerDay": 119,
-      "imageThroughputPerHour": 17,
-      "ophthalmologistsAvailable": 1,
-      "healthWorkerWorkloadPct": 96,
-      "referralDemandPerWeek": 134,
-      "avgQueueLength": 37,
-      "avgWaitTimeMinutes": 130,
-      "resourceUtilizationPct": 96,
-      "estimatedMonthlyCostInr": 398000,
-      "bottleneck": "Specialist Ophthalmologist Review Backlog",
-      "hourlyQueueCurve": [
-        {
-          "hour": "08:00",
-          "queueLength": 15,
-          "waitMinutes": 52
-        },
-        {
-          "hour": "10:00",
-          "queueLength": 31,
-          "waitMinutes": 111
-        },
-        {
-          "hour": "12:00",
-          "queueLength": 44,
-          "waitMinutes": 156
-        },
-        {
-          "hour": "14:00",
-          "queueLength": 37,
-          "waitMinutes": 130
-        },
-        {
-          "hour": "16:00",
-          "queueLength": 22,
-          "waitMinutes": 78
-        },
-        {
-          "hour": "18:00",
-          "queueLength": 9,
-          "waitMinutes": 33
-        }
-      ]
-    },
-    {
-      "id": "sim-csv-1795465785201-4",
-      "scenarioKey": "normal",
-      "name": "Rural Transport & Transit Delay",
-      "description": "Monsoon flooding blocks rural transit causing severe referral dropouts.",
+      "id": "sim-csv-1795467022005-3",
+      "scenarioKey": "limited_connectivity",
+      "name": "Limited Connectivity & Offline Queueing",
+      "description": "\"Intermittent 2G cellular connectivity throttles tele-sync",
       "source": "Imported MATLAB Simulink CSV",
       "dailyPatientArrivals": 140,
       "camerasAvailable": 6,
@@ -19927,12 +19876,12 @@
       "imageThroughputPerHour": 18,
       "ophthalmologistsAvailable": 3,
       "healthWorkerWorkloadPct": 83,
-      "referralDemandPerWeek": 78,
+      "referralDemandPerWeek": 133,
       "avgQueueLength": 3,
       "avgWaitTimeMinutes": 10,
       "resourceUtilizationPct": 83,
-      "estimatedMonthlyCostInr": 645000,
-      "bottleneck": "Rural Transit & Referral Dropout Failure",
+      "estimatedMonthlyCostInr": 500000,
+      "bottleneck": "663000",
       "hourlyQueueCurve": [
         {
           "hour": "08:00",
@@ -19963,6 +19912,159 @@
           "hour": "18:00",
           "queueLength": 1,
           "waitMinutes": 3
+        }
+      ]
+    },
+    {
+      "id": "sim-csv-1795467022005-4",
+      "scenarioKey": "camera_shortage",
+      "name": "Fundus Camera Hardware Shortage",
+      "description": "\"Optical servicing downtime leaves only 3 active cameras",
+      "source": "Imported MATLAB Simulink CSV",
+      "dailyPatientArrivals": 135,
+      "camerasAvailable": 3,
+      "screeningCapacityPerDay": 71,
+      "imageThroughputPerHour": 10,
+      "ophthalmologistsAvailable": 3,
+      "healthWorkerWorkloadPct": 98,
+      "referralDemandPerWeek": 150,
+      "avgQueueLength": 22,
+      "avgWaitTimeMinutes": 79,
+      "resourceUtilizationPct": 98,
+      "estimatedMonthlyCostInr": 500000,
+      "bottleneck": "588000",
+      "hourlyQueueCurve": [
+        {
+          "hour": "08:00",
+          "queueLength": 9,
+          "waitMinutes": 32
+        },
+        {
+          "hour": "10:00",
+          "queueLength": 19,
+          "waitMinutes": 67
+        },
+        {
+          "hour": "12:00",
+          "queueLength": 26,
+          "waitMinutes": 95
+        },
+        {
+          "hour": "14:00",
+          "queueLength": 22,
+          "waitMinutes": 79
+        },
+        {
+          "hour": "16:00",
+          "queueLength": 13,
+          "waitMinutes": 47
+        },
+        {
+          "hour": "18:00",
+          "queueLength": 6,
+          "waitMinutes": 20
+        }
+      ]
+    },
+    {
+      "id": "sim-csv-1795467022005-5",
+      "scenarioKey": "ophthalmologist_shortage",
+      "name": "Ophthalmologist Specialist Shortage",
+      "description": "Two ophthalmologist vacancies at District Hospital create severe review backlog.",
+      "source": "Imported MATLAB Simulink CSV",
+      "dailyPatientArrivals": 135,
+      "camerasAvailable": 6,
+      "screeningCapacityPerDay": 143,
+      "imageThroughputPerHour": 17,
+      "ophthalmologistsAvailable": 1,
+      "healthWorkerWorkloadPct": 93,
+      "referralDemandPerWeek": 134,
+      "avgQueueLength": 14,
+      "avgWaitTimeMinutes": 50,
+      "resourceUtilizationPct": 93,
+      "estimatedMonthlyCostInr": 423000,
+      "bottleneck": "Specialist Ophthalmologist Review Backlog",
+      "hourlyQueueCurve": [
+        {
+          "hour": "08:00",
+          "queueLength": 6,
+          "waitMinutes": 20
+        },
+        {
+          "hour": "10:00",
+          "queueLength": 12,
+          "waitMinutes": 43
+        },
+        {
+          "hour": "12:00",
+          "queueLength": 17,
+          "waitMinutes": 60
+        },
+        {
+          "hour": "14:00",
+          "queueLength": 14,
+          "waitMinutes": 50
+        },
+        {
+          "hour": "16:00",
+          "queueLength": 8,
+          "waitMinutes": 30
+        },
+        {
+          "hour": "18:00",
+          "queueLength": 4,
+          "waitMinutes": 13
+        }
+      ]
+    },
+    {
+      "id": "sim-csv-1795467022005-6",
+      "scenarioKey": "normal",
+      "name": "Increased Referral & Surgical Demand",
+      "description": "\"High-risk diabetic cohort increases referable DR rate to 38%",
+      "source": "Imported MATLAB Simulink CSV",
+      "dailyPatientArrivals": 160,
+      "camerasAvailable": 6,
+      "screeningCapacityPerDay": 143,
+      "imageThroughputPerHour": 20,
+      "ophthalmologistsAvailable": 3,
+      "healthWorkerWorkloadPct": 95,
+      "referralDemandPerWeek": 310,
+      "avgQueueLength": 18,
+      "avgWaitTimeMinutes": 54,
+      "resourceUtilizationPct": 95,
+      "estimatedMonthlyCostInr": 500000,
+      "bottleneck": "681000",
+      "hourlyQueueCurve": [
+        {
+          "hour": "08:00",
+          "queueLength": 7,
+          "waitMinutes": 22
+        },
+        {
+          "hour": "10:00",
+          "queueLength": 15,
+          "waitMinutes": 46
+        },
+        {
+          "hour": "12:00",
+          "queueLength": 22,
+          "waitMinutes": 65
+        },
+        {
+          "hour": "14:00",
+          "queueLength": 18,
+          "waitMinutes": 54
+        },
+        {
+          "hour": "16:00",
+          "queueLength": 11,
+          "waitMinutes": 32
+        },
+        {
+          "hour": "18:00",
+          "queueLength": 5,
+          "waitMinutes": 14
         }
       ]
     },
@@ -20274,6 +20376,102 @@
     }
   ],
   "auditLogs": [
+    {
+      "id": "aud-1795467381169-830b61",
+      "timestamp": "2026-11-23T20:56:21.169Z",
+      "userId": "usr-admin-1",
+      "userName": "Meenakshi Sundaram",
+      "role": "admin",
+      "action": "DEVICE_REVOCATION_EXECUTED",
+      "resourceType": "DeviceSecurity",
+      "resourceId": "dev-lost-tablet-01",
+      "outcome": "SUCCESS",
+      "details": "Administrator deactivated lost device dev-lost-tablet-01; offline access terminated."
+    },
+    {
+      "id": "aud-1795467381161-4728d1",
+      "timestamp": "2026-11-23T20:56:21.161Z",
+      "userId": "usr-doctor-1",
+      "userName": "Dr. Arvind Raman",
+      "role": "doctor",
+      "action": "PATIENT_CONSENT_WITHDRAWN",
+      "resourceType": "PatientRecord",
+      "resourceId": "pat-vhn-1795465770040-2eqo",
+      "outcome": "SUCCESS",
+      "details": "Patient revoked offline cache and data storage consent."
+    },
+    {
+      "id": "aud-1795467381143-f68924",
+      "timestamp": "2026-11-23T20:56:21.143Z",
+      "userId": "usr-admin-1",
+      "userName": "Meenakshi Sundaram",
+      "role": "admin",
+      "action": "MODEL_ROLLBACK_EXECUTED",
+      "resourceType": "ModelGovernance",
+      "resourceId": "dr_classifier.keras",
+      "outcome": "SUCCESS",
+      "details": "Admin initiated rollback to best_dr_model.keras checkpoint."
+    },
+    {
+      "id": "aud-1795467381129-fbe397",
+      "timestamp": "2026-11-23T20:56:21.129Z",
+      "userId": "usr-patient-1",
+      "userName": "Shwetha V",
+      "role": "patient",
+      "action": "DEMO_SESSION_STARTED",
+      "resourceType": "Session",
+      "resourceId": "usr-patient-1",
+      "outcome": "SUCCESS",
+      "details": "Authenticated synthetic prototype session as patient."
+    },
+    {
+      "id": "aud-1795467381118-737664",
+      "timestamp": "2026-11-23T20:56:21.118Z",
+      "userId": "usr-doctor-1",
+      "userName": "Dr. Arvind Raman",
+      "role": "doctor",
+      "action": "DEMO_SESSION_STARTED",
+      "resourceType": "Session",
+      "resourceId": "usr-doctor-1",
+      "outcome": "SUCCESS",
+      "details": "Authenticated synthetic prototype session as doctor."
+    },
+    {
+      "id": "aud-1795467381102-3e20af",
+      "timestamp": "2026-11-23T20:56:21.102Z",
+      "userId": "usr-admin-1",
+      "userName": "Meenakshi Sundaram",
+      "role": "admin",
+      "action": "DEMO_SESSION_STARTED",
+      "resourceType": "Session",
+      "resourceId": "usr-admin-1",
+      "outcome": "SUCCESS",
+      "details": "Authenticated synthetic prototype session as admin."
+    },
+    {
+      "id": "aud-1795467022005-d35bbb",
+      "timestamp": "2026-11-23T20:50:22.005Z",
+      "userId": "usr-admin-1",
+      "userName": "Meenakshi Sundaram",
+      "role": "admin",
+      "action": "SIMULINK_CSV_IMPORTED",
+      "resourceType": "SimulationResult",
+      "resourceId": "batch-6",
+      "outcome": "SUCCESS",
+      "details": "Imported 6 scenario row(s) from MATLAB Simulink CSV interface."
+    },
+    {
+      "id": "aud-1795467021977-212a36",
+      "timestamp": "2026-11-23T20:50:21.977Z",
+      "userId": "usr-admin-1",
+      "userName": "Meenakshi Sundaram",
+      "role": "admin",
+      "action": "DEMO_SESSION_STARTED",
+      "resourceType": "Session",
+      "resourceId": "usr-admin-1",
+      "outcome": "SUCCESS",
+      "details": "Authenticated synthetic prototype session as admin."
+    },
     {
       "id": "aud-1795465785201-f8edd5",
       "timestamp": "2026-11-23T20:29:45.201Z",

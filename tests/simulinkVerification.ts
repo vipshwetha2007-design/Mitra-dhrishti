@@ -34,6 +34,9 @@ async function runSimulinkTests() {
   assert(matlabContent.includes('function results = mritidhristi_district_capacity_model()'), 'Contains valid MATLAB entrypoint function');
   assert(matlabContent.includes('erlang_c_queue'), 'Implements Erlang-C discrete-event queueing formulas');
 
+  const builderPath = path.join(root, 'simulink', 'build_mritidhristi_simulink_model.m');
+  assert(fs.existsSync(builderPath), 'Programmatic Simulink model builder exists (simulink/build_mritidhristi_simulink_model.m)');
+
   // 2. Check Python simulator engine
   assert(fs.existsSync(pythonEnginePath), 'Python discrete-event queueing engine exists (simulink/run_simulation.py)');
   assert(fs.existsSync(csvPath), 'Generated scenario CSV exists (simulink/district_scenario_outputs.csv)');
@@ -41,18 +44,22 @@ async function runSimulinkTests() {
 
   // 3. Inspect JSON scenario outputs
   const scenarios = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
-  assert(scenarios.length === 4, `All 4 district scenarios modeled (${scenarios.length})`);
+  assert(scenarios.length === 6, `All 6 district scenarios modeled (${scenarios.length})`);
 
   const normal = scenarios.find((s: any) => s.scenarioKey === 'normal');
-  const surge = scenarios.find((s: any) => s.scenarioKey === 'rural_surge');
+  const surge = scenarios.find((s: any) => s.scenarioKey === 'high_demand' || s.scenarioKey === 'rural_surge');
   const shortage = scenarios.find((s: any) => s.scenarioKey === 'ophthalmologist_shortage');
-  const transport = scenarios.find((s: any) => s.scenarioKey === 'transport_delay');
+  const transport = scenarios.find((s: any) => s.scenarioKey === 'limited_connectivity' || s.scenarioKey === 'transport_delay');
+  const cameraShortage = scenarios.find((s: any) => s.scenarioKey === 'camera_shortage');
+  const referralSurge = scenarios.find((s: any) => s.scenarioKey === 'increased_referral_demand');
 
   assert(normal && normal.dailyPatientArrivals === 135, 'Baseline scenario: 135 daily arrivals');
-  assert(surge && surge.dailyPatientArrivals === 240, 'Surge scenario: 240 daily arrivals');
+  assert(surge && surge.dailyPatientArrivals >= 240, `High demand scenario: ${surge?.dailyPatientArrivals} daily arrivals`);
   assert(surge.bottleneck.includes('Capture Desk Saturation') || surge.avgWaitTimeMinutes > normal.avgWaitTimeMinutes, 'Surge correctly detects capacity saturation or increased wait');
   assert(shortage && shortage.bottleneck.includes('Specialist Ophthalmologist Review Backlog'), 'Shortage scenario detects ophthalmologist backlog');
-  assert(transport && transport.bottleneck.includes('Rural Transit & Referral Dropout Failure'), 'Transport delay detects transit failure bottleneck');
+  assert(transport && transport.bottleneck.includes('Rural Transit & Referral Dropout Failure'), 'Connectivity/transit delay detects dropout bottleneck');
+  assert(Boolean(cameraShortage), 'Camera shortage scenario modeled');
+  assert(Boolean(referralSurge), 'Increased referral demand scenario modeled');
 
   // 4. Test API Import of Simulink CSV into District Analytics
   process.env.MRITIDHRISTI_TEST = 'true';

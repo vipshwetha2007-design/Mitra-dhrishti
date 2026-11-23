@@ -1,5 +1,7 @@
 scenarioKey,name,dailyPatientArrivals,camerasAvailable,screeningCapacityPerDay,imageThroughputPerHour,ophthalmologistsAvailable,avgQueueLength,avgWaitTimeMinutes,healthWorkerWorkloadPct,referralDemandPerWeek,description,estimatedMonthlyCostInr,bottleneck
-normal,Baseline District Operation,135,6,143,17,3,2,8,80,157,Balanced operations across 4 PHCs and 1 Mobile Van unit.,663000,Balanced Baseline Across Primary Health Centres
-rural_surge,Rural Screening Surge Drive,240,6,143,21,3,22,44,98,306,ASHA/VHN intensive village mobilization increases arrivals by 78%.,717000,Fundus Camera Capture Desk Saturation
-ophthalmologist_shortage,Specialist Staff Shortage,135,5,119,17,1,37,130,96,134,Two ophthalmologist vacancies at District Hospital create review bottlenecks.,398000,Specialist Ophthalmologist Review Backlog
-transport_delay,Rural Transport & Transit Delay,140,6,143,18,3,3,10,83,78,Monsoon flooding blocks rural transit causing severe referral dropouts.,645000,Rural Transit & Referral Dropout Failure
+normal,Normal Screening Demand (Baseline),135,6,143,17,3,2,8,80,157,"Balanced operations across 4 PHCs and 1 Mobile Van unit (40,500 annual screenings).",663000,Balanced Baseline Across Primary Health Centres
+high_demand,High Screening Demand (Intensive Drive),340,8,190,27,4,22,31,98,439,"District-wide mass screening campaign serving 102,000 rural citizens annually.",941000,Fundus Camera Capture Desk Saturation
+limited_connectivity,Limited Connectivity & Offline Queueing,140,6,143,18,3,3,10,83,133,"Intermittent 2G cellular connectivity throttles tele-sync, testing durable local cache.",663000,Rural Transit & Referral Dropout Failure
+camera_shortage,Fundus Camera Hardware Shortage,135,3,71,10,3,22,79,98,150,"Optical servicing downtime leaves only 3 active cameras, saturating capture desks.",588000,Fundus Camera Capture Desk Saturation
+ophthalmologist_shortage,Ophthalmologist Specialist Shortage,135,6,143,17,1,14,50,93,134,Two ophthalmologist vacancies at District Hospital create severe review backlog.,423000,Specialist Ophthalmologist Review Backlog
+increased_referral_demand,Increased Referral & Surgical Demand,160,6,143,20,3,18,54,95,310,"High-risk diabetic cohort increases referable DR rate to 38%, stressing tertiary laser capacity.",681000,Fundus Camera Capture Desk Saturation

@@ -1,7 +1,7 @@
 [
   {
     "scenarioKey": "normal",
-    "name": "Baseline District Operation",
+    "name": "Normal Screening Demand (Baseline)",
     "dailyPatientArrivals": 135,
     "camerasAvailable": 6,
     "screeningCapacityPerDay": 143,
@@ -11,7 +11,7 @@
     "avgWaitTimeMinutes": 8,
     "healthWorkerWorkloadPct": 80,
     "referralDemandPerWeek": 157,
-    "description": "Balanced operations across 4 PHCs and 1 Mobile Van unit.",
+    "description": "Balanced operations across 4 PHCs and 1 Mobile Van unit (40,500 annual screenings).",
     "estimatedMonthlyCostInr": 663000,
     "bottleneck": "Balanced Baseline Across Primary Health Centres",
     "hourlyQueueCurve": [
@@ -48,104 +48,56 @@
     ]
   },
   {
-    "scenarioKey": "rural_surge",
-    "name": "Rural Screening Surge Drive",
-    "dailyPatientArrivals": 240,
-    "camerasAvailable": 6,
-    "screeningCapacityPerDay": 143,
-    "imageThroughputPerHour": 21,
-    "ophthalmologistsAvailable": 3,
+    "scenarioKey": "high_demand",
+    "name": "High Screening Demand (Intensive Drive)",
+    "dailyPatientArrivals": 340,
+    "camerasAvailable": 8,
+    "screeningCapacityPerDay": 190,
+    "imageThroughputPerHour": 27,
+    "ophthalmologistsAvailable": 4,
     "avgQueueLength": 22,
-    "avgWaitTimeMinutes": 44,
+    "avgWaitTimeMinutes": 31,
     "healthWorkerWorkloadPct": 98,
-    "referralDemandPerWeek": 306,
-    "description": "ASHA/VHN intensive village mobilization increases arrivals by 78%.",
-    "estimatedMonthlyCostInr": 717000,
+    "referralDemandPerWeek": 439,
+    "description": "District-wide mass screening campaign serving 102,000 rural citizens annually.",
+    "estimatedMonthlyCostInr": 941000,
     "bottleneck": "Fundus Camera Capture Desk Saturation",
     "hourlyQueueCurve": [
       {
         "hour": "08:00",
         "queueLength": 9,
-        "waitMinutes": 18
+        "waitMinutes": 12
       },
       {
         "hour": "10:00",
         "queueLength": 19,
-        "waitMinutes": 37
+        "waitMinutes": 26
       },
       {
         "hour": "12:00",
         "queueLength": 28,
-        "waitMinutes": 55
+        "waitMinutes": 39
       },
       {
         "hour": "14:00",
         "queueLength": 22,
-        "waitMinutes": 44
+        "waitMinutes": 31
       },
       {
         "hour": "16:00",
         "queueLength": 13,
-        "waitMinutes": 26
+        "waitMinutes": 19
       },
       {
         "hour": "18:00",
         "queueLength": 4,
-        "waitMinutes": 9
+        "waitMinutes": 6
       }
     ]
   },
   {
-    "scenarioKey": "ophthalmologist_shortage",
-    "name": "Specialist Staff Shortage",
-    "dailyPatientArrivals": 135,
-    "camerasAvailable": 5,
-    "screeningCapacityPerDay": 119,
-    "imageThroughputPerHour": 17,
-    "ophthalmologistsAvailable": 1,
-    "avgQueueLength": 37,
-    "avgWaitTimeMinutes": 130,
-    "healthWorkerWorkloadPct": 96,
-    "referralDemandPerWeek": 134,
-    "description": "Two ophthalmologist vacancies at District Hospital create review bottlenecks.",
-    "estimatedMonthlyCostInr": 398000,
-    "bottleneck": "Specialist Ophthalmologist Review Backlog",
-    "hourlyQueueCurve": [
-      {
-        "hour": "08:00",
-        "queueLength": 15,
-        "waitMinutes": 52
-      },
-      {
-        "hour": "10:00",
-        "queueLength": 31,
-        "waitMinutes": 110
-      },
-      {
-        "hour": "12:00",
-        "queueLength": 46,
-        "waitMinutes": 162
-      },
-      {
-        "hour": "14:00",
-        "queueLength": 37,
-        "waitMinutes": 130
-      },
-      {
-        "hour": "16:00",
-        "queueLength": 22,
-        "waitMinutes": 78
-      },
-      {
-        "hour": "18:00",
-        "queueLength": 7,
-        "waitMinutes": 26
-      }
-    ]
-  },
-  {
-    "scenarioKey": "transport_delay",
-    "name": "Rural Transport & Transit Delay",
+    "scenarioKey": "limited_connectivity",
+    "name": "Limited Connectivity & Offline Queueing",
     "dailyPatientArrivals": 140,
     "camerasAvailable": 6,
     "screeningCapacityPerDay": 143,
@@ -154,9 +106,9 @@
     "avgQueueLength": 3,
     "avgWaitTimeMinutes": 10,
     "healthWorkerWorkloadPct": 83,
-    "referralDemandPerWeek": 78,
-    "description": "Monsoon flooding blocks rural transit causing severe referral dropouts.",
-    "estimatedMonthlyCostInr": 645000,
+    "referralDemandPerWeek": 133,
+    "description": "Intermittent 2G cellular connectivity throttles tele-sync, testing durable local cache.",
+    "estimatedMonthlyCostInr": 663000,
     "bottleneck": "Rural Transit & Referral Dropout Failure",
     "hourlyQueueCurve": [
       {
@@ -188,6 +140,150 @@
         "hour": "18:00",
         "queueLength": 1,
         "waitMinutes": 3
+      }
+    ]
+  },
+  {
+    "scenarioKey": "camera_shortage",
+    "name": "Fundus Camera Hardware Shortage",
+    "dailyPatientArrivals": 135,
+    "camerasAvailable": 3,
+    "screeningCapacityPerDay": 71,
+    "imageThroughputPerHour": 10,
+    "ophthalmologistsAvailable": 3,
+    "avgQueueLength": 22,
+    "avgWaitTimeMinutes": 79,
+    "healthWorkerWorkloadPct": 98,
+    "referralDemandPerWeek": 150,
+    "description": "Optical servicing downtime leaves only 3 active cameras, saturating capture desks.",
+    "estimatedMonthlyCostInr": 588000,
+    "bottleneck": "Fundus Camera Capture Desk Saturation",
+    "hourlyQueueCurve": [
+      {
+        "hour": "08:00",
+        "queueLength": 9,
+        "waitMinutes": 32
+      },
+      {
+        "hour": "10:00",
+        "queueLength": 19,
+        "waitMinutes": 67
+      },
+      {
+        "hour": "12:00",
+        "queueLength": 28,
+        "waitMinutes": 99
+      },
+      {
+        "hour": "14:00",
+        "queueLength": 22,
+        "waitMinutes": 79
+      },
+      {
+        "hour": "16:00",
+        "queueLength": 13,
+        "waitMinutes": 47
+      },
+      {
+        "hour": "18:00",
+        "queueLength": 4,
+        "waitMinutes": 16
+      }
+    ]
+  },
+  {
+    "scenarioKey": "ophthalmologist_shortage",
+    "name": "Ophthalmologist Specialist Shortage",
+    "dailyPatientArrivals": 135,
+    "camerasAvailable": 6,
+    "screeningCapacityPerDay": 143,
+    "imageThroughputPerHour": 17,
+    "ophthalmologistsAvailable": 1,
+    "avgQueueLength": 14,
+    "avgWaitTimeMinutes": 50,
+    "healthWorkerWorkloadPct": 93,
+    "referralDemandPerWeek": 134,
+    "description": "Two ophthalmologist vacancies at District Hospital create severe review backlog.",
+    "estimatedMonthlyCostInr": 423000,
+    "bottleneck": "Specialist Ophthalmologist Review Backlog",
+    "hourlyQueueCurve": [
+      {
+        "hour": "08:00",
+        "queueLength": 6,
+        "waitMinutes": 20
+      },
+      {
+        "hour": "10:00",
+        "queueLength": 12,
+        "waitMinutes": 42
+      },
+      {
+        "hour": "12:00",
+        "queueLength": 18,
+        "waitMinutes": 62
+      },
+      {
+        "hour": "14:00",
+        "queueLength": 14,
+        "waitMinutes": 50
+      },
+      {
+        "hour": "16:00",
+        "queueLength": 8,
+        "waitMinutes": 30
+      },
+      {
+        "hour": "18:00",
+        "queueLength": 3,
+        "waitMinutes": 10
+      }
+    ]
+  },
+  {
+    "scenarioKey": "increased_referral_demand",
+    "name": "Increased Referral & Surgical Demand",
+    "dailyPatientArrivals": 160,
+    "camerasAvailable": 6,
+    "screeningCapacityPerDay": 143,
+    "imageThroughputPerHour": 20,
+    "ophthalmologistsAvailable": 3,
+    "avgQueueLength": 18,
+    "avgWaitTimeMinutes": 54,
+    "healthWorkerWorkloadPct": 95,
+    "referralDemandPerWeek": 310,
+    "description": "High-risk diabetic cohort increases referable DR rate to 38%, stressing tertiary laser capacity.",
+    "estimatedMonthlyCostInr": 681000,
+    "bottleneck": "Fundus Camera Capture Desk Saturation",
+    "hourlyQueueCurve": [
+      {
+        "hour": "08:00",
+        "queueLength": 7,
+        "waitMinutes": 22
+      },
+      {
+        "hour": "10:00",
+        "queueLength": 15,
+        "waitMinutes": 46
+      },
+      {
+        "hour": "12:00",
+        "queueLength": 22,
+        "waitMinutes": 68
+      },
+      {
+        "hour": "14:00",
+        "queueLength": 18,
+        "waitMinutes": 54
+      },
+      {
+        "hour": "16:00",
+        "queueLength": 11,
+        "waitMinutes": 32
+      },
+      {
+        "hour": "18:00",
+        "queueLength": 4,
+        "waitMinutes": 11
       }
     ]
   }
