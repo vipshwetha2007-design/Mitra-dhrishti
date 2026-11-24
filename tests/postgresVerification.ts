@@ -18,7 +18,7 @@ function assert(cond: boolean, desc: string) {
 
 async function runPostgresVerification() {
   console.log('===================================================================');
-  console.log(' MRITIDHRISTI PHASE 12: POSTGRESQL PERSISTENCE & MIGRATION VERIFICATION');
+  console.log(' MITRA DRISHTI PHASE 12: POSTGRESQL PERSISTENCE & MIGRATION VERIFICATION');
   console.log('===================================================================');
 
   const root = process.cwd();

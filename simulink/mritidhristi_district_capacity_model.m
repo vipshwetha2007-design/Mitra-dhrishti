@@ -1,5 +1,5 @@
 %% =========================================================================
-%  MRITIDHRISTI — PREVENT • DETECT • PROTECT
+%  MITRA DRISHTI — PREVENT • DETECT • PROTECT
 %  MATLAB / Simulink District Healthcare Resource Planning Model
 %  File: simulink/mritidhristi_district_capacity_model.m
 %  Standard: Discrete-Event Multi-Server Multi-Tier Healthcare Queueing Model

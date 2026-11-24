@@ -15,9 +15,9 @@ export default defineConfig(() => {
         includeAssets: ['icon.svg', 'apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png', 'pwa-maskable-512x512.png'],
         manifest: {
           id: '/',
-          name: 'Mritidhristi – Prevent • Detect • Protect',
-          short_name: 'Mritidhristi',
-          description: 'Offline-first healthcare screening and continuity-of-care platform for Type 2 diabetes prevention and retinal screening support.',
+          name: 'MITRA DRISHTI – Prevent • Detect • Protect',
+          short_name: 'MitraDrishti',
+          description: 'Your trusted companion for diabetes prevention and vision protection.',
           theme_color: '#0B2540',
           background_color: '#F4F7FA',
           display: 'standalone',

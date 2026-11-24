@@ -1,5 +1,5 @@
 %% =========================================================================
-%  MRITIDHRISTI — PREVENT • DETECT • PROTECT
+%  MITRA DRISHTI — PREVENT • DETECT • PROTECT
 %  MathWorks MATLAB Retinal Fundus Preprocessing & Image Quality Assessment
 %  File: matlab/mritidhristi_retinal_preprocessing.m
 %  Problem Statement: SIH26038 — Explainable AI for DR Screening in Rural India

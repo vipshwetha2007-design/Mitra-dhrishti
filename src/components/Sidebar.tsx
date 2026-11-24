@@ -205,7 +205,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {!collapsed && (
             <div className="min-w-0">
               <div className="font-display text-lg font-bold tracking-tight text-white leading-none">
-                Mritidhristi
+                MITRA DRISHTI
               </div>
               <div className="mt-1 text-[11px] font-medium text-teal-200/85 truncate">
                 {t.appTagline}

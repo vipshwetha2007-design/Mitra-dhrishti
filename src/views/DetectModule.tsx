@@ -77,7 +77,7 @@ const DATASET_SPECS = [
 
 const FALLBACK_DATASET_STATS = {
   manifest: {
-    dataset_name: 'APTOS 2019 Blindness Detection (Mritidhristi Curated & Leakage-Free)',
+    dataset_name: 'APTOS 2019 Blindness Detection (MITRA DRISHTI Curated & Leakage-Free)',
     primary_source: 'Aravind Eye Hospital, Tamil Nadu, India / Kaggle Competition Dataset',
     license: 'Competition Data Agreement / Educational & Non-commercial Clinical Research',
     total_inspected_images: 3662,
@@ -142,7 +142,7 @@ export const DetectModule: React.FC<DetectModuleProps> = ({
   useEffect(() => {
     if (subTab === 'datasets') {
       setLoadingStats(true);
-      const token = localStorage.getItem('mritidhristi_token');
+      const token = localStorage.getItem('mitra_drishti_token') || localStorage.getItem('mritidhristi_token');
       fetch('/api/detect/dataset-stats', {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       })
@@ -180,7 +180,7 @@ export const DetectModule: React.FC<DetectModuleProps> = ({
         setAnalysis(analyzeRetinalCanvasPixels(canvas, 'uploaded_custom'));
 
         if (isOnline) {
-          const token = localStorage.getItem('mritidhristi_token');
+          const token = localStorage.getItem('mitra_drishti_token') || localStorage.getItem('mritidhristi_token');
           fetch('/api/detect/predict', {
             method: 'POST',
             headers: {
@@ -705,7 +705,7 @@ export const DetectModule: React.FC<DetectModuleProps> = ({
                   </span>
                 </div>
                 <h2 className="mt-2 font-display text-xl font-bold text-[#0B2540]">
-                  {datasetStats.manifest?.dataset_name || 'APTOS 2019 Blindness Detection (Mritidhristi Curated)'}
+                  {datasetStats.manifest?.dataset_name || 'APTOS 2019 Blindness Detection (MITRA DRISHTI Curated)'}
                 </h2>
                 <p className="mt-1 text-xs text-slate-600 max-w-2xl leading-relaxed">
                   <strong>Cohort Origin:</strong> Aravind Eye Hospital clinics across Tamil Nadu, India. 3,662 genuine clinical retinal fundus examinations graded under the International Clinical Diabetic Retinopathy (ICDR) scale. Zero synthetic images; audited for genuine CNN training.
@@ -860,7 +860,7 @@ export const DetectModule: React.FC<DetectModuleProps> = ({
                 Multi-Cohort Retinal Dataset Governance
               </h3>
               <p className="mt-1 text-xs text-slate-600 leading-relaxed max-w-3xl">
-                Mritidhristi evaluates models across distinct Indian and international cohorts to ensure generalizability across non-mydriatic camera hardware.
+                MITRA DRISHTI evaluates models across distinct Indian and international cohorts to ensure generalizability across non-mydriatic camera hardware.
               </p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

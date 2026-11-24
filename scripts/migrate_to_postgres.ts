@@ -1,5 +1,5 @@
 /**
- * MRITIDHRISTI — PREVENT • DETECT • PROTECT
+ * MITRA DRISHTI — PREVENT • DETECT • PROTECT
  * PostgreSQL Migration Runner & Data Exporter (Phase 12)
  *
  * Reads JSON store (`server/data/db.json`), validates entity relationships,
@@ -22,7 +22,7 @@ function escapeSql(val: any): string {
 
 export function generateMigrationSql(): { recordCount: number; sqlFilePath: string } {
   console.log('===================================================================');
-  console.log(' MRITIDHRISTI: POSTGRESQL DATA MIGRATION GENERATOR');
+  console.log(' MITRA DRISHTI: POSTGRESQL DATA MIGRATION GENERATOR');
   console.log('===================================================================');
 
   const root = process.cwd();
@@ -31,7 +31,7 @@ export function generateMigrationSql(): { recordCount: number; sqlFilePath: stri
   const raw = store.data;
   const sqlLines: string[] = [];
 
-  sqlLines.push('-- Mritidhristi Automated PostgreSQL Data Migration');
+  sqlLines.push('-- MITRA DRISHTI Automated PostgreSQL Data Migration');
   sqlLines.push(`-- Generated: ${new Date().toISOString()}`);
   sqlLines.push('BEGIN;\n');
 

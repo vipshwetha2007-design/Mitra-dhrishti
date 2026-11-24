@@ -1,5 +1,5 @@
 # Retinal Datasets, Clinical Sources & Licensing Directory
-**Project:** MRITIDHRISTI — PREVENT • DETECT • PROTECT  
+**Project:** MITRA DRISHTI — PREVENT • DETECT • PROTECT  
 **System Module:** DETECT — AI Retinal Screening  
 **Clinical Standards:** ICDR 5-Class Diabetic Retinopathy Scale  
 
@@ -8,9 +8,9 @@
 ## 1. Primary Curated Dataset: APTOS 2019 Blindness Detection
 
 - **Clinical Cohort:** Patients evaluated at Aravind Eye Hospital clinics across Tamil Nadu, India.
-- **Role in Mritidhristi:** Primary training and validation benchmark for 5-class ICDR Diabetic Retinopathy grading.
+- **Role in MITRA DRISHTI:** Primary training and validation benchmark for 5-class ICDR Diabetic Retinopathy grading.
 - **Imaging Modality:** Color fundus photography (predominantly Topcon, Zeiss, and non-mydriatic cameras).
-- **Clinical Relevance:** Directly matches Mritidhristi's deployment demographics in Tamil Nadu and Indian rural/primary health centers.
+- **Clinical Relevance:** Directly matches MITRA DRISHTI's deployment demographics in Tamil Nadu and Indian rural/primary health centers.
 - **Labels:** 5-class ICDR severity grades (0: No DR, 1: Mild, 2: Moderate, 3: Severe, 4: Proliferative DR) verified by clinical retina specialists.
 - **Curated Dataset Size:** 3,662 genuine clinical retinal fundus examinations.
 - **License / Usage Constraints:** Kaggle Competition Rules — Non-commercial academic research and clinical development.
@@ -52,9 +52,9 @@ To ingest the full raw EyePACS or DDR datasets into `datasets/raw/`:
 
 ## 4. Ethical Compliance & Data Privacy
 
-- All genuine retinal datasets integrated into Mritidhristi are fully de-identified and anonymized according to HIPAA Safe Harbor guidelines and clinical research ethics boards.
+- All genuine retinal datasets integrated into MITRA DRISHTI are fully de-identified and anonymized according to HIPAA Safe Harbor guidelines and clinical research ethics boards.
 - No protected health information (PHI), patient names, biometric faces, or geographic identifiers are contained within image data or metadata.
 - Preprocessing applies strict circular cropping to eliminate peripheral metadata, patient ID watermarks, or camera imprint labels.
 
 ---
-*Documented for MRITIDHRISTI Clinical AI Standards (Phase 5).*
+*Documented for MITRA DRISHTI Clinical AI Standards (Phase 5).*

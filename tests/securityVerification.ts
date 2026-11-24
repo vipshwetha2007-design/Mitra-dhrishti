@@ -25,7 +25,7 @@ function recordResult(res: TestCaseResult) {
 
 async function runSecurityTests() {
   console.log('\n================================================================');
-  console.log('   MRITIDHRISTI — PHASE 1 SECURITY AUTOMATED TEST SUITE');
+  console.log('   MITRA DRISHTI — PHASE 1 SECURITY AUTOMATED TEST SUITE');
   console.log('================================================================\n');
 
   // Launch test instance with headless API mode

@@ -34,7 +34,7 @@ def test_assert(condition, desc):
         failed += 1
 
 print("===================================================================")
-print(" MRITIDHRISTI PHASE 7 & 8: RETINAL INFERENCE & GRAD-CAM VERIFICATION")
+print(" MITRA DRISHTI PHASE 7 & 8: RETINAL INFERENCE & GRAD-CAM VERIFICATION")
 print("===================================================================")
 
 # 1. Load a real clinical fundus scan

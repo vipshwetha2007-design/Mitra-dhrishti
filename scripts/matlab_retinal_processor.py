@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-MRITIDHRISTI — PREVENT • DETECT • PROTECT
+MITRA DRISHTI — PREVENT • DETECT • PROTECT
 Python / OpenCV / SciPy Execution Engine for MATLAB Retinal Processing Algorithms
 File: scripts/matlab_retinal_processor.py
 Problem Statement: SIH26038 — Explainable AI for DR Screening in Rural India

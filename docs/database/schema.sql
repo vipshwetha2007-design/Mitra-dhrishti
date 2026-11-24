@@ -1,4 +1,4 @@
--- MRITIDHRISTI – PREVENT • DETECT • PROTECT
+-- MITRA DRISHTI – PREVENT • DETECT • PROTECT
 -- PostgreSQL Relational Schema Blueprint (26 Entities)
 -- Ready for Phase 5 Cloud SQL (PostgreSQL) / Drizzle / SQLAlchemy Migration
 

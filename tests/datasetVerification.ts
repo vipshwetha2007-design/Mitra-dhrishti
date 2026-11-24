@@ -1,5 +1,5 @@
 /**
- * MRITIDHRISTI — PREVENT • DETECT • PROTECT
+ * MITRA DRISHTI — PREVENT • DETECT • PROTECT
  * Phase 5 Retinal Dataset Preparation & Clinical Quality Verification Suite
  *
  * Verifies:
@@ -372,7 +372,7 @@ test('Test 13: Backend GET /api/detect/dataset-stats endpoint responds with veri
 // ---------------------------------------------------------------------------
 async function run() {
   console.log('\n===============================================================');
-  console.log(' MRITIDHRISTI PHASE 5: RETINAL DATASET PREPARATION VERIFICATION');
+  console.log(' MITRA DRISHTI PHASE 5: RETINAL DATASET PREPARATION VERIFICATION');
   console.log('===============================================================\n');
 
   let passed = 0;

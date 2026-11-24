@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-MRITIDHRISTI — PREVENT • DETECT • PROTECT
+MITRA DRISHTI — PREVENT • DETECT • PROTECT
 Phase 6: Genuine CNN Model Training & Held-Out Test Evaluation
 
 Implements genuine transfer learning for 5-class ICDR Diabetic Retinopathy grading:
@@ -467,7 +467,7 @@ def _generate_eval_markdown(results):
     ov = results["overall"]
     cm = results["confusion_matrix"]
     md = f"""# Genuine CNN Model Training & Held-Out Test Evaluation Report
-**Project:** MRITIDHRISTI — PREVENT • DETECT • PROTECT  
+**Project:** MITRA DRISHTI — PREVENT • DETECT • PROTECT  
 **Phase:** Phase 6 — Genuine CNN Training & Evaluation  
 **Architecture:** MobileNetV2 (ImageNet Pretrained Transfer Learning)  
 **Evaluated Cohort:** Held-Out Quarantined Test Set (`datasets/splits/test.csv`, {results['test_sample_count']} Scans)  

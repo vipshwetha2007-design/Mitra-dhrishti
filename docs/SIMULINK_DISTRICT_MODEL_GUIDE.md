@@ -1,4 +1,4 @@
-# MRITIDHRISTI — MathWorks Simulink & SimEvents District Healthcare Capacity Guide
+# MITRA DRISHTI — MathWorks Simulink & SimEvents District Healthcare Capacity Guide
 
 **Problem Statement:** SIH26038 – Explainable AI for Diabetic Retinopathy Screening in Rural India  
 **Organisation:** MathWorks  
@@ -102,4 +102,4 @@ This regenerates `simulink/district_scenario_outputs.csv` and `simulink/district
 ## 5. Audit & Compliance Statement
 - **Actual Status on Audit Date:** MATLAB/Simulink binary software is not installed on this local server environment.
 - **Feasible Models Provided:** Both the MATLAB programmatic `.slx` generator (`simulink/build_mritidhristi_simulink_model.m`) and the complete analytical `.m` function (`simulink/mritidhristi_district_capacity_model.m`) are provided in full.
-- **No Static Fakes:** The simulation engine is dynamic; modifying inputs in `run_simulation.py` or `.m` changes the Erlang-C delays, queues, bottlenecks, and costs imported into the Mritidhristi administrative analytics dashboard.
+- **No Static Fakes:** The simulation engine is dynamic; modifying inputs in `run_simulation.py` or `.m` changes the Erlang-C delays, queues, bottlenecks, and costs imported into the MITRA DRISHTI administrative analytics dashboard.

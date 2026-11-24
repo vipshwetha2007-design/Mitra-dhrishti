@@ -50,7 +50,7 @@ export const SimulinkAnalyticsView: React.FC<SimulinkAnalyticsViewProps> = ({
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'mritidhristi-simulink-output-template.csv';
+    a.download = 'mitra-drishti-simulink-output-template.csv';
     a.click();
     URL.revokeObjectURL(url);
   };

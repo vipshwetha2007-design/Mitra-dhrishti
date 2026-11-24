@@ -1,4 +1,4 @@
-# Mritidhristi – Prevent • Detect • Protect — Project Progress Tracker
+# MITRA DRISHTI – Prevent • Detect • Protect — Project Progress Tracker
 
 ## Clinical Boundary & Data Provenance
 - **Clinical Boundary**: Screening and care-coordination prototype only; not a diagnostic replacement.

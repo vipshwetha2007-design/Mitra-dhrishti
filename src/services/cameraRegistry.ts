@@ -1,5 +1,5 @@
 /**
- * MRITIDHRISTI — PREVENT • DETECT • PROTECT
+ * MITRA DRISHTI — PREVENT • DETECT • PROTECT
  * Fundus Camera Compatibility Registry & Device Calibration Engine
  * File: src/services/cameraRegistry.ts
  * Problem Statement: SIH26038 — Explainable AI for DR Screening in Rural India

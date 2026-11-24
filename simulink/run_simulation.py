@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-MRITIDHRISTI — PREVENT • DETECT • PROTECT
+MITRA DRISHTI — PREVENT • DETECT • PROTECT
 Phase 11: District Healthcare Resource Planning Discrete-Event Queueing Engine.
 Standard: Multi-Server Multi-Tier Discrete-Event Queueing Model (SimEvents Equivalent).
 

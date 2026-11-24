@@ -1,5 +1,5 @@
 /**
- * MRITIDHRISTI — PREVENT • DETECT • PROTECT
+ * MITRA DRISHTI — PREVENT • DETECT • PROTECT
  * HL7 FHIR R4 (Release 4) Resource Mapper & Interoperability Engine
  * File: src/services/fhirMapper.ts
  * Standards: HL7 FHIR R4, SNOMED-CT, LOINC, Ayushman Bharat Digital Mission (ABDM) Profile
@@ -18,7 +18,7 @@ export interface FhirBundle {
 }
 
 /**
- * Maps a Mritidhristi PatientRecord to an HL7 FHIR R4 Patient Resource.
+ * Maps a MITRA DRISHTI PatientRecord to an HL7 FHIR R4 Patient Resource.
  */
 export function mapToFhirPatient(patient: PatientRecord): Record<string, unknown> {
   const genderMap: Record<string, string> = {
@@ -35,7 +35,7 @@ export function mapToFhirPatient(patient: PatientRecord): Record<string, unknown
     id: patient.id,
     identifier: [
       {
-        system: 'https://mritidhristi.health.gov.in/mrn',
+        system: 'https://mitradrishti.health.gov.in/mrn',
         value: patient.mrn,
         use: 'official',
       },
@@ -153,14 +153,14 @@ export function mapToFhirScreeningObservation(
     component: [
       {
         code: {
-          coding: [{ system: 'http://mritidhristi.health.gov.in/codes', code: 'gradcam-hotspots' }],
+          coding: [{ system: 'https://mitradrishti.health.gov.in/codes', code: 'gradcam-hotspots' }],
           text: 'Explainable AI Grad-CAM Hotspots',
         },
         valueInteger: screening.gradCam?.hotspots?.length || 0,
       },
       {
         code: {
-          coding: [{ system: 'http://mritidhristi.health.gov.in/codes', code: 'model-confidence' }],
+          coding: [{ system: 'https://mitradrishti.health.gov.in/codes', code: 'model-confidence' }],
           text: 'Calibrated Softmax Confidence',
         },
         valueQuantity: {

@@ -1,5 +1,5 @@
 %% =========================================================================
-%  MRITIDHRISTI — PREVENT • DETECT • PROTECT
+%  MITRA DRISHTI — PREVENT • DETECT • PROTECT
 %  MathWorks MATLAB Retinal Structure & Pathological Lesion Segmentation Engine
 %  File: matlab/mritidhristi_structure_and_lesion_segmentation.m
 %  Problem Statement: SIH26038 — Explainable AI for DR Screening in Rural India

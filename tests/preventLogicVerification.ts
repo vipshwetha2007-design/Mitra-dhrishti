@@ -25,7 +25,7 @@ function recordResult(res: TestCaseResult) {
 
 async function runPreventTests() {
   console.log('\n================================================================');
-  console.log('   MRITIDHRISTI — PHASE 4 PREVENT CORE FUNCTIONALITY TEST SUITE');
+  console.log('   MITRA DRISHTI — PHASE 4 PREVENT CORE FUNCTIONALITY TEST SUITE');
   console.log('================================================================\n');
 
   process.env.MRITIDHRISTI_TEST = 'true';

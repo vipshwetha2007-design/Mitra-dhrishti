@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-MRITIDHRISTI — PREVENT • DETECT • PROTECT
+MITRA DRISHTI — PREVENT • DETECT • PROTECT
 Phase 7 & Phase 8: Genuine Clinical Retinal Inference, Grad-CAM Explainability,
 and AI Reliability & Uncertainty Engine.
 

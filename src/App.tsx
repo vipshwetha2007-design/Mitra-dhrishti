@@ -167,7 +167,7 @@ export default function App() {
         await fetchBootstrap(auth.token);
       } catch (err) {
         if (!active) return;
-        setFatalError(err instanceof Error ? err.message : 'Unable to connect to Mritidhristi API');
+        setFatalError(err instanceof Error ? err.message : 'Unable to connect to MITRA DRISHTI API');
       } finally {
         if (active) setLoading(false);
       }
@@ -662,7 +662,7 @@ export default function App() {
         <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-xs">
           <div className="mx-auto h-10 w-10 animate-spin rounded-full border-3 border-slate-200 border-t-[#0D9488]" />
           <h1 className="mt-4 font-display text-lg font-bold text-[#0B2540]">
-            Initializing Mritidhristi
+            Initializing MITRA DRISHTI
           </h1>
           <p className="mt-1 text-xs text-slate-500">
             Loading role-scoped healthcare records and IndexedDB offline sync engine...

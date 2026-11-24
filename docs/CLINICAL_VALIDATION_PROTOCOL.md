@@ -1,5 +1,5 @@
-# MRITIDHRISTI — Clinical & Ethical Validation Protocol
-**Project:** MRITIDHRISTI — PREVENT • DETECT • PROTECT  
+# MITRA DRISHTI — Clinical & Ethical Validation Protocol
+**Project:** MITRA DRISHTI — PREVENT • DETECT • PROTECT  
 **Problem Statement:** SIH26038 – Explainable AI for Diabetic Retinopathy Screening in Rural India  
 **Standard:** STARD-AI / TRIPOD-AI Guidelines for Healthcare AI Clinical Validation  
 **Ethical Framework:** ICMR National Ethical Guidelines for Biomedical and Health Research (2017) & DPDP Act 2023  
@@ -9,7 +9,7 @@
 ## 1. Protocol Overview & Objectives
 
 ### 1.1 Study Title
-*Prospective Multicenter Diagnostic Accuracy and Clinical Triage Evaluation of an Explainable Artificial Intelligence Platform (MRITIDHRISTI) for Diabetic Retinopathy Screening in Rural Primary Healthcare Settings of Tamil Nadu.*
+*Prospective Multicenter Diagnostic Accuracy and Clinical Triage Evaluation of an Explainable Artificial Intelligence Platform (MITRA DRISHTI) for Diabetic Retinopathy Screening in Rural Primary Healthcare Settings of Tamil Nadu.*
 
 ### 1.2 Primary Clinical Objectives
 1. **Screening Sensitivity Evaluation:** Validate that the autonomous referable DR screening triage gate achieves $\ge 90.0\%$ sensitivity against senior retinal specialist adjudications.

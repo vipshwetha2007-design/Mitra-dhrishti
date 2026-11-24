@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-MRITIDHRISTI — Diagnostic & Decision Threshold Analysis for Referable DR
+MITRA DRISHTI — Diagnostic & Decision Threshold Analysis for Referable DR
 Evaluates the existing MobileNetV2 model on the VALIDATION split (val.csv, 373 scans)
 to analyze referable DR sensitivity vs specificity, identify optimal clinical screening threshold,
 and evaluate generalizability on the untouched held-out test split (test.csv, 660 scans).

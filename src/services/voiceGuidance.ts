@@ -1,5 +1,5 @@
 /**
- * MRITIDHRISTI — PREVENT • DETECT • PROTECT
+ * MITRA DRISHTI — PREVENT • DETECT • PROTECT
  * Regional Language Voice Guidance & Read-Aloud Accessibility Engine
  * File: src/services/voiceGuidance.ts
  * Problem Statement: SIH26038 — Explainable AI for DR Screening in Rural India

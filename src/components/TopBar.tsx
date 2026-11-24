@@ -247,7 +247,7 @@ export const TopBar: React.FC<TopBarProps> = ({
           <div className="w-full max-w-sm rounded-xl border border-slate-200 bg-white p-6 shadow-xl">
             <div className="flex items-center justify-between">
               <h3 className="font-display text-base font-bold text-slate-900">
-                Install Mritidhristi on iOS
+                Install MITRA DRISHTI on iOS
               </h3>
               <button
                 type="button"
@@ -260,7 +260,7 @@ export const TopBar: React.FC<TopBarProps> = ({
             <p className="mt-3 text-sm text-slate-600 leading-relaxed">
               1. Tap the <strong>Share</strong> icon in Safari&apos;s toolbar.<br />
               2. Scroll down and select <strong>Add to Home Screen</strong>.<br />
-              3. Launch Mritidhristi offline directly from your home screen.
+              3. Launch MITRA DRISHTI offline directly from your home screen.
             </p>
             <button
               type="button"

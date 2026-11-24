@@ -1,5 +1,5 @@
 /**
- * MRITIDHRISTI — PREVENT • DETECT • PROTECT
+ * MITRA DRISHTI — PREVENT • DETECT • PROTECT
  * Offline Storage Encryption, Device Security & Key Management Engine
  * File: src/offline/crypto.ts
  * Standards: WebCrypto API, AES-GCM-256, PBKDF2 Key Derivation, Device Deactivation

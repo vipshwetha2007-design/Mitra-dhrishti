@@ -1,5 +1,5 @@
 %% =========================================================================
-%  MRITIDHRISTI — PREVENT • DETECT • PROTECT
+%  MITRA DRISHTI — PREVENT • DETECT • PROTECT
 %  MathWorks Simulink & SimEvents District Healthcare Queueing Model Builder
 %  File: simulink/build_mritidhristi_simulink_model.m
 %  Problem Statement: SIH26038 — Explainable AI for DR Screening in Rural India

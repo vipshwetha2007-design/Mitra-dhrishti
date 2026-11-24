@@ -64,7 +64,7 @@ function assert(condition: boolean, msg: string) {
 }
 
 console.log('===================================================================');
-console.log(' MRITIDHRISTI PHASE 6: CNN MODEL ARTIFACTS & EVALUATION VERIFICATION');
+console.log(' MITRA DRISHTI PHASE 6: CNN MODEL ARTIFACTS & EVALUATION VERIFICATION');
 console.log('===================================================================');
 
 const ROOT = process.cwd();

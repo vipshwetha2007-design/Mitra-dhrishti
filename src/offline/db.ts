@@ -55,7 +55,7 @@ export interface CachedReportSummary {
 }
 
 /**
- * Mritidhristi IndexedDB Offline Store (Dexie.js)
+ * MITRA DRISHTI IndexedDB Offline Store (Dexie.js)
  * Security boundary: Never stores auth bearer tokens, passwords, or unrestricted cohort PHI.
  * Only permitted patient workflow summaries and queued offline mutations are cached locally.
  */

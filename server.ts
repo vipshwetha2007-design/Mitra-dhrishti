@@ -924,7 +924,7 @@ export async function createMritidhristiApp(options: { skipFrontend?: boolean } 
       meta: {
         dataProvenance: 'Synthetic Prototype Dataset + Live Session Mutations',
         clinicalDisclaimer:
-          'Mritidhristi is a screening and care-coordination prototype, not a diagnostic replacement. All clinical decisions remain with authorised healthcare professionals.',
+          'MITRA DRISHTI is a screening and care-coordination prototype, not a diagnostic replacement. All clinical decisions remain with authorised healthcare professionals.',
         serverTime: new Date().toISOString(),
       },
     };
@@ -2449,11 +2449,13 @@ export async function createMritidhristiApp(options: { skipFrontend?: boolean } 
   return app;
 }
 
+export const createMitraDrishtiApp = createMritidhristiApp;
+
 export async function startServer() {
   const app = await createMritidhristiApp({ skipFrontend: false });
   return new Promise<ReturnType<typeof app.listen>>((resolve) => {
     const server = app.listen(PORT, '0.0.0.0', () => {
-      console.log(`Mritidhristi server listening on http://0.0.0.0:${PORT}`);
+      console.log(`MITRA DRISHTI server listening on http://0.0.0.0:${PORT}`);
       resolve(server);
     });
   });

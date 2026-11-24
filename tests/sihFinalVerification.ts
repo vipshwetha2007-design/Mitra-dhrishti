@@ -1,5 +1,5 @@
 /**
- * MRITIDHRISTI — SIH26038 FINAL ALIGNMENT & GAP CLOSURE VERIFICATION SUITE
+ * MITRA DRISHTI — SIH26038 FINAL ALIGNMENT & GAP CLOSURE VERIFICATION SUITE
  * File: tests/sihFinalVerification.ts
  * Tests:
  * 1. MATLAB retinal image preprocessing and segmentation scripts
@@ -40,7 +40,7 @@ function assert(cond: boolean, desc: string) {
 
 async function runSihVerification() {
   console.log('===================================================================');
-  console.log(' MRITIDHRISTI: SIH26038 MASTER ALIGNMENT & GAP CLOSURE VERIFICATION');
+  console.log(' MITRA DRISHTI: SIH26038 MASTER ALIGNMENT & GAP CLOSURE VERIFICATION');
   console.log('===================================================================');
 
   const root = process.cwd();

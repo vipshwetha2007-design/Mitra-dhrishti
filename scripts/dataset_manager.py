@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-MRITIDHRISTI — PREVENT • DETECT • PROTECT
+MITRA DRISHTI — PREVENT • DETECT • PROTECT
 Phase 5: Retinal Dataset Preparation & Clinical Quality Assessment Engine
 
 This script manages genuine clinical retinal fundus datasets for genuine CNN training preparation:
@@ -754,7 +754,7 @@ class DatasetManager:
             json.dump(qa_stats, f, indent=2)
 
         md = f"""# Retinal Dataset Image Quality Audit Report
-**Project:** MRITIDHRISTI — PREVENT • DETECT • PROTECT  
+**Project:** MITRA DRISHTI — PREVENT • DETECT • PROTECT  
 **Phase:** Phase 5 — Retinal Dataset Preparation  
 **Dataset:** APTOS 2019 Blindness Detection (Aravind Eye Hospital Cohort)  
 **Verification Status:** Verified Genuine Clinical Data (Zero Synthetic Images)  
@@ -819,7 +819,7 @@ Total Inspected: {len(self.records)}
         total_valid = len(self.valid_records)
 
         md = f"""# Retinal Dataset Clinical Distribution & Statistics Report
-**Project:** MRITIDHRISTI — PREVENT • DETECT • PROTECT  
+**Project:** MITRA DRISHTI — PREVENT • DETECT • PROTECT  
 **Phase:** Phase 5 — Retinal Dataset Preparation  
 **Standard:** International Clinical Diabetic Retinopathy (ICDR) 5-Class Disease Severity Scale  
 
@@ -885,7 +885,7 @@ The dataset exhibits natural clinical imbalance (Class 0 comprises ~49% of cases
         test_counts = Counter(r["icdr_grade"] for r in self.splits["test"])
 
         md = f"""# Retinal Dataset Partition & Split Verification Report
-**Project:** MRITIDHRISTI — PREVENT • DETECT • PROTECT  
+**Project:** MITRA DRISHTI — PREVENT • DETECT • PROTECT  
 **Phase:** Phase 5 — Retinal Dataset Preparation  
 **Split Architecture:** Stratified, Cluster-Aware, Leakage-Free (70% Train / 15% Val / 15% Test)  
 **Random Seed:** 42 (100% Deterministic Reproducibility)  
@@ -937,7 +937,7 @@ The dataset exhibits natural clinical imbalance (Class 0 comprises ~49% of cases
         """Generates comprehensive datasets, citations, and licenses documentation."""
         path = os.path.join(DOCS_DIR, "DATASETS_AND_LICENSES.md")
         content = """# Retinal Datasets, Clinical Sources & Licensing Directory
-**Project:** MRITIDHRISTI — PREVENT • DETECT • PROTECT  
+**Project:** MITRA DRISHTI — PREVENT • DETECT • PROTECT  
 **System Module:** DETECT — AI Retinal Screening  
 **Clinical Standards:** ICDR 5-Class Diabetic Retinopathy Scale  
 

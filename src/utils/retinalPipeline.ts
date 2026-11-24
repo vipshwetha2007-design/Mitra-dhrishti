@@ -471,7 +471,7 @@ export function analyzeRetinalCanvasPixels(
       implementationStatus: 'Illustrative / Prototype Heuristic',
     },
     modelPrediction: {
-      modelVersion: 'mritidhristi-prototype-icdr-v0.1 (Illustrative)',
+      modelVersion: 'mitra-drishti-prototype-icdr-v0.1 (Illustrative)',
       architectureReference: 'EfficientNet-B3 / ResNet-50 Pipeline Interface (No Clinical Weights)',
       icdrGrade: gradeWithheld ? null : icdrGrade,
       gradeLabel: !gradable ? 'Grade Withheld — Ungradable Image Quality' : gradeLabel,

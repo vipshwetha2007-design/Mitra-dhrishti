@@ -1898,7 +1898,7 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
                 className="mt-0.5 h-4 w-4 accent-[#0D9488]"
               />
               <span>
-                I understand Mritidhristi is a non-diagnostic screening prototype and does not replace physician diagnosis.
+                I understand MITRA DRISHTI is a non-diagnostic screening prototype and does not replace physician diagnosis.
               </span>
             </label>
           </div>

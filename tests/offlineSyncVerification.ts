@@ -17,7 +17,7 @@ function assert(cond: boolean, desc: string) {
 
 async function runOfflineSyncTests() {
   console.log('===================================================================');
-  console.log(' MRITIDHRISTI PHASE 10: OFFLINE SYNCHRONIZATION & CONFLICT RESOLUTION');
+  console.log(' MITRA DRISHTI PHASE 10: OFFLINE SYNCHRONIZATION & CONFLICT RESOLUTION');
   console.log('===================================================================');
 
   process.env.MRITIDHRISTI_TEST = 'true';

@@ -19,7 +19,7 @@ function assert(cond: boolean, desc: string) {
 
 async function runSimulinkTests() {
   console.log('===================================================================');
-  console.log(' MRITIDHRISTI PHASE 11: MATLAB/SIMULINK RESOURCE PLANNING MODELS');
+  console.log(' MITRA DRISHTI PHASE 11: MATLAB/SIMULINK RESOURCE PLANNING MODELS');
   console.log('===================================================================');
 
   const root = process.cwd();
