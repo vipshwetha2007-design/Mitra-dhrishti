@@ -28,13 +28,15 @@ os.environ["KERAS_HOME"] = os.path.abspath(".keras")
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageOps
 
 import keras
 import tensorflow as tf
 
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-MODEL_PATH = os.path.join(ROOT_DIR, "models", "dr_classifier.keras")
+IMPROVED_MODEL_PATH = os.path.join(ROOT_DIR, "models", "dr_classifier_improved.keras")
+BASELINE_MODEL_PATH = os.path.join(ROOT_DIR, "models", "dr_classifier.keras")
+MODEL_PATH = IMPROVED_MODEL_PATH if os.path.exists(IMPROVED_MODEL_PATH) else BASELINE_MODEL_PATH
 
 ICDR_GRADES = {
     0: "No Apparent Diabetic Retinopathy",
@@ -55,46 +57,95 @@ TEMPERATURE_SCALING_T = 1.25
 _LOADED_MODEL = None
 _BASE_FEATURE_EXTRACTOR = None
 _HEAD_MODEL = None
+_LOADED_MODEL_TYPE = "improved" if os.path.exists(IMPROVED_MODEL_PATH) else "baseline"
+_ACTIVE_MODEL_PATH = None
 
 
-def get_inference_models():
-    global _LOADED_MODEL, _BASE_FEATURE_EXTRACTOR, _HEAD_MODEL
-    if _LOADED_MODEL is None:
-        if not os.path.exists(MODEL_PATH):
-            raise FileNotFoundError(f"Model file not found: {MODEL_PATH}")
-        _LOADED_MODEL = keras.models.load_model(MODEL_PATH)
-        base = _LOADED_MODEL.get_layer("mobilenetv2_1.00_224")
-        _BASE_FEATURE_EXTRACTOR = keras.Model(
-            inputs=base.input, outputs=base.get_layer("out_relu").output
-        )
+def get_inference_models(model_path_override=None):
+    global _LOADED_MODEL, _BASE_FEATURE_EXTRACTOR, _HEAD_MODEL, _LOADED_MODEL_TYPE, _ACTIVE_MODEL_PATH
 
-        head_input = keras.Input(shape=(7, 7, 1280))
-        x = head_input
-        for layer_name in [
-            "gap",
-            "bn_dense",
-            "dropout_1",
-            "dense_features",
-            "bn_features",
-            "dropout_2",
-            "dr_probabilities",
-        ]:
-            x = _LOADED_MODEL.get_layer(layer_name)(x)
-        _HEAD_MODEL = keras.Model(inputs=head_input, outputs=x)
+    target_path = model_path_override or os.environ.get("DR_MODEL_PATH")
+    if not target_path:
+        # Default priority: improved model, fallback to baseline model
+        if os.path.exists(IMPROVED_MODEL_PATH):
+            target_path = IMPROVED_MODEL_PATH
+        elif os.path.exists(BASELINE_MODEL_PATH):
+            target_path = BASELINE_MODEL_PATH
+        else:
+            raise FileNotFoundError(f"Neither improved nor baseline model found in {os.path.join(ROOT_DIR, 'models')}")
+
+    if _LOADED_MODEL is not None and _ACTIVE_MODEL_PATH == target_path:
+        return _LOADED_MODEL, _BASE_FEATURE_EXTRACTOR, _HEAD_MODEL
+
+    # Try loading selected target_path, with automatic fallback if loading fails
+    try:
+        loaded_model = keras.models.load_model(target_path, compile=False)
+        active_path = target_path
+    except Exception as exc:
+        if target_path != BASELINE_MODEL_PATH and os.path.exists(BASELINE_MODEL_PATH):
+            print(f"[!] Warning: Failed to load {target_path} ({exc}). Falling back to baseline {BASELINE_MODEL_PATH}", file=sys.stderr)
+            loaded_model = keras.models.load_model(BASELINE_MODEL_PATH, compile=False)
+            active_path = BASELINE_MODEL_PATH
+        else:
+            raise exc
+
+    # Identify whether this is improved or baseline
+    if "improved" in os.path.basename(active_path).lower():
+        model_type = "improved"
+    else:
+        model_type = "baseline"
+
+    # Dynamic extraction of MobileNetV2 base feature extractor and classification head
+    base_m = [l for l in loaded_model.layers if "mobilenetv2" in l.name.lower()][0]
+    target_layer = base_m.get_layer("out_relu")
+    base_feature_extractor = keras.Model(inputs=base_m.input, outputs=target_layer.output)
+
+    head_input = keras.Input(shape=target_layer.output.shape[1:])
+    x = head_input
+    for l in loaded_model.layers:
+        if l != base_m and not isinstance(l, keras.layers.InputLayer):
+            x = l(x)
+    head_model = keras.Model(inputs=head_input, outputs=x)
+
+    _LOADED_MODEL = loaded_model
+    _BASE_FEATURE_EXTRACTOR = base_feature_extractor
+    _HEAD_MODEL = head_model
+    _LOADED_MODEL_TYPE = model_type
+    _ACTIVE_MODEL_PATH = active_path
 
     return _LOADED_MODEL, _BASE_FEATURE_EXTRACTOR, _HEAD_MODEL
+
+
+def get_loaded_model_info():
+    global _LOADED_MODEL_TYPE, _ACTIVE_MODEL_PATH
+    return {
+        "modelType": _LOADED_MODEL_TYPE,
+        "activeModelPath": _ACTIVE_MODEL_PATH,
+        "isImproved": _LOADED_MODEL_TYPE == "improved",
+    }
 
 
 # ---------------------------------------------------------------------------
 # Image Preprocessing and Quality / OOD Screening
 # ---------------------------------------------------------------------------
-def load_and_preprocess_image(image_input):
+def get_fov_bbox(pil_img):
+    """Detects bounding box of circular retinal fundus aperture to preserve full temporal/nasal retina."""
+    arr = np.array(pil_img)
+    mask = np.mean(arr, axis=2) > 15
+    if np.any(mask):
+        ymin, ymax = np.where(mask.any(axis=1))[0][[0, -1]]
+        xmin, xmax = np.where(mask.any(axis=0))[0][[0, -1]]
+        return int(xmin), int(ymin), int(xmax), int(ymax)
+    return 0, 0, pil_img.width, pil_img.height
+
+
+def load_and_preprocess_image(image_input, model_type=None):
     """
     Accepts a filepath, raw bytes, or base64 data URI string.
     Returns:
         pil_img: PIL Image object
-        rgb_np: (H, W, 3) uint8 numpy array
-        preprocessed_tensor: (1, 224, 224, 3) float32 tensor
+        original_crop: (H, W, 3) uint8 numpy array for Grad-CAM overlay and quality checks
+        tensor: (1, 224, 224, 3) float32 tensor
     """
     if isinstance(image_input, str):
         if image_input.startswith("data:image"):
@@ -113,23 +164,35 @@ def load_and_preprocess_image(image_input):
     else:
         raise ValueError("Unsupported image input format.")
 
+    active_type = model_type or _LOADED_MODEL_TYPE
     rgb_np = np.array(pil_img, dtype=np.uint8)
 
-    # Circular FOV center crop & resize to (224, 224)
-    h, w, _ = rgb_np.shape
-    crop_size = min(h, w)
-    start_y = (h - crop_size) // 2
-    start_x = (w - crop_size) // 2
-    square_crop = rgb_np[start_y : start_y + crop_size, start_x : start_x + crop_size]
+    if active_type == "improved":
+        xmin, ymin, xmax, ymax = get_fov_bbox(pil_img)
+        # Bounded FOV crop preserving full retina (nasal and temporal arcades)
+        fov_crop = pil_img.crop((xmin, ymin, xmax, ymax))
+        original_crop = np.array(fov_crop, dtype=np.uint8)
+        # Normalized contrast enhancement matching improved training pipeline
+        enh = ImageOps.autocontrast(fov_crop, cutoff=1)
+        resized_pil = enh.resize((224, 224), Image.Resampling.LANCZOS)
+        arr = np.array(resized_pil, dtype=np.float32)
+        norm_np = (arr / 127.5) - 1.0
+        tensor = np.expand_dims(norm_np, axis=0).astype(np.float32)
+    else:
+        # Baseline circular FOV center crop & resize to (224, 224)
+        h, w, _ = rgb_np.shape
+        crop_size = min(h, w)
+        start_y = (h - crop_size) // 2
+        start_x = (w - crop_size) // 2
+        original_crop = rgb_np[start_y : start_y + crop_size, start_x : start_x + crop_size]
 
-    resized_pil = Image.fromarray(square_crop).resize((224, 224), Image.Resampling.BILINEAR)
-    resized_np = np.array(resized_pil, dtype=np.float32) / 255.0
+        resized_pil = Image.fromarray(original_crop).resize((224, 224), Image.Resampling.BILINEAR)
+        resized_np = np.array(resized_pil, dtype=np.float32) / 255.0
+        # ImageNet normalization
+        norm_np = (resized_np - IMAGENET_MEAN) / IMAGENET_STD
+        tensor = np.expand_dims(norm_np, axis=0).astype(np.float32)
 
-    # ImageNet normalization
-    norm_np = (resized_np - IMAGENET_MEAN) / IMAGENET_STD
-    tensor = np.expand_dims(norm_np, axis=0).astype(np.float32)
-
-    return pil_img, square_crop, tensor
+    return pil_img, original_crop, tensor
 
 
 def assess_image_quality_and_ood(rgb_np):
@@ -345,18 +408,33 @@ def generate_gradcam_overlay_and_hotspots(original_crop, cam_2d, opacity=0.60):
 # ---------------------------------------------------------------------------
 # Master Inference Orchestrator
 # ---------------------------------------------------------------------------
-def run_retinal_inference(image_input):
+def run_retinal_inference(image_input, model_path=None):
     """
     Main entry point for genuine CNN inference + Grad-CAM + Uncertainty estimation.
+    Supports both improved model (dr_classifier_improved.keras) and baseline fallback (dr_classifier.keras).
     """
     t0 = time.time()
-    _, original_crop, input_tensor = load_and_preprocess_image(image_input)
+    # 1. Ensure models loaded and determine model type
+    model, base_feature_extractor, head_model = get_inference_models(model_path)
+    model_type = _LOADED_MODEL_TYPE
 
-    # 1. Quality and OOD Assessment
+    _, original_crop, input_tensor = load_and_preprocess_image(image_input, model_type=model_type)
+
+    # 2. Quality and OOD Assessment
     quality_result = assess_image_quality_and_ood(original_crop)
 
-    # 2. Check if image is ungradable / OOD
+    # 3. Check if image is ungradable / OOD
     if not quality_result["gradable"]:
+        model_version = (
+            "Mritidhristi-MobileNetV2-ICDR5 (v2.0-improved)"
+            if model_type == "improved"
+            else "Mritidhristi-MobileNetV2-ICDR5 (v1.0-clinical)"
+        )
+        arch_ref = (
+            "MobileNetV2 Progressive Fine-Tuning + Adaptive FOV + Label Smoothing"
+            if model_type == "improved"
+            else "MobileNetV2 Transfer Learning with MC-Dropout (10 passes)"
+        )
         return {
             "success": True,
             "quality": {
@@ -381,8 +459,11 @@ def run_retinal_inference(image_input):
                 "implementationStatus": "Illustrative / Prototype Heuristic",
             },
             "modelPrediction": {
-                "modelVersion": "Mritidhristi-MobileNetV2-ICDR5 (v1.0-clinical)",
-                "architectureReference": "MobileNetV2 Transfer Learning with MC-Dropout (10 passes)",
+                "modelVersion": model_version,
+                "architectureReference": arch_ref,
+                "activeModelFile": os.path.basename(_ACTIVE_MODEL_PATH) if _ACTIVE_MODEL_PATH else "dr_classifier.keras",
+                "calibrationThreshold": 0.38 if model_type == "improved" else 0.35,
+                "isImprovedModel": (model_type == "improved"),
                 "icdrGrade": None,
                 "gradeLabel": "Ungradable / Acquisition Rejected",
                 "confidence": 0.0,
@@ -403,9 +484,6 @@ def run_retinal_inference(image_input):
             "inferenceDurationMs": round((time.time() - t0) * 1000, 1),
         }
 
-    # 3. Load Models
-    model, base_feature_extractor, head_model = get_inference_models()
-
     # 4. Deterministic CNN Forward Pass
     conv_features = base_feature_extractor(input_tensor)
     deterministic_probs = head_model(conv_features, training=False).numpy()[0]
@@ -419,9 +497,10 @@ def run_retinal_inference(image_input):
     mc_variance = mc_results["totalVariance"]
 
     # 5b. Referable DR Triage (SIH26038 Clinical Standard: Referable = Grade >= 2)
-    # Calibrated decision threshold tau = 0.35 (validated on independent validation split)
+    # Calibrated decision threshold: tau = 0.38 for improved model, 0.35 for baseline model
+    calibrated_threshold = 0.38 if model_type == "improved" else 0.35
     p_referable = float(np.sum(deterministic_probs[2:]))
-    is_referable = bool(p_referable >= 0.35)
+    is_referable = bool(p_referable >= calibrated_threshold)
     triage_recommendation = (
         "Urgent / Priority Ophthalmology Referral (< 2-4 weeks)"
         if is_referable
@@ -429,7 +508,7 @@ def run_retinal_inference(image_input):
     )
 
     # Autonomous Withholding Logic:
-    # If entropy is high (> 1.85 bits out of max 2.32) or confidence < 0.40, withhold autonomous grading
+    # If entropy is high (> 1.85 bits out of max 2.32) or confidence < 0.38, withhold autonomous grading
     grade_withheld = False
     withhold_reason = None
     if predictive_entropy > 1.85 or calibrated_confidence < 0.38:
@@ -463,6 +542,17 @@ def run_retinal_inference(image_input):
         fovea_detected = True
         neovascularisation = predicted_grade == 4
 
+    model_version = (
+        "Mritidhristi-MobileNetV2-ICDR5 (v2.0-improved)"
+        if model_type == "improved"
+        else "Mritidhristi-MobileNetV2-ICDR5 (v1.0-clinical)"
+    )
+    arch_ref = (
+        "MobileNetV2 Progressive Fine-Tuning + Adaptive FOV + Label Smoothing + Calibrated Referable DR (tau=0.38)"
+        if model_type == "improved"
+        else "MobileNetV2 Transfer Learning with MC-Dropout (10 passes)"
+    )
+
     result = {
         "success": True,
         "quality": {
@@ -492,8 +582,11 @@ def run_retinal_inference(image_input):
             "implementationStatus": "SIH26038 Matched-Filter & Top-Hat Segmentation",
         },
         "modelPrediction": {
-            "modelVersion": "Mritidhristi-MobileNetV2-ICDR5 (v1.0-clinical)",
-            "architectureReference": "MobileNetV2 Transfer Learning with MC-Dropout (10 passes)",
+            "modelVersion": model_version,
+            "architectureReference": arch_ref,
+            "activeModelFile": os.path.basename(_ACTIVE_MODEL_PATH) if _ACTIVE_MODEL_PATH else "dr_classifier.keras",
+            "calibrationThreshold": calibrated_threshold,
+            "isImprovedModel": (model_type == "improved"),
             "icdrGrade": predicted_grade,
             "gradeLabel": ICDR_GRADES.get(predicted_grade, f"ICDR Grade {predicted_grade}"),
             "confidence": round(calibrated_confidence, 4),
@@ -528,6 +621,7 @@ def main():
     parser = argparse.ArgumentParser(description="MRITIDHRISTI Clinical Retinal Inference Engine")
     parser.add_argument("--image", help="Path to input fundus image file or base64 text file")
     parser.add_argument("--stdin", action="store_true", help="Read base64 or raw image data from stdin")
+    parser.add_argument("--model", help="Optional path to model file (.keras)")
     parser.add_argument("--output", help="Optional path to write output JSON")
     args = parser.parse_args()
 
@@ -546,7 +640,7 @@ def main():
         else:
             parser.error("Either --image or --stdin must be provided.")
 
-        result = run_retinal_inference(image_input)
+        result = run_retinal_inference(image_input, model_path=args.model)
         json_output = json.dumps(result, indent=2)
 
         if args.output:

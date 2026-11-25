@@ -15,11 +15,17 @@
     "test:dataset": "tsx tests/datasetVerification.ts",
     "test:cnn": "tsx tests/cnnVerification.ts",
     "test:retinal": "python tests/retinalInferenceTest.py",
+    "test:retinal:improved": "python tests/improvedRetinalInferenceTest.py",
+    "test:lesion": "python tests/lesionSegmentationTest.py",
+    "test:lesion:improved": "python tests/improvedLesionSegmentationTest.py",
+    "test:dme": "python tests/dmeClassificationTest.py",
+    "test:localize": "python tests/opticDiscLocalisationTest.py",
+    "test:cross-eval": "python scripts/evaluate_idrid_cross_dataset.py",
     "test:offline": "tsx tests/offlineSyncVerification.ts",
     "test:simulink": "tsx tests/simulinkVerification.ts",
     "test:postgres": "tsx tests/postgresVerification.ts",
     "test:sih": "tsx tests/sihFinalVerification.ts",
-    "test": "npm run test:security && npm run test:prevent && npm run test:dataset && npm run test:cnn && npm run test:retinal && npm run test:offline && npm run test:simulink && npm run test:postgres && npm run test:sih"
+    "test": "npm run test:security && npm run test:prevent && npm run test:dataset && npm run test:cnn && npm run test:retinal && npm run test:lesion && npm run test:offline && npm run test:simulink && npm run test:postgres && npm run test:sih"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",

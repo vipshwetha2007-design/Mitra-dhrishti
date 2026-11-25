@@ -1,0 +1,22 @@
+{
+  "model_name": "Mritidhristi-MobileNetV2-ICDR5-Improved",
+  "architecture": "MobileNetV2 Two-Stage Fine-Tuning with Label Smoothing",
+  "input_shape": [
+    224,
+    224,
+    3
+  ],
+  "num_classes": 5,
+  "class_mapping": {
+    "0": "No DR",
+    "1": "Mild NPDR",
+    "2": "Moderate NPDR",
+    "3": "Severe NPDR",
+    "4": "Proliferative DR"
+  },
+  "calibrated_referable_threshold": 0.38,
+  "training_samples": 2629,
+  "validation_samples": 373,
+  "sha256": "9056fe3984b0b528dbf56c396e445e9f6616f8f03f08492c3f9f7c8a0e49eb7f",
+  "saved_at": "2026-11-25 19:05:45 UTC"
+}

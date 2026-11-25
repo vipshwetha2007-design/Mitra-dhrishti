@@ -11,6 +11,10 @@ coverage/
 # Large Dataset Binaries (Images & Cache)
 datasets/raw/
 datasets/processed/
+A. Segmentation/
+B. Disease Grading/
+C. Localization/
+scratch/
 *.arrow
 .cache/
 .keras/
