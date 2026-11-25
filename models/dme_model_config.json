@@ -1,0 +1,37 @@
+{
+  "model_name": "Mritidhristi-IDRiD-DME-Classifier",
+  "architecture": "MobileNetV2 Transfer Learning with GlobalAveragePooling and Dense Head",
+  "input_shape": [
+    224,
+    224,
+    3
+  ],
+  "num_classes": 3,
+  "classes": [
+    0,
+    1,
+    2
+  ],
+  "class_names": {
+    "0": "No Apparent DME Risk Features",
+    "1": "Moderate DME Risk Category",
+    "2": "High DME Risk Category (Hard Exudates within 1 Disc Diameter of Foveal Center)"
+  },
+  "class_descriptions": {
+    "0": "No apparent hard exudates within the macular boundary.",
+    "1": "Hard exudates present within macular region, but > 1 disc diameter from the foveal center per IDRiD criteria.",
+    "2": "Hard exudates present within 1 disc diameter of the foveal center per IDRiD criteria (High Risk category; requires clinical ophthalmological examination and OCT confirmation)."
+  },
+  "training_samples_raw": 330,
+  "training_samples_augmented": 726,
+  "validation_samples": 83,
+  "batch_size": 16,
+  "initial_lr": 0.0005,
+  "class_weights": {
+    "0": 0.8582,
+    "1": 1.8333,
+    "2": 0.7756
+  },
+  "sha256": "91682fcce0ec0c0f1806e543b91aa56372d7b50b959262957bfa60235a68e3c4",
+  "saved_at": "2026-11-25 15:29:58 UTC"
+}

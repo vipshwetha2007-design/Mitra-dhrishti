@@ -8,6 +8,7 @@ export interface PipelineAnalysisOutput {
   lesionFindings: RetinalScreening['lesionFindings'];
   modelPrediction: RetinalScreening['modelPrediction'];
   gradCam: RetinalScreening['gradCam'];
+  inferenceDurationMs?: number;
 }
 
 /**
@@ -430,10 +431,10 @@ export function analyzeRetinalCanvasPixels(
       gradeLabel = 'Grade Withheld — Out-of-Distribution (Non-Retinal Image Detected)';
       confidence = 0.38;
     } else {
-      // Conservative prototype screening posture for uncalibrated custom upload
+      // Preliminary client preview prior to genuine CNN inference execution
       icdrGrade = null;
-      gradeLabel = 'Grade Withheld — Clinical CNN Weights Not Loaded (Human Review Required)';
-      confidence = 0.62;
+      gradeLabel = 'Evaluating MobileNetV2 Retinal Inference...';
+      confidence = 0.50;
       hotspots = [{ x: 0.5, y: 0.5, radius: 0.2, intensity: 0.5 }];
     }
   }
@@ -443,8 +444,10 @@ export function analyzeRetinalCanvasPixels(
     ? rejectionReason
     : oodFlag
     ? 'Color/structure distribution outside retinal fundus domain (OOD detection triggered).'
+    : confidence < 0.7 && presetMode === 'uploaded_custom'
+    ? 'Evaluating live CNN predictions from backend server. Complete model results will populate upon inference completion.'
     : confidence < 0.7
-    ? 'Prototype safety rule: custom uploaded image withheld from automated grading until trained ResNet/EfficientNet clinical weights are validated. Routed directly to clinician review.'
+    ? 'Prototype safety rule: low confidence withheld from automated grading. Routed directly to clinician review.'
     : undefined;
 
   return {

@@ -33,6 +33,37 @@ import type { AppNavView, BootstrapPayload } from '../types/domain';
 import type { TranslationBundle } from '../i18n/translations';
 import { FundusVisualizer } from '../components/FundusVisualizer';
 
+const HealthOverviewTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="rounded-xl border border-slate-200/90 bg-white/95 p-3.5 shadow-lg backdrop-blur-xs text-[13px] min-w-[170px]">
+        <div className="flex items-center justify-between pb-1.5 mb-2 border-b border-slate-100">
+          <span className="font-bold text-[14px] text-[#0B2540]">{label} 2026</span>
+          <span className="text-[12px] text-slate-500 font-medium">Health Data</span>
+        </div>
+        <div className="space-y-1.5">
+          {payload.map((entry: any) => {
+            const isRisk = entry.dataKey === 'riskScore';
+            const unit = isRisk ? 'pts' : '%';
+            return (
+              <div key={entry.dataKey} className="flex items-center justify-between gap-3 text-slate-700">
+                <span className="flex items-center gap-1.5 text-[13px] font-medium">
+                  <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: entry.color }} />
+                  {entry.name}:
+                </span>
+                <span className="font-bold font-mono text-[14px] text-slate-900">
+                  {entry.value !== undefined && entry.value !== null ? `${entry.value} ${unit}` : '—'}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
+
 interface PatientDashboardProps {
   data: BootstrapPayload;
   t: TranslationBundle;
@@ -52,6 +83,21 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
 }) => {
   const [range, setRange] = useState<'6m' | '3m'>('6m');
   const [showGradCamPreview, setShowGradCamPreview] = useState(false);
+  const [visibleSeries, setVisibleSeries] = useState({
+    riskScore: true,
+    activity: true,
+    sleep: true,
+  });
+
+  const toggleSeries = (key: 'riskScore' | 'activity' | 'sleep') => {
+    setVisibleSeries((prev) => {
+      const next = { ...prev, [key]: !prev[key] };
+      if (!next.riskScore && !next.activity && !next.sleep) {
+        return prev;
+      }
+      return next;
+    });
+  };
 
   // 1. Patient-specific record retrieval
   const patient = data.patients.find((p) => p.id === data.user.patientId) || data.patients[0];
@@ -252,7 +298,7 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
       });
     }
 
-    let hasAnyData = false;
+    let populatedMonths = 0;
 
     const series = targetMonths.map((m) => {
       const asms = patientAssessments.filter((a) => {
@@ -268,14 +314,12 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
       let riskScore: number | null = null;
       if (asms.length > 0) {
         riskScore = Math.round(asms.reduce((acc, a) => acc + a.experimentalScore, 0) / asms.length);
-        hasAnyData = true;
       }
 
       let activity: number | null = null;
       let sleep: number | null = null;
 
       if (habits.length > 0) {
-        hasAnyData = true;
         const avgSteps = habits.reduce((acc, h) => acc + (h.stepsAchieved || 0), 0) / habits.length;
         activity = Math.min(100, Math.round((avgSteps / 10000) * 100));
 
@@ -283,15 +327,21 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
         sleep = Math.min(100, Math.round((avgSleep / 8) * 100));
       }
 
+      if (riskScore !== null || activity !== null || sleep !== null) {
+        populatedMonths++;
+      }
+
       return {
         month: m.label,
+        year: m.year,
         riskScore: riskScore ?? undefined,
         activity: activity ?? undefined,
         sleep: sleep ?? undefined,
       };
     });
 
-    return hasAnyData ? series : [];
+    // Requirement 9: Show honest empty state when historical trend points are insufficient (minimum 2 data points required to form a line)
+    return populatedMonths >= 2 ? series : [];
   }, [range, patientAssessments, patientHabits]);
 
   // Dynamic Prevention Programme Checklist & Adherence
@@ -468,24 +518,24 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
         </div>
 
         {/* Left Interactive Content */}
-        <div className="relative z-10 px-6 py-6 sm:px-8 max-w-xl">
+        <div className="relative z-10 px-6 py-6 sm:px-8 max-w-md lg:max-w-lg">
           <h1 className="font-display text-2xl sm:text-3xl font-extrabold tracking-tight text-[#0B2540]">
             {t.hero.welcomeBack}, {firstName}!
           </h1>
-          <p className="mt-1 text-sm sm:text-base font-bold text-[#143B5A]">
+          <p className="mt-1 text-base sm:text-[17px] font-bold text-[#143B5A]">
             {t.hero.subtitle}
           </p>
-          <p className="mt-1 text-xs sm:text-sm text-slate-600 font-normal">
+          <p className="mt-1 text-[14px] sm:text-[15px] text-slate-600 font-normal leading-relaxed">
             {t.hero.tagline}
           </p>
           <div className="mt-4">
             <button
               type="button"
               onClick={() => onNavigate('prevent')}
-              className="inline-flex items-center gap-2 rounded-full bg-[#0D9488] hover:bg-[#0F766E] px-5 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-md hover:shadow-lg transition-all cursor-pointer"
+              className="inline-flex items-center gap-2 rounded-full bg-[#0D9488] hover:bg-[#0F766E] px-5 py-2.5 text-[15px] font-semibold text-white shadow-md hover:shadow-lg transition-all cursor-pointer"
             >
               <span>{t.hero.exploreCta}</span>
-              <ArrowRight className="h-4 w-4" />
+              <ArrowRight className="h-4.5 w-4.5" />
             </button>
           </div>
         </div>
@@ -503,15 +553,15 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
               <Activity className="h-6 w-6 stroke-[2.2]" />
             </div>
             <div className="min-w-0">
-              <div className="font-display text-sm font-extrabold tracking-wide text-[#0B2540]">
+              <div className="font-display text-[17px] font-bold tracking-wide text-[#0B2540]">
                 {t.pillars.preventTitle}
               </div>
-              <div className="text-xs text-slate-600 truncate mt-0.5">
+              <div className="text-[14px] text-slate-600 truncate mt-0.5">
                 {t.pillars.preventDesc}
               </div>
-              <div className={`mt-1.5 flex items-center gap-2 text-xs font-bold ${preventStatus.colorClass}`}>
-                <span className="flex items-center gap-1">
-                  <span className={`h-2 w-2 rounded-full ${preventStatus.dotClass}`} />
+              <div className={`mt-1.5 flex items-center gap-2 text-[14px] font-semibold ${preventStatus.colorClass}`}>
+                <span className="flex items-center gap-1.5">
+                  <span className={`h-2.5 w-2.5 rounded-full ${preventStatus.dotClass}`} />
                   {preventStatus.label}
                 </span>
                 {preventStatus.deltaText && (
@@ -537,21 +587,21 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
               <Eye className="h-6 w-6 stroke-[2.2]" />
             </div>
             <div className="min-w-0">
-              <div className="font-display text-sm font-extrabold tracking-wide text-[#0B2540]">
+              <div className="font-display text-[17px] font-bold tracking-wide text-[#0B2540]">
                 {t.pillars.detectTitle}
               </div>
-              <div className="text-xs text-slate-600 truncate mt-0.5">
+              <div className="text-[14px] text-slate-600 truncate mt-0.5">
                 {t.pillars.detectDesc}
               </div>
-              <div className={`mt-1.5 flex items-center gap-1.5 text-xs font-bold ${detectStatus.colorClass}`}>
+              <div className={`mt-1.5 flex items-center gap-1.5 text-[14px] font-semibold ${detectStatus.colorClass}`}>
                 {detectStatus.isPending ? (
-                  <AlertCircle className="h-3.5 w-3.5 text-amber-600 shrink-0" />
+                  <AlertCircle className="h-4 w-4 text-amber-600 shrink-0" />
                 ) : detectStatus.isDr ? (
-                  <AlertCircle className="h-3.5 w-3.5 text-rose-600 shrink-0" />
+                  <AlertCircle className="h-4 w-4 text-rose-600 shrink-0" />
                 ) : latestScreening ? (
-                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
                 ) : (
-                  <span className="h-2 w-2 rounded-full bg-slate-400 shrink-0" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-slate-400 shrink-0" />
                 )}
                 <span className="truncate">{detectStatus.label}</span>
               </div>
@@ -572,17 +622,17 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
               <ShieldCheck className="h-6 w-6 stroke-[2.2]" />
             </div>
             <div className="min-w-0">
-              <div className="font-display text-sm font-extrabold tracking-wide text-[#0B2540]">
+              <div className="font-display text-[17px] font-bold tracking-wide text-[#0B2540]">
                 {t.pillars.protectTitle}
               </div>
-              <div className="text-xs text-slate-600 truncate mt-0.5">
+              <div className="text-[14px] text-slate-600 truncate mt-0.5">
                 {t.pillars.protectDesc}
               </div>
-              <div className={`mt-1.5 flex items-center gap-1.5 text-xs font-bold ${protectStatus.colorClass}`}>
+              <div className={`mt-1.5 flex items-center gap-1.5 text-[14px] font-semibold ${protectStatus.colorClass}`}>
                 {protectStatus.actionRequired ? (
-                  <AlertCircle className="h-3.5 w-3.5 text-amber-600 shrink-0" />
+                  <AlertCircle className="h-4 w-4 text-amber-600 shrink-0" />
                 ) : (
-                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
                 )}
                 <span>{protectStatus.label}</span>
               </div>
@@ -601,123 +651,148 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
           {/* Row 1: Health Overview, Retinal Screening Result, Prevention Programme */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-5">
             {/* Card A: Health Overview */}
-            <div className="lg:col-span-5 rounded-2xl border border-blue-100/70 bg-white p-4.5 shadow-xs flex flex-col justify-between">
+            <div className="lg:col-span-5 rounded-2xl border border-blue-100/70 bg-white p-5 shadow-xs flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
-                    <TrendingUp className="h-4 w-4 text-[#0B2540]" />
-                    <h2 className="font-display text-sm font-bold text-[#0B2540]">
+                    <TrendingUp className="h-5 w-5 text-[#0B2540]" />
+                    <h2 className="font-display text-[18px] font-bold text-[#0B2540]">
                       {t.dashboard.healthOverview}
                     </h2>
                   </div>
-                  <div className="flex items-center gap-1 rounded-md border border-slate-200 bg-slate-50 px-2 py-0.5 text-xs text-slate-600">
+                  <div className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-[13px] font-medium text-slate-700 whitespace-nowrap shrink-0">
                     <span>{range === '6m' ? t.dashboard.last6Months : t.dashboard.last3Months}</span>
                     <ChevronDown
-                      className="h-3 w-3 cursor-pointer"
+                      className="h-3.5 w-3.5 cursor-pointer text-slate-500"
                       onClick={() => setRange((r) => (r === '6m' ? '3m' : '6m'))}
                     />
                   </div>
                 </div>
 
-                {/* Legend matching reference screenshot */}
-                <div className="mt-2.5 flex items-center justify-end gap-3 text-[11px] font-medium text-slate-600">
-                  <span className="flex items-center gap-1">
-                    <span className="h-2 w-2 rounded-full bg-[#2563EB]" />
-                    {t.dashboard.riskScore}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <span className="h-2 w-2 rounded-full bg-[#10B981]" />
-                    {t.dashboard.activity}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <span className="h-2 w-2 rounded-full bg-[#8B5CF6]" />
-                    {t.dashboard.sleep}
-                  </span>
+                {/* Interactive Legend Controlling & Identifying Series */}
+                <div className="mt-3 flex items-center justify-end gap-2 text-[13px] font-medium text-slate-600">
+                  <button
+                    type="button"
+                    onClick={() => toggleSeries('riskScore')}
+                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full transition-all cursor-pointer ${
+                      visibleSeries.riskScore
+                        ? 'bg-blue-50 text-blue-700 font-semibold border border-blue-200/60 shadow-2xs'
+                        : 'opacity-40 hover:opacity-70 text-slate-400 border border-transparent line-through'
+                    }`}
+                    title="Toggle Risk Score line"
+                  >
+                    <span className="h-2.5 w-2.5 rounded-full bg-[#2563EB] shrink-0" />
+                    <span>{t.dashboard.riskScore}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => toggleSeries('activity')}
+                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full transition-all cursor-pointer ${
+                      visibleSeries.activity
+                        ? 'bg-emerald-50 text-emerald-700 font-semibold border border-emerald-200/60 shadow-2xs'
+                        : 'opacity-40 hover:opacity-70 text-slate-400 border border-transparent line-through'
+                    }`}
+                    title="Toggle Activity line"
+                  >
+                    <span className="h-2.5 w-2.5 rounded-full bg-[#10B981] shrink-0" />
+                    <span>{t.dashboard.activity}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => toggleSeries('sleep')}
+                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full transition-all cursor-pointer ${
+                      visibleSeries.sleep
+                        ? 'bg-purple-50 text-purple-700 font-semibold border border-purple-200/60 shadow-2xs'
+                        : 'opacity-40 hover:opacity-70 text-slate-400 border border-transparent line-through'
+                    }`}
+                    title="Toggle Sleep line"
+                  >
+                    <span className="h-2.5 w-2.5 rounded-full bg-[#8B5CF6] shrink-0" />
+                    <span>{t.dashboard.sleep}</span>
+                  </button>
                 </div>
               </div>
 
-              {/* Smooth Line Chart or Clean Empty State */}
+              {/* Smooth Continuous Line Chart or Honest Empty State */}
               <div className="h-48 w-full mt-2">
                 {healthSeries.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={healthSeries} margin={{ top: 10, right: 10, left: -22, bottom: 0 }}>
+                    <LineChart data={healthSeries} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#EEF2F6" vertical={false} />
                       <XAxis
                         dataKey="month"
-                        tick={{ fontSize: 11, fill: '#64748B' }}
-                        axisLine={{ stroke: '#E2E8F0' }}
+                        tick={{ fontSize: 12, fill: '#475569' }}
+                        axisLine={{ stroke: '#CBD5E1' }}
                         tickLine={false}
                       />
                       <YAxis
                         domain={[0, 100]}
                         ticks={[0, 25, 50, 75, 100]}
-                        tick={{ fontSize: 10, fill: '#64748B' }}
+                        tick={{ fontSize: 11, fill: '#475569' }}
                         axisLine={false}
                         tickLine={false}
                       />
-                      <Tooltip
-                        contentStyle={{
-                          borderRadius: '12px',
-                          borderColor: '#E2E8F0',
-                          fontSize: '11px',
-                          boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
-                        }}
-                      />
+                      <Tooltip content={<HealthOverviewTooltip />} />
                       <Line
                         type="monotone"
                         dataKey="riskScore"
                         name={t.dashboard.riskScore}
                         stroke="#2563EB"
-                        strokeWidth={2}
-                        dot={{ r: 3, fill: '#2563EB', strokeWidth: 0 }}
-                        activeDot={{ r: 5 }}
+                        strokeWidth={2.5}
+                        dot={{ r: 4, fill: '#2563EB', strokeWidth: 1.5, stroke: '#FFFFFF' }}
+                        activeDot={{ r: 6.5, strokeWidth: 2, stroke: '#FFFFFF' }}
                         connectNulls
+                        hide={!visibleSeries.riskScore}
                       />
                       <Line
                         type="monotone"
                         dataKey="activity"
                         name={t.dashboard.activity}
                         stroke="#10B981"
-                        strokeWidth={2}
-                        dot={{ r: 3, fill: '#10B981', strokeWidth: 0 }}
-                        activeDot={{ r: 5 }}
+                        strokeWidth={2.5}
+                        dot={{ r: 4, fill: '#10B981', strokeWidth: 1.5, stroke: '#FFFFFF' }}
+                        activeDot={{ r: 6.5, strokeWidth: 2, stroke: '#FFFFFF' }}
                         connectNulls
+                        hide={!visibleSeries.activity}
                       />
                       <Line
                         type="monotone"
                         dataKey="sleep"
                         name={t.dashboard.sleep}
                         stroke="#8B5CF6"
-                        strokeWidth={2}
-                        dot={{ r: 3, fill: '#8B5CF6', strokeWidth: 0 }}
-                        activeDot={{ r: 5 }}
+                        strokeWidth={2.5}
+                        dot={{ r: 4, fill: '#8B5CF6', strokeWidth: 1.5, stroke: '#FFFFFF' }}
+                        activeDot={{ r: 6.5, strokeWidth: 2, stroke: '#FFFFFF' }}
                         connectNulls
+                        hide={!visibleSeries.sleep}
                       />
                     </LineChart>
                   </ResponsiveContainer>
                 ) : (
                   <div className="flex h-full w-full flex-col items-center justify-center rounded-xl bg-slate-50/60 border border-dashed border-slate-200 text-center p-4">
                     <TrendingUp className="h-6 w-6 text-slate-300 mb-1" />
-                    <p className="text-xs font-semibold text-slate-600">No health trend data available yet</p>
-                    <p className="text-[11px] text-slate-400 mt-0.5">Complete a lifestyle assessment or habit log to track progress</p>
+                    <p className="text-[15px] font-semibold text-slate-700">No longitudinal trend data available</p>
+                    <p className="text-[13px] text-slate-500 mt-1 max-w-xs">
+                      At least 2 months of longitudinal assessment or habit records are required to plot continuous trend lines.
+                    </p>
                   </div>
                 )}
               </div>
             </div>
 
             {/* Card B: Retinal Screening Result */}
-            <div className="lg:col-span-4 rounded-2xl border border-blue-100/70 bg-white p-4.5 shadow-xs flex flex-col justify-between">
+            <div className="lg:col-span-4 rounded-2xl border border-blue-100/70 bg-white p-5 shadow-xs flex flex-col justify-between">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
-                  <Eye className="h-4 w-4 text-[#0B2540]" />
-                  <h2 className="font-display text-sm font-bold text-[#0B2540]">
+                  <Eye className="h-5 w-5 text-[#0B2540]" />
+                  <h2 className="font-display text-[18px] font-bold text-[#0B2540]">
                     {t.dashboard.retinalResult}
                   </h2>
                 </div>
                 <button
                   type="button"
                   onClick={() => onNavigate('reports')}
-                  className="text-xs font-semibold text-[#0284C7] hover:underline whitespace-nowrap cursor-pointer"
+                  className="text-[14px] font-semibold text-[#0284C7] hover:underline whitespace-nowrap cursor-pointer"
                 >
                   {t.dashboard.viewReport}
                 </button>
@@ -725,11 +800,11 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
 
               {latestScreening ? (
                 /* Fundus Circle + Diagnosis Info + Grad-CAM CTA */
-                <div className="my-auto py-2 flex items-center gap-4">
+                <div className="my-auto py-2 flex items-center gap-3">
                   {/* Circular Fundus Photography */}
                   <div
                     onClick={() => setShowGradCamPreview((v) => !v)}
-                    className="relative h-24 w-24 sm:h-26 sm:w-26 shrink-0 rounded-full overflow-hidden border border-slate-200 shadow-inner cursor-pointer group"
+                    className="relative h-18 w-18 shrink-0 rounded-full overflow-hidden border border-slate-200 shadow-inner cursor-pointer group"
                     title="Click to toggle Grad-CAM overlay"
                   >
                     <FundusVisualizer
@@ -741,7 +816,7 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
                       className="h-full w-full object-cover group-hover:scale-105 transition-transform"
                     />
                     {showGradCamPreview && (
-                      <div className="absolute inset-0 bg-black/20 flex items-center justify-center text-[9px] font-bold text-white uppercase tracking-wider">
+                      <div className="absolute inset-0 bg-black/20 flex items-center justify-center text-[10px] font-bold text-white uppercase tracking-wider">
                         Grad-CAM
                       </div>
                     )}
@@ -751,35 +826,35 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5">
                       {detectStatus.isPending ? (
-                        <AlertCircle className="h-5 w-5 text-amber-600 shrink-0" />
+                        <AlertCircle className="h-4.5 w-4.5 text-amber-600 shrink-0" />
                       ) : detectStatus.isDr ? (
-                        <AlertCircle className="h-5 w-5 text-rose-600 shrink-0" />
+                        <AlertCircle className="h-4.5 w-4.5 text-rose-600 shrink-0" />
                       ) : (
-                        <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
+                        <CheckCircle2 className="h-4.5 w-4.5 text-emerald-600 shrink-0" />
                       )}
-                      <span className="font-display text-sm font-bold text-[#0B2540] leading-tight truncate">
+                      <span className="font-display text-[15px] font-bold text-[#0B2540] leading-tight">
                         {detectStatus.label}
                       </span>
                     </div>
-                    <div className="mt-1 text-xs font-semibold text-slate-700">
-                      ICDR Grade: {latestReview ? latestReview.clinicianGrade : (latestScreening.modelPrediction.icdrGrade ?? 0)}
+                    <div className="mt-1 text-[14px] font-semibold text-slate-800">
+                      ICDR Grade {latestScreening.modelPrediction.icdrGrade ?? 0}
                     </div>
-                    <div className="text-[11px] text-slate-500 truncate">
-                      ({latestScreening.modelPrediction.gradeLabel})
+                    <div className="text-[13px] text-slate-500 leading-tight mt-0.5 line-clamp-2">
+                      {latestReview?.clinicianGrade ? 'Clinician Verified' : latestScreening.modelPrediction.gradeLabel}
                     </div>
 
                     {/* View Grad-CAM Button + Colorful Heatmap Thumbnail */}
-                    <div className="mt-3 flex items-center gap-2">
+                    <div className="mt-2.5 flex items-center gap-2">
                       <button
                         type="button"
                         onClick={() => setShowGradCamPreview((v) => !v)}
-                        className="rounded-lg bg-[#EBF4FD] hover:bg-[#D8EDFD] px-3 py-1.5 text-xs font-semibold text-[#0284C7] transition-colors cursor-pointer"
+                        className="rounded-lg bg-[#EBF4FD] hover:bg-[#D8EDFD] px-3 py-1.5 text-[12.5px] font-semibold text-[#0284C7] transition-colors cursor-pointer whitespace-nowrap shrink-0"
                       >
                         {showGradCamPreview ? 'Show Fundus' : 'View Grad-CAM'}
                       </button>
                       <div
                         onClick={() => setShowGradCamPreview((v) => !v)}
-                        className="h-8 w-8 rounded-lg overflow-hidden border border-sky-200 cursor-pointer shadow-2xs hover:scale-110 transition-transform shrink-0"
+                        className="h-7 w-7 rounded-lg overflow-hidden border border-sky-200 cursor-pointer shadow-2xs hover:scale-110 transition-transform shrink-0"
                         title="Grad-CAM Activation Map"
                       >
                         <img
@@ -794,11 +869,11 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
               ) : (
                 <div className="my-auto py-4 flex flex-col items-center justify-center text-center">
                   <Eye className="h-8 w-8 text-slate-300 mb-1.5" />
-                  <p className="text-xs font-semibold text-slate-700">{t.dashboard.noScreeningsYet}</p>
+                  <p className="text-[14px] font-semibold text-slate-700">{t.dashboard.noScreeningsYet}</p>
                   <button
                     type="button"
                     onClick={() => onNavigate('detect')}
-                    className="mt-2 text-xs font-semibold text-[#0284C7] hover:underline cursor-pointer"
+                    className="mt-2 text-[14px] font-semibold text-[#0284C7] hover:underline cursor-pointer"
                   >
                     Schedule Screening →
                   </button>
@@ -807,19 +882,19 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
             </div>
 
             {/* Card C: Prevention Programme */}
-            <div className="lg:col-span-3 rounded-2xl border border-blue-100/70 bg-white p-4.5 shadow-xs flex flex-col justify-between">
+            <div className="lg:col-span-3 rounded-2xl border border-blue-100/70 bg-white p-5 shadow-xs flex flex-col justify-between">
               <div className="flex items-center gap-2">
-                <Target className="h-4 w-4 text-[#0B2540]" />
-                <h2 className="font-display text-sm font-bold text-[#0B2540]">
+                <Target className="h-5 w-5 text-[#0B2540]" />
+                <h2 className="font-display text-[18px] font-bold text-[#0B2540]">
                   {t.dashboard.preventionProgramme}
                 </h2>
               </div>
 
               {/* Circular Progress Ring + Checklist */}
-              <div className="my-auto py-2 flex items-center gap-3.5">
+              <div className="my-auto py-2 flex items-center gap-3">
                 {/* SVG Progress Ring */}
-                <div className="relative h-20 w-20 shrink-0">
-                  <svg className="h-20 w-20 -rotate-90" viewBox="0 0 88 88">
+                <div className="relative h-16 w-16 shrink-0">
+                  <svg className="h-16 w-16 -rotate-90" viewBox="0 0 88 88">
                     <circle
                       cx="44"
                       cy="44"
@@ -841,22 +916,22 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
                     />
                   </svg>
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="font-display text-lg font-extrabold text-[#0B2540] tabular-nums">
+                    <span className="font-display text-[17px] font-bold text-[#0B2540] tabular-nums">
                       {adherence}%
                     </span>
-                    <span className="text-[9px] text-slate-500 font-medium">
-                      {programme?.currentMonth || 1} / 12 Months
+                    <span className="text-[10px] text-slate-500 font-semibold leading-none">
+                      {programme?.currentMonth || 1}/12 Mo
                     </span>
                   </div>
                 </div>
 
                 {/* Checklist from real programme data */}
-                <div className="space-y-1.5 text-xs text-slate-700 min-w-0 flex-1">
+                <div className="space-y-1.5 text-[13px] text-slate-700 min-w-0 flex-1">
                   {programmeChecklist.map((item, idx) => (
                     <div
                       key={idx}
                       className={`flex items-center gap-1.5 ${
-                        item.completed ? 'text-slate-700' : 'text-slate-400'
+                        item.completed ? 'text-slate-800' : 'text-slate-400'
                       }`}
                     >
                       {item.completed ? (
@@ -864,7 +939,7 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
                       ) : (
                         <span className="h-3.5 w-3.5 rounded-full border border-slate-300 shrink-0" />
                       )}
-                      <span className="truncate">{item.label}</span>
+                      <span className="leading-tight">{item.label}</span>
                     </div>
                   ))}
                 </div>
@@ -874,7 +949,7 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
               <button
                 type="button"
                 onClick={() => onNavigate('prevent')}
-                className="w-full rounded-xl bg-[#EAF3FA] hover:bg-[#DCEBF7] py-2 text-xs font-semibold text-[#0B2540] transition-colors text-center cursor-pointer"
+                className="w-full rounded-xl bg-[#EAF3FA] hover:bg-[#DCEBF7] py-2 text-[13.5px] font-semibold text-[#0B2540] transition-colors text-center cursor-pointer whitespace-nowrap"
               >
                 {t.dashboard.continueProgramme}
               </button>
@@ -884,19 +959,19 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
           {/* Row 2: Upcoming Appointments, Quick Actions, Health Insights */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-5">
             {/* Card D: Upcoming Appointments */}
-            <div className="lg:col-span-4 rounded-2xl border border-blue-100/70 bg-white p-4.5 shadow-xs flex flex-col justify-between">
+            <div className="lg:col-span-4 rounded-2xl border border-blue-100/70 bg-white p-5 shadow-xs flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-[#0B2540]" />
-                    <h2 className="font-display text-sm font-bold text-[#0B2540]">
+                    <Calendar className="h-5 w-5 text-[#0B2540]" />
+                    <h2 className="font-display text-[18px] font-bold text-[#0B2540]">
                       {t.dashboard.upcomingAppointments}
                     </h2>
                   </div>
                   <button
                     type="button"
                     onClick={() => onNavigate('appointments')}
-                    className="text-xs font-semibold text-[#0284C7] hover:underline cursor-pointer"
+                    className="text-[14px] font-semibold text-[#0284C7] hover:underline cursor-pointer whitespace-nowrap shrink-0"
                   >
                     {t.dashboard.viewAll}
                   </button>
@@ -904,25 +979,25 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
 
                 {appointmentInfo ? (
                   /* Appointment Date Badge & Details */
-                  <div className="mt-3.5 flex items-start gap-3">
-                    <div className="flex flex-col items-center justify-center rounded-xl bg-[#EAF4FD] px-3 py-2 text-center shrink-0 w-14">
-                      <span className="font-mono text-lg font-extrabold text-[#0284C7] leading-none">
+                  <div className="mt-3.5 flex items-start gap-3.5">
+                    <div className="flex flex-col items-center justify-center rounded-xl bg-[#EAF4FD] px-3.5 py-2.5 text-center shrink-0 w-16">
+                      <span className="font-mono text-[22px] font-extrabold text-[#0284C7] leading-none">
                         {appointmentInfo.day}
                       </span>
-                      <span className="mt-0.5 text-[11px] font-bold text-[#0284C7]">
+                      <span className="mt-1 text-[13px] font-bold text-[#0284C7]">
                         {appointmentInfo.month}
                       </span>
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="text-sm font-bold text-[#0B2540] truncate">
+                      <div className="text-[16px] font-bold text-[#0B2540] leading-snug">
                         {upcomingApt?.title || 'Consultation'}
                       </div>
-                      <div className="mt-0.5 text-xs text-slate-500">
+                      <div className="mt-0.5 text-[14px] text-slate-600">
                         {upcomingApt?.scheduledTime || '10:30 AM'} • {upcomingApt?.facility || 'Care Center'}
                       </div>
-                      <div className="mt-1">
+                      <div className="mt-1.5">
                         <span
-                          className={`inline-block rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
+                          className={`inline-block rounded-full px-3 py-0.5 text-[12px] font-bold ${
                             upcomingApt?.status === 'Confirmed'
                               ? 'bg-[#E8F8EE] text-[#10B981]'
                               : 'bg-amber-50 text-amber-700'
@@ -934,7 +1009,7 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
                     </div>
                   </div>
                 ) : (
-                  <div className="py-6 text-center text-xs text-slate-500">
+                  <div className="py-6 text-center text-[14px] text-slate-500">
                     {t.dashboard.noAppointments}
                   </div>
                 )}
@@ -942,9 +1017,9 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
 
               {/* Dynamic Reminder Banner */}
               {appointmentInfo && (
-                <div className="mt-3 rounded-xl bg-[#FEF6EE] border border-[#FEE4C8] px-3.5 py-2.5 text-xs text-[#9A4200] flex items-center gap-2.5">
-                  <Bell className="h-4 w-4 text-[#EA580C] shrink-0" />
-                  <span className="truncate">
+                <div className="mt-3.5 rounded-xl bg-[#FEF6EE] border border-[#FEE4C8] px-4 py-2.5 text-[14px] text-[#9A4200] flex items-center gap-2.5">
+                  <Bell className="h-4.5 w-4.5 text-[#EA580C] shrink-0" />
+                  <span className="leading-snug">
                     <strong>Reminder:</strong> {appointmentInfo.reminderText}
                   </span>
                 </div>
@@ -952,23 +1027,23 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
             </div>
 
             {/* Card E: Quick Actions (4 Colorful Cards) */}
-            <div className="lg:col-span-4 rounded-2xl border border-blue-100/70 bg-white p-4.5 shadow-xs flex flex-col justify-between">
+            <div className="lg:col-span-4 rounded-2xl border border-blue-100/70 bg-white p-5 shadow-xs flex flex-col justify-between">
               <div className="flex items-center gap-2">
-                <Zap className="h-4 w-4 text-[#0B2540]" />
-                <h2 className="font-display text-sm font-bold text-[#0B2540]">
+                <Zap className="h-5 w-5 text-[#0B2540]" />
+                <h2 className="font-display text-[18px] font-bold text-[#0B2540]">
                   {t.dashboard.quickActions}
                 </h2>
               </div>
 
-              <div className="grid grid-cols-4 gap-2.5 my-auto py-2">
+              <div className="grid grid-cols-2 gap-2.5 my-auto py-2">
                 {/* 1. Take Risk Assessment */}
                 <button
                   type="button"
                   onClick={() => onNavigate('prevent')}
-                  className="flex flex-col items-center justify-center text-center p-2.5 rounded-xl bg-[#E8F8EE] hover:bg-[#D5F3DF] transition-all cursor-pointer group shadow-2xs"
+                  className="flex flex-col items-center justify-center text-center p-3 rounded-xl bg-[#E8F8EE] hover:bg-[#D5F3DF] transition-all cursor-pointer group shadow-2xs"
                 >
                   <BarChart2 className="h-5 w-5 text-[#059669] mb-1.5 group-hover:scale-110 transition-transform" />
-                  <span className="text-[11px] font-bold text-[#065F46] leading-tight whitespace-pre-line">
+                  <span className="text-[13px] font-semibold text-[#065F46] leading-snug whitespace-pre-line text-center">
                     {t.dashboard.takeAssessment}
                   </span>
                 </button>
@@ -977,10 +1052,10 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
                 <button
                   type="button"
                   onClick={() => onNavigate('detect')}
-                  className="flex flex-col items-center justify-center text-center p-2.5 rounded-xl bg-[#EBF4FD] hover:bg-[#D5EAFB] transition-all cursor-pointer group shadow-2xs"
+                  className="flex flex-col items-center justify-center text-center p-3 rounded-xl bg-[#EBF4FD] hover:bg-[#D5EAFB] transition-all cursor-pointer group shadow-2xs"
                 >
                   <Eye className="h-5 w-5 text-[#0284C7] mb-1.5 group-hover:scale-110 transition-transform" />
-                  <span className="text-[11px] font-bold text-[#0369A1] leading-tight whitespace-pre-line">
+                  <span className="text-[13px] font-semibold text-[#0369A1] leading-snug whitespace-pre-line text-center">
                     {t.dashboard.uploadImage}
                   </span>
                 </button>
@@ -989,10 +1064,10 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
                 <button
                   type="button"
                   onClick={() => onNavigate('reports')}
-                  className="flex flex-col items-center justify-center text-center p-2.5 rounded-xl bg-[#F3EEFD] hover:bg-[#E6DBFB] transition-all cursor-pointer group shadow-2xs"
+                  className="flex flex-col items-center justify-center text-center p-3 rounded-xl bg-[#F3EEFD] hover:bg-[#E6DBFB] transition-all cursor-pointer group shadow-2xs"
                 >
                   <FileText className="h-5 w-5 text-[#7C3AED] mb-1.5 group-hover:scale-110 transition-transform" />
-                  <span className="text-[11px] font-bold text-[#6D28D9] leading-tight whitespace-pre-line">
+                  <span className="text-[13px] font-semibold text-[#6D28D9] leading-snug whitespace-pre-line text-center">
                     {t.dashboard.viewReports}
                   </span>
                 </button>
@@ -1001,10 +1076,10 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
                 <button
                   type="button"
                   onClick={() => onNavigate('appointments')}
-                  className="flex flex-col items-center justify-center text-center p-2.5 rounded-xl bg-[#FFF4E5] hover:bg-[#FEE7CA] transition-all cursor-pointer group shadow-2xs"
+                  className="flex flex-col items-center justify-center text-center p-3 rounded-xl bg-[#FFF4E5] hover:bg-[#FEE7CA] transition-all cursor-pointer group shadow-2xs"
                 >
                   <Calendar className="h-5 w-5 text-[#EA580C] mb-1.5 group-hover:scale-110 transition-transform" />
-                  <span className="text-[11px] font-bold text-[#C2410C] leading-tight whitespace-pre-line">
+                  <span className="text-[13px] font-semibold text-[#C2410C] leading-snug whitespace-pre-line text-center">
                     {t.dashboard.bookAppointment}
                   </span>
                 </button>
@@ -1012,20 +1087,20 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
             </div>
 
             {/* Card F: Health Insights */}
-            <div className="lg:col-span-4 rounded-2xl border border-blue-100/70 bg-white p-4.5 shadow-xs flex flex-col justify-between">
+            <div className="lg:col-span-4 rounded-2xl border border-blue-100/70 bg-white p-5 shadow-xs flex flex-col justify-between">
               <div className="flex items-center gap-2">
-                <Lightbulb className="h-4 w-4 text-[#0B2540]" />
-                <h2 className="font-display text-sm font-bold text-[#0B2540]">
+                <Lightbulb className="h-5 w-5 text-[#0B2540]" />
+                <h2 className="font-display text-[18px] font-bold text-[#0B2540]">
                   {t.dashboard.healthInsights}
                 </h2>
               </div>
 
               <div className="my-auto py-2 flex items-center justify-between gap-3">
                 {/* Dynamic Insights Bullets */}
-                <div className="space-y-2 text-xs text-slate-700 min-w-0 flex-1">
+                <div className="space-y-2 text-[14px] text-slate-700 min-w-0 flex-1">
                   {healthInsights.map((insight, idx) => (
                     <div key={idx} className="flex items-start gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
+                      <CheckCircle2 className="h-4.5 w-4.5 text-emerald-600 shrink-0 mt-0.5" />
                       <span className="leading-snug">{insight.text}</span>
                     </div>
                   ))}
@@ -1070,18 +1145,18 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
         {/* Right 3 Columns Operational Rail */}
         <div className="xl:col-span-3 space-y-4">
           {/* 1. Alerts & Notifications Card */}
-          <div className="rounded-2xl border border-blue-100/70 bg-white p-4 lg:p-4.5 shadow-xs">
+          <div className="rounded-2xl border border-blue-100/70 bg-white p-5 shadow-xs">
             <div className="flex items-center justify-between gap-2 mb-3">
               <div className="flex items-center gap-2">
-                <Bell className="h-4 w-4 text-[#0B2540]" />
-                <h2 className="font-display text-sm font-bold text-[#0B2540]">
+                <Bell className="h-5 w-5 text-[#0B2540]" />
+                <h2 className="font-display text-[18px] font-bold text-[#0B2540]">
                   {t.dashboard.alertsNotifications}
                 </h2>
               </div>
               <button
                 type="button"
                 onClick={() => onNavigate('notifications')}
-                className="text-xs font-semibold text-[#0284C7] hover:underline cursor-pointer"
+                className="text-[14px] font-semibold text-[#0284C7] hover:underline cursor-pointer whitespace-nowrap shrink-0"
               >
                 {t.dashboard.viewAll}
               </button>
@@ -1098,10 +1173,10 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
                     <div
                       key={notif.id}
                       onClick={() => onNavigate(notif.actionView || 'notifications')}
-                      className="flex items-start gap-3 rounded-xl p-2 hover:bg-slate-50 transition-colors cursor-pointer"
+                      className="flex items-start gap-3 rounded-xl p-2.5 hover:bg-slate-50 transition-colors cursor-pointer"
                     >
                       <div
-                        className={`h-5 w-5 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${
+                        className={`h-6 w-6 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${
                           isUrgent
                             ? 'bg-rose-100 text-rose-600'
                             : isWarning
@@ -1112,21 +1187,21 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
                         }`}
                       >
                         {isUrgent || isWarning ? (
-                          <AlertCircle className="h-3.5 w-3.5" />
+                          <AlertCircle className="h-4 w-4" />
                         ) : isSuccess ? (
-                          <Check className="h-3.5 w-3.5" />
+                          <Check className="h-4 w-4" />
                         ) : (
-                          <Bell className="h-3.5 w-3.5" />
+                          <Bell className="h-4 w-4" />
                         )}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <div className="text-xs font-bold text-[#0B2540] truncate">
+                        <div className="text-[14px] font-bold text-[#0B2540] leading-snug">
                           {notif.title}
                         </div>
-                        <div className="text-[11px] text-slate-500 truncate">
+                        <div className="text-[13px] text-slate-600 line-clamp-2 leading-snug mt-0.5">
                           {notif.message}
                         </div>
-                        <div className="text-[10px] text-slate-400 font-mono mt-0.5">
+                        <div className="text-[12px] text-slate-400 font-mono mt-1">
                           {new Date(notif.createdAt).toLocaleTimeString([], {
                             hour: '2-digit',
                             minute: '2-digit',
@@ -1137,7 +1212,7 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
                   );
                 })
               ) : (
-                <div className="py-4 text-center text-xs text-slate-500">
+                <div className="py-4 text-center text-[14px] text-slate-500">
                   {t.dashboard.noNotifications}
                 </div>
               )}
@@ -1145,15 +1220,15 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
           </div>
 
           {/* 2. System Status Card */}
-          <div className="rounded-2xl border border-blue-100/70 bg-white p-3.5 shadow-xs flex items-center justify-between">
+          <div className="rounded-2xl border border-blue-100/70 bg-white p-4 shadow-xs flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <BarChart2 className="h-4 w-4 text-emerald-600" />
-              <span className="font-display text-xs font-bold text-[#0B2540]">
+              <BarChart2 className="h-4.5 w-4.5 text-emerald-600" />
+              <span className="font-display text-[14px] font-bold text-[#0B2540]">
                 {t.dashboard.systemStatus}
               </span>
             </div>
-            <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-600">
-              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+            <div className="flex items-center gap-1.5 text-[14px] font-semibold text-emerald-700">
+              <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" />
               <span>{t.dashboard.allSystemsOnline}</span>
             </div>
           </div>
@@ -1161,16 +1236,16 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
           {/* 3. Offline Mode Available Card */}
           <div
             onClick={() => onNavigate('offline')}
-            className="rounded-2xl border border-[#C5ECD2] bg-[#EAF8EE] p-3.5 shadow-xs flex items-center gap-3 cursor-pointer hover:bg-[#DFF5E5] transition-colors"
+            className="rounded-2xl border border-[#C5ECD2] bg-[#EAF8EE] p-4 shadow-xs flex items-center gap-3 cursor-pointer hover:bg-[#DFF5E5] transition-colors"
           >
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
               <Wifi className="h-5 w-5" />
             </div>
             <div className="min-w-0">
-              <div className="text-xs font-bold text-[#065F46]">
+              <div className="text-[14px] font-bold text-[#065F46]">
                 {t.dashboard.offlineModeAvailable}
               </div>
-              <div className="text-[11px] text-slate-600 leading-tight mt-0.5">
+              <div className="text-[13px] text-slate-700 leading-tight mt-0.5">
                 {t.dashboard.offlineModeDesc}
               </div>
             </div>

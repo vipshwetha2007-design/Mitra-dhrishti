@@ -1,0 +1,56 @@
+{
+  "evaluation_cohort": "IDRiD Official Localization Testing Set (103 scans)",
+  "test_sample_count": 103,
+  "canvas_dimensions": {
+    "width": 4288,
+    "height": 2848
+  },
+  "overall_performance": {
+    "mean_landmark_error_px": 187.04,
+    "median_landmark_error_px": 162.98,
+    "std_landmark_error_px": 114.36,
+    "min_error_px": 19.49,
+    "max_error_px": 533.75,
+    "mean_normalized_error_od_diameters": 0.4157,
+    "average_inference_latency_ms": 81.67
+  },
+  "optic_disc_localization": {
+    "mean_error_px": 227.18,
+    "median_error_px": 199.93,
+    "std_error_px": 136.44,
+    "min_error_px": 19.49,
+    "max_error_px": 533.75,
+    "threshold_accuracies": {
+      "within_50px_pct": 3.88,
+      "within_100px_pct": 21.36,
+      "within_150px_pct": 34.95,
+      "within_200px_pct": 50.49,
+      "within_250px_pct": 59.22,
+      "within_half_od_diameter_225px_pct": 57.28
+    }
+  },
+  "fovea_localization": {
+    "mean_error_px": 146.91,
+    "median_error_px": 143.01,
+    "std_error_px": 65.71,
+    "min_error_px": 29.17,
+    "max_error_px": 327.28,
+    "threshold_accuracies": {
+      "within_50px_pct": 6.8,
+      "within_100px_pct": 29.13,
+      "within_150px_pct": 59.22,
+      "within_200px_pct": 75.73,
+      "within_250px_pct": 94.17,
+      "within_half_od_diameter_225px_pct": 88.35
+    }
+  },
+  "optic_disc_fovea_distance": {
+    "ground_truth_mean_distance_px": 1287.6,
+    "ground_truth_median_distance_px": 1289.65,
+    "predicted_mean_distance_px": 1141.23,
+    "predicted_median_distance_px": 1151.6,
+    "mean_distance_error_px": 236.34,
+    "median_distance_error_px": 215.09
+  },
+  "evaluation_timestamp": "2026-11-25 16:38:49 UTC"
+}

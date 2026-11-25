@@ -1,0 +1,46 @@
+{
+  "evaluation_cohort": "IDRiD Official Testing Set (A. Segmentation/b. Testing Set)",
+  "test_sample_count": 27,
+  "operating_threshold": 0.35,
+  "mean_dice": 0.0859,
+  "mean_iou": 0.048,
+  "per_class_results": {
+    "MA": {
+      "name": "Microaneurysms (MA)",
+      "dice": 0.0,
+      "iou": 0.0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "total_true_pixels": 2147,
+      "total_pred_pixels": 27
+    },
+    "HE": {
+      "name": "Haemorrhages (HE)",
+      "dice": 0.0,
+      "iou": 0.0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "total_true_pixels": 23353,
+      "total_pred_pixels": 5072
+    },
+    "EX": {
+      "name": "Hard Exudates (EX)",
+      "dice": 0.251,
+      "iou": 0.1435,
+      "precision": 0.8331,
+      "recall": 0.1478,
+      "total_true_pixels": 23986,
+      "total_pred_pixels": 4254
+    },
+    "SE": {
+      "name": "Soft Exudates (SE)",
+      "dice": 0.0926,
+      "iou": 0.0486,
+      "precision": 0.0757,
+      "recall": 0.1192,
+      "total_true_pixels": 4034,
+      "total_pred_pixels": 6352
+    }
+  },
+  "evaluation_timestamp": "2026-11-25 14:48:25 UTC"
+}

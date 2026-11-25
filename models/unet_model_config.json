@@ -1,0 +1,29 @@
+{
+  "model_name": "Mritidhristi-IDRiD-UNet-Lesions",
+  "architecture": "Lightweight Convolutional U-Net with Skip Connections",
+  "input_shape": [
+    256,
+    256,
+    3
+  ],
+  "num_classes": 4,
+  "classes": [
+    "MA",
+    "HE",
+    "EX",
+    "SE"
+  ],
+  "class_descriptions": [
+    "Microaneurysms (MA)",
+    "Haemorrhages (HE)",
+    "Hard Exudates (EX)",
+    "Soft Exudates (SE)"
+  ],
+  "training_samples": 88,
+  "validation_samples": 10,
+  "batch_size": 4,
+  "initial_lr": 0.001,
+  "loss_function": "Combined Soft-Dice + 0.5 * BinaryCrossEntropy",
+  "sha256": "edb8a316a8c26ba4943f8f74e2212eefde94f60d0da346c1078850fb096d675c",
+  "saved_at": "2026-11-25 14:46:52 UTC"
+}

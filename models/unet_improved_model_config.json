@@ -1,0 +1,47 @@
+{
+  "model_name": "Mritidhristi-IDRiD-UNet-Lesions-Improved",
+  "architecture": "Enhanced Residual Convolutional U-Net with Skip Connections",
+  "input_shape": [
+    256,
+    256,
+    3
+  ],
+  "num_classes": 4,
+  "classes": [
+    "MA",
+    "HE",
+    "EX",
+    "SE"
+  ],
+  "class_descriptions": [
+    "Microaneurysms (MA)",
+    "Haemorrhages (HE)",
+    "Hard Exudates (EX)",
+    "Soft Exudates (SE)"
+  ],
+  "training_samples": 88,
+  "validation_samples": 10,
+  "batch_size": 4,
+  "initial_lr": 0.001,
+  "loss_function": "Combined Asymmetric Focal Tversky Loss (alpha=0.75, beta=0.25) + 0.5 * Binary Focal Loss",
+  "calibrated_thresholds": {
+    "MA": {
+      "optimal_threshold": 0.25,
+      "validation_dice": 0.1544
+    },
+    "HE": {
+      "optimal_threshold": 0.1,
+      "validation_dice": 0.4202
+    },
+    "EX": {
+      "optimal_threshold": 0.05,
+      "validation_dice": 0.577
+    },
+    "SE": {
+      "optimal_threshold": 0.5,
+      "validation_dice": 0.3524
+    }
+  },
+  "sha256": "5ca0f8f4e4687e12c3d588187e56d4f300ba723b5d947affba897d00365993ff",
+  "saved_at": "2026-11-25 18:00:50 UTC"
+}

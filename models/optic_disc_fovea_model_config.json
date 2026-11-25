@@ -1,0 +1,29 @@
+{
+  "model_name": "Mritidhristi-IDRiD-Landmark-Localizer",
+  "architecture": "MobileNetV2 with CoordConv Spatial Embedding and Dual-Head Regression",
+  "input_shape": [
+    224,
+    224,
+    3
+  ],
+  "original_canvas_size": [
+    4288,
+    2848
+  ],
+  "output_heads": [
+    "optic_disc_center",
+    "fovea_center"
+  ],
+  "target_landmarks": {
+    "optic_disc_center": "Center of optic disc anatomical structure",
+    "fovea_center": "Center of the fovea centralis / macula avascular zone"
+  },
+  "training_samples_raw": 330,
+  "training_samples_augmented": 1320,
+  "validation_samples": 83,
+  "batch_size": 16,
+  "initial_lr": 0.0005,
+  "loss_function": "Pixel Euclidean Distance Loss (Scaled by Canvas Dimensions)",
+  "sha256": "c85128856e749dc60e5ea9457bd364193a39244763c2362753c47b7bb0bb8121",
+  "saved_at": "2026-11-25 16:38:22 UTC"
+}

@@ -1,0 +1,76 @@
+{
+  "evaluation_cohort": "IDRiD Official Disease Grading Testing Set (103 scans)",
+  "test_sample_count": 103,
+  "overall_metrics": {
+    "accuracy": 0.7379,
+    "quadratic_weighted_kappa": 0.5831,
+    "macro_precision": 0.825,
+    "macro_recall": 0.5699,
+    "macro_f1": 0.5728,
+    "weighted_f1": 0.7117
+  },
+  "per_class_metrics": {
+    "0": {
+      "name": "No Apparent DME Risk Features",
+      "description": "No apparent hard exudates within the macular boundary.",
+      "support": 45,
+      "predicted_count": 45,
+      "precision": 0.7556,
+      "sensitivity_recall": 0.7556,
+      "specificity": 0.8103,
+      "f1_score": 0.7556
+    },
+    "1": {
+      "name": "Moderate DME Risk Category",
+      "description": "Hard exudates present within macular region, but > 1 disc diameter from the foveal center.",
+      "support": 10,
+      "predicted_count": 1,
+      "precision": 1.0,
+      "sensitivity_recall": 0.1,
+      "specificity": 1.0,
+      "f1_score": 0.1818
+    },
+    "2": {
+      "name": "High DME Risk Category (Hard Exudates within 1 DD of Fovea)",
+      "description": "Hard exudates present within 1 disc diameter of the foveal center according to IDRiD criteria.",
+      "support": 48,
+      "predicted_count": 57,
+      "precision": 0.7193,
+      "sensitivity_recall": 0.8542,
+      "specificity": 0.7091,
+      "f1_score": 0.781
+    }
+  },
+  "confusion_matrix": [
+    [
+      34,
+      0,
+      11
+    ],
+    [
+      4,
+      1,
+      5
+    ],
+    [
+      7,
+      0,
+      41
+    ]
+  ],
+  "csme_high_risk_triage": {
+    "definition": "High Risk DME Category (Grade 2 vs Grades 0, 1) using binary decision threshold P(Grade 2) >= 0.50",
+    "operating_threshold": 0.5,
+    "sensitivity": 0.8333,
+    "specificity": 0.7455,
+    "roc_auc": 0.8489,
+    "true_positives": 40,
+    "false_positives": 14,
+    "true_negatives": 41,
+    "false_negatives": 8,
+    "threshold_reconciliation": {
+      "argmax_vs_threshold_explanation": "Argmax 3-class classification assigns the highest softmax probability even if below 0.50. Under argmax, TP=41 (85.42% sensitivity) and FP=16 (70.91% specificity). Under the binary decision threshold P(Grade 2)>=0.50, one borderline positive (IDRiD_012, p2=0.4808) is not assigned high-risk (TP=40, sensitivity=83.33%), and two borderline negatives (IDRiD_006, p2=0.4932; IDRiD_054, p2=0.4933) are classified negative, reducing FP to 14 (TN=41, specificity=74.55%)."
+    }
+  },
+  "evaluation_timestamp": "2026-11-25 15:42:41 UTC"
+}

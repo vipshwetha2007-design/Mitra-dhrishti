@@ -1,5 +1,5 @@
 -- MITRA DRISHTI Automated PostgreSQL Data Migration
--- Generated: 2026-11-24T07:55:38.266Z
+-- Generated: 2026-11-25T13:45:44.356Z
 BEGIN;
 
 -- Roles
@@ -53,6 +53,7 @@ INSERT INTO patients (mrn, full_name, age, sex, phone, district, village_or_ward
 INSERT INTO patients (mrn, full_name, age, sex, phone, district, village_or_ward, preferred_language, diabetes_status, is_synthetic) VALUES ('MRN-MISSED-001', 'Missed Checkpoint Patient', 45, 'Male', '+91 9999988888', 'Chennai South', 'Adyar Urban PHC', 'en', 'at_risk', TRUE) ON CONFLICT (mrn) DO NOTHING;
 
 -- Retinal Screenings
+-- Screening recorded for patient pat-1 (Left (OS))
 -- Screening recorded for patient pat-1 (Right (OD))
 -- Screening recorded for patient pat-2 (Left (OS))
 

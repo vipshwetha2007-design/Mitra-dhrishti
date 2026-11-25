@@ -1,0 +1,209 @@
+{
+  "audit_metadata": {
+    "audit_title": "MITRA DRISHTI — DME Model Metric and Clinical Safety Forensic Audit",
+    "timestamp": "2026-11-25T15:46:00Z",
+    "target_model_file": "models/dme_classifier.keras",
+    "target_model_sha256": "91682fcce0ec0c0f1806e543b91aa56372d7b50b959262957bfa60235a68e3c4",
+    "target_model_size_bytes": 21320240,
+    "architecture": "MobileNetV2 Transfer Learning with GlobalAveragePooling and Dense Head",
+    "dataset_provenance": "Indian Diabetic Retinopathy Image Dataset (IDRiD) Disease Grading",
+    "evaluation_cohort": "Official 103 Untouched Testing Scans",
+    "preservation_status": {
+      "dr_classifier_intact": true,
+      "dr_classifier_bytes": 11663859,
+      "unet_lesion_model_intact": true,
+      "unet_lesion_model_bytes": 5934764
+    }
+  },
+  "recalculated_metrics": {
+    "total_test_scans": 103,
+    "overall": {
+      "accuracy": 0.7379,
+      "quadratic_weighted_kappa": 0.5831,
+      "macro_precision": 0.825,
+      "macro_recall": 0.5699,
+      "macro_f1": 0.5728,
+      "weighted_f1": 0.7117,
+      "brier_score": 0.4278,
+      "expected_calibration_error": 0.1246
+    },
+    "argmax_confusion_matrix": [
+      [34, 0, 11],
+      [4, 1, 5],
+      [7, 0, 41]
+    ],
+    "per_class_argmax": {
+      "0": {
+        "name": "No Apparent DME Risk Features",
+        "support": 45,
+        "predicted_count": 45,
+        "true_positives": 34,
+        "false_positives": 11,
+        "false_negatives": 11,
+        "true_negatives": 47,
+        "precision": 0.7556,
+        "sensitivity": 0.7556,
+        "specificity": 0.8103,
+        "f1_score": 0.7556
+      },
+      "1": {
+        "name": "Moderate DME Risk Category",
+        "support": 10,
+        "predicted_count": 1,
+        "true_positives": 1,
+        "false_positives": 0,
+        "false_negatives": 9,
+        "true_negatives": 93,
+        "precision": 1.0,
+        "sensitivity": 0.1,
+        "specificity": 1.0,
+        "f1_score": 0.1818
+      },
+      "2": {
+        "name": "High DME Risk Category (Hard Exudates within 1 DD of Fovea)",
+        "support": 48,
+        "predicted_count": 57,
+        "true_positives": 41,
+        "false_positives": 16,
+        "false_negatives": 7,
+        "true_negatives": 39,
+        "precision": 0.7193,
+        "sensitivity": 0.8542,
+        "specificity": 0.7091,
+        "f1_score": 0.781
+      }
+    },
+    "binary_csme_triage_threshold_0_5": {
+      "operating_threshold": 0.5,
+      "true_positives": 40,
+      "false_positives": 14,
+      "true_negatives": 41,
+      "false_negatives": 8,
+      "sensitivity": 0.8333,
+      "specificity": 0.7455,
+      "roc_auc": 0.8489
+    }
+  },
+  "reconciliations": {
+    "grade_2_sensitivity_reconciliation": {
+      "issue": "Reported sensitivity 83.33% (40/48) vs Confusion Matrix sensitivity 85.42% (41/48)",
+      "root_cause": "Operating decision rule difference: 3-class argmax selection vs binary triage decision threshold P(Grade 2) >= 0.50.",
+      "discrepancy_scan": {
+        "index": 11,
+        "image_id": "IDRiD_012",
+        "ground_truth": 2,
+        "probabilities": {
+          "p0": 0.4764,
+          "p1": 0.0428,
+          "p2": 0.4808
+        },
+        "argmax_decision": 2,
+        "threshold_50_decision": 0,
+        "impact": "In argmax, p2 is the largest probability (0.4808 > 0.4764 > 0.0428), scoring a True Positive (41/48 = 85.42%). In binary triage with cutoff 0.50, 0.4808 < 0.50, converting this case to a False Negative (40/48 = 83.33%)."
+      }
+    },
+    "grade_2_specificity_reconciliation": {
+      "issue": "Reported specificity 74.55% (41/55) vs Confusion Matrix specificity 70.91% (39/55)",
+      "root_cause": "In 3-class argmax, 16 non-Grade-2 scans have Grade 2 as plurality prediction (FP=16, TN=39, Spec=70.91%). At threshold 0.50, two borderline scans fall below 0.50, moving from FP to TN (FP=14, TN=41, Spec=74.55%).",
+      "discrepancy_scans": [
+        {
+          "index": 5,
+          "image_id": "IDRiD_006",
+          "ground_truth": 1,
+          "probabilities": { "p0": 0.4861, "p1": 0.0207, "p2": 0.4932 },
+          "argmax_decision": 2,
+          "threshold_50_decision": 0,
+          "impact": "Argmax FP -> Binary Triage TN"
+        },
+        {
+          "index": 53,
+          "image_id": "IDRiD_054",
+          "ground_truth": 0,
+          "probabilities": { "p0": 0.3873, "p1": 0.1194, "p2": 0.4933 },
+          "argmax_decision": 2,
+          "threshold_50_decision": 0,
+          "impact": "Argmax FP -> Binary Triage TN"
+        }
+      ]
+    },
+    "class_weights_investigation": {
+      "issue": "Difference between theoretical raw dataset weights and weights recorded in dme_model_config.json",
+      "findings": {
+        "raw_413_distribution": { "0": 177, "1": 41, "2": 195 },
+        "theoretical_weights_raw_413": { "0": 0.7778, "1": 3.3577, "2": 0.706 },
+        "raw_330_train_split": { "0": 141, "1": 33, "2": 156 },
+        "theoretical_weights_raw_330": { "0": 0.7801, "1": 3.3333, "2": 0.7051 },
+        "actual_augmented_train_counts": { "0": 282, "1": 132, "2": 312, "total": 726 },
+        "recorded_weights_post_augmentation": { "0": 0.8582, "1": 1.8333, "2": 0.7756 }
+      },
+      "resolution": "Class weights were computed in train_dme_classifier.py AFTER minority class augmentation. Class 1 was 4x oversampled (33 raw -> 132 augmented), which reduced its computed inverse-frequency weight from 3.33 down to 1.8333. The effective combined balancing factor for Class 1 relative to Class 0 is (4 * 1.8333) / (2 * 0.8582) = 4.27x."
+    }
+  },
+  "dataset_split_and_isolation": {
+    "total_official_training_scans": 413,
+    "train_split_count": 330,
+    "val_split_count": 83,
+    "split_strategy": "Stratified 80/20 train/validation split with fixed seed 42",
+    "official_testing_scans": 103,
+    "isolation_verified": true,
+    "details": "The 103 official testing scans were stored in 'B. Disease Grading/1. Original Images/b. Testing Set' and were never loaded, augmented, or accessed during model training or checkpoint selection. Evaluation was performed strictly post-hoc on the saved model checkpoint."
+  },
+  "clinical_safety_and_governance": {
+    "terminology_corrections_made": [
+      {
+        "component": "scripts/dme_inference_engine.py",
+        "previous_claim": "Severe / Center-Threatening (CSME), immediate threat to central visual acuity, Urgent Macular OCT Examination & Anti-VEGF / Laser Photocoagulation Consultation",
+        "corrected_text": "High Risk Category (Center-Adjacent Exudates), Hard exudates observed within 1 disc diameter of foveal center per IDRiD criteria, Prompt ophthalmologist assessment and Optical Coherence Tomography (OCT) confirmation"
+      },
+      {
+        "component": "models/dme_model_config.json",
+        "previous_claim": "High DME Risk (CSME)",
+        "corrected_text": "High DME Risk Category (Hard Exudates within 1 Disc Diameter of Foveal Center)"
+      }
+    ],
+    "mandatory_disclaimer_verified": true,
+    "disclaimer_text": "Model prediction for clinical risk stratification only. Slit-lamp biomicroscopy and Optical Coherence Tomography (OCT) are mandatory for definitive DME diagnosis."
+  },
+  "confidence_and_calibration_audit": {
+    "sample_test_confidence": 0.9999,
+    "sample_image": "IDRiD_001.jpg",
+    "calibration_evaluated": true,
+    "calibration_findings": {
+      "min_confidence": 0.3883,
+      "median_confidence": 0.9054,
+      "max_confidence": 1.0,
+      "fraction_confidence_gt_90": 0.5146,
+      "fraction_confidence_gt_99": 0.2816,
+      "expected_calibration_error_10_bins": 0.1246,
+      "brier_score": 0.4278,
+      "temperature_scaling_applied": false,
+      "platt_scaling_applied": false
+    },
+    "calibration_limitation_statement": "Deep convolutional networks with Softmax output functions notoriously suffer from uncalibrated overconfidence on small biomedical datasets. An ECE of 12.46% and a 28.2% frequency of >99% confidence predictions indicate that raw Softmax probabilities must NOT be interpreted as true clinical posterior probabilities without post-hoc temperature scaling."
+  },
+  "api_and_end_to_end_verification": {
+    "endpoint": "/api/detect/predict-dme",
+    "server_file": "server.ts",
+    "auth_required": true,
+    "input_validation": "Zod detectPredictSchema and validateSafeImageDataUrl",
+    "execution_mode": "Asynchronous spawned child process running scripts/dme_inference_engine.py --stdin",
+    "stdin_end_to_end_test_status": "PASS",
+    "end_to_end_latency_ms": 6367.7,
+    "verified_response_fields": [
+      "status", "model_name", "predicted_grade", "category_name",
+      "severity_level", "confidence", "class_probabilities",
+      "is_csme_high_risk", "clinical_findings", "triage_recommendation",
+      "urgency", "inference_latency_ms", "total_latency_ms", "clinical_disclaimer"
+    ]
+  },
+  "conclusion": {
+    "suitable_for_research_demonstration": true,
+    "suitable_for_clinical_diagnosis": false,
+    "clinical_validation_claimed": false,
+    "unresolved_limitations": [
+      "Grade 1 sensitivity is depressed at 10.0% due to severe class scarcity (10 test scans) and subtlety of non-center-involving hard exudates on 224x224 downscaled scans.",
+      "Softmax probabilities are uncalibrated (ECE 12.46%), producing extreme confidence values (>0.999) on certain scans.",
+      "Fundus photographs provide 2D reflectance only; 3D macular edema thickening cannot be definitively measured without cross-sectional OCT imaging."
+    ]
+  }
+}

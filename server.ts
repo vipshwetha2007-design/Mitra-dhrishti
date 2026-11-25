@@ -135,8 +135,8 @@ const retinalScreeningSchema = z.object({
     width: z.number().int().min(1).max(10000),
     height: z.number().int().min(1).max(10000),
     gradable: z.boolean(),
-    rejectionReason: z.string().optional(),
-    recaptureGuidance: z.string().optional(),
+    rejectionReason: z.string().nullable().optional(),
+    recaptureGuidance: z.string().nullable().optional(),
   }),
   anatomicalStructures: z.object({
     opticDiscDetected: z.boolean(),
@@ -147,7 +147,7 @@ const retinalScreeningSchema = z.object({
     hardExudatesFlag: z.boolean(),
     haemorrhagesFlag: z.boolean(),
     microaneurysmsExperimentalNote: z.string().max(400),
-    implementationStatus: z.literal('Illustrative / Prototype Heuristic'),
+    implementationStatus: z.string().max(160),
   }),
   modelPrediction: z.object({
     modelVersion: z.string().max(120),
@@ -158,11 +158,22 @@ const retinalScreeningSchema = z.object({
     uncertainty: z.number().min(0).max(1),
     oodFlag: z.boolean(),
     gradeWithheld: z.boolean(),
-    withholdReason: z.string().optional(),
-    isIllustrativeOutput: z.literal(true),
+    withholdReason: z.string().nullable().optional(),
+    isIllustrativeOutput: z.boolean(),
+    activeModelFile: z.string().optional(),
+    calibrationThreshold: z.number().optional(),
+    isImprovedModel: z.boolean().optional(),
+    calibratedProbabilities: z.array(z.number()).optional(),
+    pReferable: z.number().optional(),
+    isReferable: z.boolean().optional(),
+    triageRecommendation: z.string().optional(),
+    monteCarloVariance: z.any().optional(),
+    predictiveEntropy: z.number().optional(),
   }),
+  inferenceDurationMs: z.number().optional(),
   gradCam: z.object({
     available: z.boolean(),
+    heatmapDataUrl: z.string().optional(),
     hotspots: z.array(
       z.object({
         x: z.number().min(0).max(1),
@@ -1258,7 +1269,18 @@ export async function createMritidhristiApp(options: { skipFrontend?: boolean } 
     imageDataUrl: z.string().min(20).max(10_000_000),
   });
 
-  app.post('/api/detect/predict', requireAuth, (req: AuthRequest, res) => {
+  app.post('/api/detect/predict', (req: AuthRequest, res) => {
+    // Optional Bearer token resolution (permits live kiosk screening without dropping authenticated user context)
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.slice('Bearer '.length).trim();
+      const resolved = store.getSession(token);
+      if (resolved) {
+        req.authUser = resolved.user;
+        req.authToken = token;
+      }
+    }
+
     const parsed = detectPredictSchema.safeParse(req.body);
     if (!parsed.success) {
       res.status(400).json({ error: 'Invalid prediction payload. imageDataUrl is required.', details: parsed.error.flatten() });
@@ -1290,12 +1312,16 @@ export async function createMritidhristiApp(options: { skipFrontend?: boolean } 
       stderrData += chunk.toString();
     });
 
+    pyProcess.stdin.on('error', () => {
+      // Prevent unhandled write EOF exceptions if python terminates early
+    });
+
     const timeoutTimer = setTimeout(() => {
       pyProcess.kill();
       if (!res.headersSent) {
-        res.status(504).json({ error: 'Inference timed out after 30 seconds.' });
+        res.status(504).json({ error: 'Inference timed out after 60 seconds.' });
       }
-    }, 30000);
+    }, 60000);
 
     pyProcess.on('close', (code) => {
       clearTimeout(timeoutTimer);
@@ -1320,6 +1346,213 @@ export async function createMritidhristiApp(options: { skipFrontend?: boolean } 
         res.json(parsedResult);
       } catch (err: any) {
         res.status(500).json({ error: 'Failed to parse inference output', details: err.message, raw: stdoutData });
+      }
+    });
+
+    pyProcess.stdin.write(parsed.data.imageDataUrl);
+    pyProcess.stdin.end();
+  });
+
+  app.post('/api/detect/predict-dme', requireAuth, (req: AuthRequest, res) => {
+    const parsed = detectPredictSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: 'Invalid payload. imageDataUrl is required.', details: parsed.error.flatten() });
+      return;
+    }
+
+    if (!validateSafeImageDataUrl(parsed.data.imageDataUrl)) {
+      res.status(400).json({ error: 'Unsupported image format. Only PNG, JPEG, or WebP images are permitted.' });
+      return;
+    }
+
+    const pyProcess = spawn('python', ['scripts/dme_inference_engine.py', '--stdin'], {
+      cwd: process.cwd(),
+      env: {
+        ...process.env,
+        KERAS_HOME: path.join(process.cwd(), '.keras'),
+        TF_CPP_MIN_LOG_LEVEL: '3',
+      },
+    });
+
+    let stdoutData = '';
+    let stderrData = '';
+
+    pyProcess.stdout.on('data', (chunk) => {
+      stdoutData += chunk.toString();
+    });
+
+    pyProcess.stderr.on('data', (chunk) => {
+      stderrData += chunk.toString();
+    });
+
+    const timeoutTimer = setTimeout(() => {
+      pyProcess.kill();
+      if (!res.headersSent) {
+        res.status(504).json({ error: 'DME prediction timed out after 30 seconds.' });
+      }
+    }, 30000);
+
+    pyProcess.on('close', (code) => {
+      clearTimeout(timeoutTimer);
+      if (res.headersSent) return;
+
+      if (code !== 0) {
+        res.status(500).json({
+          error: 'DME prediction process exited with error',
+          details: stderrData || stdoutData || `Exit code ${code}`,
+        });
+        return;
+      }
+
+      try {
+        const firstBrace = stdoutData.indexOf('{');
+        const lastBrace = stdoutData.lastIndexOf('}');
+        if (firstBrace === -1 || lastBrace === -1) {
+          throw new Error('No valid JSON output found from DME inference engine');
+        }
+        const jsonStr = stdoutData.slice(firstBrace, lastBrace + 1);
+        const parsedResult = JSON.parse(jsonStr);
+        res.json(parsedResult);
+      } catch (err: any) {
+        res.status(500).json({ error: 'Failed to parse DME output', details: err.message, raw: stdoutData });
+      }
+    });
+
+    pyProcess.stdin.write(parsed.data.imageDataUrl);
+    pyProcess.stdin.end();
+  });
+
+  app.post('/api/detect/locate-landmarks', requireAuth, (req: AuthRequest, res) => {
+    const parsed = detectPredictSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: 'Invalid payload. imageDataUrl is required.', details: parsed.error.flatten() });
+      return;
+    }
+
+    if (!validateSafeImageDataUrl(parsed.data.imageDataUrl)) {
+      res.status(400).json({ error: 'Unsupported image format. Only PNG, JPEG, or WebP images are permitted.' });
+      return;
+    }
+
+    const pyProcess = spawn('python', ['scripts/optic_disc_fovea_inference.py', '--stdin'], {
+      cwd: process.cwd(),
+      env: {
+        ...process.env,
+        KERAS_HOME: path.join(process.cwd(), '.keras'),
+        TF_CPP_MIN_LOG_LEVEL: '3',
+      },
+    });
+
+    let stdoutData = '';
+    let stderrData = '';
+
+    pyProcess.stdout.on('data', (chunk) => {
+      stdoutData += chunk.toString();
+    });
+
+    pyProcess.stderr.on('data', (chunk) => {
+      stderrData += chunk.toString();
+    });
+
+    const timeoutTimer = setTimeout(() => {
+      pyProcess.kill();
+      if (!res.headersSent) {
+        res.status(504).json({ error: 'Landmark localization timed out after 30 seconds.' });
+      }
+    }, 30000);
+
+    pyProcess.on('close', (code) => {
+      clearTimeout(timeoutTimer);
+      if (res.headersSent) return;
+
+      if (code !== 0) {
+        res.status(500).json({
+          error: 'Landmark localization process exited with error',
+          details: stderrData || stdoutData || `Exit code ${code}`,
+        });
+        return;
+      }
+
+      try {
+        const firstBrace = stdoutData.indexOf('{');
+        const lastBrace = stdoutData.lastIndexOf('}');
+        if (firstBrace === -1 || lastBrace === -1) {
+          throw new Error('No valid JSON output found from landmark localization engine');
+        }
+        const jsonStr = stdoutData.slice(firstBrace, lastBrace + 1);
+        const parsedResult = JSON.parse(jsonStr);
+        res.json(parsedResult);
+      } catch (err: any) {
+        res.status(500).json({ error: 'Failed to parse landmark output', details: err.message, raw: stdoutData });
+      }
+    });
+
+    pyProcess.stdin.write(parsed.data.imageDataUrl);
+    pyProcess.stdin.end();
+  });
+
+  app.post('/api/detect/segment-lesions', requireAuth, (req: AuthRequest, res) => {
+    const parsed = detectPredictSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: 'Invalid payload. imageDataUrl is required.', details: parsed.error.flatten() });
+      return;
+    }
+
+    if (!validateSafeImageDataUrl(parsed.data.imageDataUrl)) {
+      res.status(400).json({ error: 'Unsupported image format. Only PNG, JPEG, or WebP images are permitted.' });
+      return;
+    }
+
+    const pyProcess = spawn('python', ['scripts/lesion_segmentation_engine.py', '--stdin'], {
+      cwd: process.cwd(),
+      env: {
+        ...process.env,
+        KERAS_HOME: path.join(process.cwd(), '.keras'),
+        TF_CPP_MIN_LOG_LEVEL: '3',
+      },
+    });
+
+    let stdoutData = '';
+    let stderrData = '';
+
+    pyProcess.stdout.on('data', (chunk) => {
+      stdoutData += chunk.toString();
+    });
+
+    pyProcess.stderr.on('data', (chunk) => {
+      stderrData += chunk.toString();
+    });
+
+    const timeoutTimer = setTimeout(() => {
+      pyProcess.kill();
+      if (!res.headersSent) {
+        res.status(504).json({ error: 'Lesion segmentation timed out after 30 seconds.' });
+      }
+    }, 30000);
+
+    pyProcess.on('close', (code) => {
+      clearTimeout(timeoutTimer);
+      if (res.headersSent) return;
+
+      if (code !== 0) {
+        res.status(500).json({
+          error: 'U-Net segmentation process exited with error',
+          details: stderrData || stdoutData || `Exit code ${code}`,
+        });
+        return;
+      }
+
+      try {
+        const firstBrace = stdoutData.indexOf('{');
+        const lastBrace = stdoutData.lastIndexOf('}');
+        if (firstBrace === -1 || lastBrace === -1) {
+          throw new Error('No valid JSON output found from lesion segmentation engine');
+        }
+        const jsonStr = stdoutData.slice(firstBrace, lastBrace + 1);
+        const parsedResult = JSON.parse(jsonStr);
+        res.json(parsedResult);
+      } catch (err: any) {
+        res.status(500).json({ error: 'Failed to parse segmentation output', details: err.message, raw: stdoutData });
       }
     });
 
@@ -1728,6 +1961,19 @@ export async function createMritidhristiApp(options: { skipFrontend?: boolean } 
     }
     if (!canAccessPatient(user, parsed.data.patientId)) {
       res.status(403).json({ error: 'Access denied for this patient.' });
+      return;
+    }
+    // Prevent duplicate records caused by repeated submissions
+    const existing = store.data.appointments.find(
+      (a) =>
+        a.patientId === parsed.data.patientId &&
+        a.scheduledDate === parsed.data.scheduledDate &&
+        a.scheduledTime === parsed.data.scheduledTime &&
+        a.title === parsed.data.title &&
+        a.status !== 'Cancelled'
+    );
+    if (existing) {
+      res.status(200).json(existing);
       return;
     }
     const apt: AppointmentRecord = {

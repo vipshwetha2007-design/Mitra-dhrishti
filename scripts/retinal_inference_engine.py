@@ -171,7 +171,15 @@ def load_and_preprocess_image(image_input, model_type=None):
         xmin, ymin, xmax, ymax = get_fov_bbox(pil_img)
         # Bounded FOV crop preserving full retina (nasal and temporal arcades)
         fov_crop = pil_img.crop((xmin, ymin, xmax, ymax))
-        original_crop = np.array(fov_crop, dtype=np.uint8)
+        # Standardize display/overlay resolution to max dimension 512 for responsive inference
+        if max(fov_crop.size) > 512:
+            ratio = 512.0 / max(fov_crop.size)
+            new_size = (max(1, int(fov_crop.width * ratio)), max(1, int(fov_crop.height * ratio)))
+            display_crop = fov_crop.resize(new_size, Image.Resampling.BILINEAR)
+        else:
+            display_crop = fov_crop
+        original_crop = np.array(display_crop, dtype=np.uint8)
+
         # Normalized contrast enhancement matching improved training pipeline
         enh = ImageOps.autocontrast(fov_crop, cutoff=1)
         resized_pil = enh.resize((224, 224), Image.Resampling.LANCZOS)
@@ -184,7 +192,10 @@ def load_and_preprocess_image(image_input, model_type=None):
         crop_size = min(h, w)
         start_y = (h - crop_size) // 2
         start_x = (w - crop_size) // 2
-        original_crop = rgb_np[start_y : start_y + crop_size, start_x : start_x + crop_size]
+        base_crop = pil_img.crop((start_x, start_y, start_x + crop_size, start_y + crop_size))
+        if max(base_crop.size) > 512:
+            base_crop = base_crop.resize((512, 512), Image.Resampling.BILINEAR)
+        original_crop = np.array(base_crop, dtype=np.uint8)
 
         resized_pil = Image.fromarray(original_crop).resize((224, 224), Image.Resampling.BILINEAR)
         resized_np = np.array(resized_pil, dtype=np.float32) / 255.0
@@ -242,7 +253,7 @@ def assess_image_quality_and_ood(rgb_np):
         gradable = False
         rejection_reason = "Out-of-Distribution Rejection: Uploaded scan does not match retinal fundus chromatic profile."
         recapture_guidance = "Please capture standard posterior-pole retinal fundus imaging using certified non-mydriatic fundus camera."
-    elif lap_var < 12.0:
+    elif lap_var < 3.0:
         gradable = False
         rejection_reason = "Image Quality Rejection: Severe Optical Blur / Cataract Media Opacity."
         recapture_guidance = "Clean camera optics, adjust diopter focus wheel on retinal arcade, and retake in dim lighting."

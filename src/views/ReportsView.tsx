@@ -65,36 +65,36 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ data, searchQuery }) =
   };
 
   return (
-    <div className="space-y-5">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold text-[#0F766E]">Unified Longitudinal Health Records</p>
-          <h1 className="font-display text-2xl font-bold text-[#0B2540]">
+          <p className="text-[14px] font-semibold text-[#0F766E] uppercase tracking-wide">Unified Longitudinal Health Records</p>
+          <h1 className="font-display text-[28px] font-bold text-[#0B2540] leading-tight">
             Annotated Screening &amp; Prevention Reports
           </h1>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
           <button
             type="button"
             onClick={() => window.print()}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-[14px] font-semibold text-slate-700 hover:bg-slate-50 transition-colors shadow-2xs"
           >
-            <Printer className="h-3.5 w-3.5" />
+            <Printer className="h-4 w-4" />
             Print
           </button>
           <button
             type="button"
             onClick={exportSummaryJson}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-[#0B2540] px-3.5 py-2 text-xs font-semibold text-white hover:bg-[#113556]"
+            className="inline-flex items-center gap-2 rounded-xl bg-[#0B2540] px-4 py-2.5 text-[14px] font-semibold text-white hover:bg-[#113556] transition-colors shadow-sm"
           >
-            <Download className="h-3.5 w-3.5" />
+            <Download className="h-4 w-4" />
             Export JSON
           </button>
         </div>
       </div>
 
       {/* Filter Bar */}
-      <div className="flex flex-wrap gap-1.5 rounded-xl bg-slate-200/70 p-1 w-fit">
+      <div className="flex flex-wrap gap-2 rounded-xl bg-slate-200/70 p-1.5 w-fit">
         {[
           { id: 'all', label: 'All Reports' },
           { id: 'retinal', label: `Retinal Screenings (${filteredScreenings.length})` },
@@ -105,8 +105,8 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ data, searchQuery }) =
             key={tab.id}
             type="button"
             onClick={() => setFilter(tab.id as typeof filter)}
-            className={`rounded-lg px-3.5 py-1.5 text-xs font-semibold transition-colors ${
-              filter === tab.id ? 'bg-white text-[#0B2540] shadow-xs' : 'text-slate-600 hover:text-slate-900'
+            className={`rounded-lg px-4 py-2 text-[14px] sm:text-[15px] font-semibold transition-colors ${
+              filter === tab.id ? 'bg-white text-[#0B2540] shadow-xs' : 'text-slate-700 hover:text-slate-900'
             }`}
           >
             {tab.label}
@@ -116,9 +116,9 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ data, searchQuery }) =
 
       {/* Annotated Retinal Screening Reports */}
       {(filter === 'all' || filter === 'retinal') && (
-        <section className="space-y-3">
-          <h2 className="font-display text-base font-bold text-[#0B2540] flex items-center gap-2">
-            <Eye className="h-4 w-4 text-[#12598C]" />
+        <section className="space-y-4">
+          <h2 className="font-display text-[20px] font-bold text-[#0B2540] flex items-center gap-2.5">
+            <Eye className="h-5 w-5 text-[#12598C]" />
             Step 7 Annotated Retinal Screening Reports
           </h2>
           {filteredScreenings.length > 0 ? (
@@ -128,9 +128,9 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ data, searchQuery }) =
               return (
                 <article
                   key={scr.id}
-                  className="rounded-2xl border border-slate-200 bg-white p-5 grid grid-cols-1 lg:grid-cols-12 gap-5 items-start"
+                  className="rounded-2xl border border-slate-200 bg-white p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start shadow-sm"
                 >
-                  <div className="lg:col-span-4 grid grid-cols-2 gap-2.5">
+                  <div className="lg:col-span-4 grid grid-cols-2 gap-3">
                     <FundusVisualizer
                       preset={scr.imagePreset}
                       imageDataUrl={scr.imageDataUrl}
@@ -149,31 +149,34 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ data, searchQuery }) =
                       label="Grad-CAM"
                     />
                   </div>
-                  <div className="lg:col-span-8 space-y-2 text-xs">
+                  <div className="lg:col-span-8 space-y-2.5 text-[14px]">
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div className="font-display text-sm font-bold text-[#0B2540]">
+                      <div className="font-display text-[17px] font-bold text-[#0B2540]">
                         {pat?.name || scr.patientId} ({pat?.mrn}) · {scr.eye}
                       </div>
-                      <span className="font-mono text-[11px] text-slate-500">
+                      <span className="font-mono text-[13px] text-slate-500">
                         {new Date(scr.capturedAt).toLocaleString()}
                       </span>
                     </div>
-                    <div className="text-slate-800 font-semibold">
+                    <div className="text-slate-900 font-semibold text-[15px]">
                       AI Assist Output: {scr.modelPrediction.gradeLabel}
                     </div>
-                    <div className="font-mono text-[11px] text-slate-600 tabular-nums">
+                    <div className="font-mono text-[13px] text-slate-600 tabular-nums">
                       Quality: {scr.quality.gradable ? 'Gradable' : 'Ungradable'} (Sharpness {scr.quality.sharpnessScore}/100) ·
                       Confidence: {Math.round(scr.modelPrediction.confidence * 100)}% ·
                       Human Review: <strong>{scr.humanReviewStatus}</strong>
                     </div>
-                    <p className="text-slate-600">{scr.summaryText}</p>
+                    <p className="text-slate-700 leading-relaxed">{scr.summaryText}</p>
                     {rev && (
-                      <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-3 text-slate-800">
-                        <strong>Clinician Review ({rev.doctorName}):</strong> {rev.clinicianGrade} · Triage:{' '}
-                        <strong>{rev.triageCategory}</strong>. {rev.clinicalNotes}
+                      <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-4 text-[14px] text-slate-800 leading-relaxed space-y-1">
+                        <div>
+                          <strong>Clinician Review ({rev.doctorName}):</strong> {rev.clinicianGrade} · Triage:{' '}
+                          <strong className="text-[#0F766E]">{rev.triageCategory}</strong>
+                        </div>
+                        <div className="text-slate-700">{rev.clinicalNotes}</div>
                       </div>
                     )}
-                    <div className="text-[11px] text-slate-500">
+                    <div className="text-[13px] text-slate-500">
                       Clinical boundary: AI retinal output is screening assistance only and requires authorised clinician interpretation.
                     </div>
                   </div>
@@ -181,7 +184,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ data, searchQuery }) =
               );
             })
           ) : (
-            <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-8 text-center text-xs text-slate-500">
+            <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-8 text-center text-[14px] text-slate-500">
               <Eye className="mx-auto h-8 w-8 text-slate-300 mb-2" />
               <p className="font-semibold text-slate-700">No retinal screening reports found</p>
               <p className="text-slate-400 mt-1">
@@ -196,33 +199,33 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ data, searchQuery }) =
 
       {/* Lifestyle Risk Assessment Reports */}
       {(filter === 'all' || filter === 'lifestyle') && (
-        <section className="space-y-3">
-          <h2 className="font-display text-base font-bold text-[#0B2540] flex items-center gap-2">
-            <FileText className="h-4 w-4 text-[#0D9488]" />
+        <section className="space-y-4">
+          <h2 className="font-display text-[20px] font-bold text-[#0B2540] flex items-center gap-2.5">
+            <FileText className="h-5 w-5 text-[#0D9488]" />
             Lifestyle Risk Assessment Reports (Experimental)
           </h2>
           {filteredAssessments.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               {filteredAssessments.map((asm) => {
                 const pat = patientMap.get(asm.patientId);
                 return (
-                  <div key={asm.id} className="rounded-2xl border border-slate-200 bg-white p-5 text-xs space-y-2">
+                  <div key={asm.id} className="rounded-2xl border border-slate-200 bg-white p-6 text-[14px] space-y-2.5 shadow-sm">
                     <div className="flex items-center justify-between">
-                      <span className="font-bold text-[#0B2540]">
+                      <span className="font-bold text-[16px] text-[#0B2540]">
                         {pat?.name || asm.patientId} ({pat?.mrn})
                       </span>
-                      <span className="font-mono text-[11px] text-slate-500">
+                      <span className="font-mono text-[13px] text-slate-500">
                         {new Date(asm.assessedAt).toLocaleDateString()}
                       </span>
                     </div>
-                    <div className="font-mono text-sm font-bold text-[#0F766E] tabular-nums">
+                    <div className="font-mono text-[16px] font-bold text-[#0F766E] tabular-nums">
                       Score: {asm.experimentalScore}/100 ({asm.riskCategory} Risk Tier)
                     </div>
-                    <div className="text-slate-600">
+                    <div className="text-slate-800">
                       Top Modifiable Drivers: <strong>{asm.topModifiableFactors.join(', ')}</strong>
                     </div>
-                    <p className="text-slate-600 leading-relaxed">{asm.explanation}</p>
-                    <div className="text-[11px] text-slate-500">
+                    <p className="text-slate-700 leading-relaxed">{asm.explanation}</p>
+                    <div className="text-[13px] text-slate-500 pt-1 border-t border-slate-100">
                       {asm.scoringModelLabel} · {asm.recordedOffline ? 'Captured Offline & Synced' : 'Online Capture'}
                     </div>
                   </div>
@@ -230,7 +233,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ data, searchQuery }) =
               })}
             </div>
           ) : (
-            <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-8 text-center text-xs text-slate-500">
+            <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-8 text-center text-[14px] text-slate-500">
               <FileText className="mx-auto h-8 w-8 text-slate-300 mb-2" />
               <p className="font-semibold text-slate-700">No lifestyle assessment reports found</p>
               <p className="text-slate-400 mt-1">
@@ -245,32 +248,32 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ data, searchQuery }) =
 
       {/* Laboratory Reports */}
       {(filter === 'all' || filter === 'labs') && (
-        <section className="space-y-3">
-          <h2 className="font-display text-base font-bold text-[#0B2540] flex items-center gap-2">
-            <FlaskConical className="h-4 w-4 text-indigo-700" />
+        <section className="space-y-4">
+          <h2 className="font-display text-[20px] font-bold text-[#0B2540] flex items-center gap-2.5">
+            <FlaskConical className="h-5 w-5 text-indigo-700" />
             Clinician-Recorded Laboratory Reports (HbA1c &amp; FPG)
           </h2>
           {filteredLabs.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               {filteredLabs.map((lab) => {
                 const pat = patientMap.get(lab.patientId);
                 return (
-                  <div key={lab.id} className="rounded-2xl border border-slate-200 bg-white p-5 text-xs space-y-2">
+                  <div key={lab.id} className="rounded-2xl border border-slate-200 bg-white p-6 text-[14px] space-y-2.5 shadow-sm">
                     <div className="flex items-center justify-between">
-                      <span className="font-bold text-[#0B2540]">{pat?.name || lab.patientId}</span>
-                      <span className="font-mono text-[11px] text-slate-500">{lab.testedAt.slice(0, 10)}</span>
+                      <span className="font-bold text-[16px] text-[#0B2540]">{pat?.name || lab.patientId}</span>
+                      <span className="font-mono text-[13px] text-slate-500">{lab.testedAt.slice(0, 10)}</span>
                     </div>
-                    <div className="font-mono text-sm font-bold text-slate-900 tabular-nums">
+                    <div className="font-mono text-[16px] font-bold text-slate-900 tabular-nums">
                       HbA1c: {lab.hba1cPercent ?? '—'}% · Fasting Glucose: {lab.fastingGlucoseMgDl ?? '—'} mg/dL
                     </div>
-                    <p className="text-slate-700">{lab.guidelineInterpretation}</p>
-                    <div className="text-[11px] text-slate-500">Recorded by {lab.recordedByName}</div>
+                    <p className="text-slate-800 leading-relaxed">{lab.guidelineInterpretation}</p>
+                    <div className="text-[13px] text-slate-500 pt-1 border-t border-slate-100">Recorded by {lab.recordedByName}</div>
                   </div>
                 );
               })}
             </div>
           ) : (
-            <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-8 text-center text-xs text-slate-500">
+            <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-8 text-center text-[14px] text-slate-500">
               <FlaskConical className="mx-auto h-8 w-8 text-slate-300 mb-2" />
               <p className="font-semibold text-slate-700">No laboratory reports found</p>
               <p className="text-slate-400 mt-1">

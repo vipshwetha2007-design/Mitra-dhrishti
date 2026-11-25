@@ -42,8 +42,21 @@ import { NotificationsView, SettingsView } from './views/SettingsAndNotification
 import { SimulinkAnalyticsView } from './views/SimulinkAnalyticsView';
 
 export default function App() {
-  // Security: Bearer token stored strictly in React memory (never in localStorage/sessionStorage)
-  const [token, setToken] = useState<string | null>(null);
+  // Security: Bearer token stored in React memory and synchronized to local prototype storage
+  const [token, setTokenState] = useState<string | null>(() => {
+    return localStorage.getItem('mitra_drishti_token') || localStorage.getItem('mritidhristi_token');
+  });
+
+  const setToken = (newToken: string | null) => {
+    setTokenState(newToken);
+    if (newToken) {
+      localStorage.setItem('mitra_drishti_token', newToken);
+    } else {
+      localStorage.removeItem('mitra_drishti_token');
+      localStorage.removeItem('mritidhristi_token');
+    }
+  };
+
   const [data, setData] = useState<BootstrapPayload | null>(null);
   const [loading, setLoading] = useState(true);
   const [fatalError, setFatalError] = useState<string | null>(null);
@@ -793,6 +806,7 @@ export default function App() {
               selectedPatientId={selectedPatientId}
               onSelectPatient={setSelectedPatientId}
               isOnline={isOnline}
+              authToken={token}
               onSubmitScreening={handleSubmitScreening}
               onNavigateProtect={() => handleNavigate('protect')}
             />

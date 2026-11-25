@@ -25,6 +25,7 @@
     "test:simulink": "tsx tests/simulinkVerification.ts",
     "test:postgres": "tsx tests/postgresVerification.ts",
     "test:sih": "tsx tests/sihFinalVerification.ts",
+    "test:e2e": "tsx tests/finalPrototypeStabilisationTest.ts",
     "test": "npm run test:security && npm run test:prevent && npm run test:dataset && npm run test:cnn && npm run test:retinal && npm run test:lesion && npm run test:offline && npm run test:simulink && npm run test:postgres && npm run test:sih"
   },
   "dependencies": {

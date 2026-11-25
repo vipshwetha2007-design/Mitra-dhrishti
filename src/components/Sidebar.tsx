@@ -157,14 +157,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <Icon className={`h-[18px] w-[18px] shrink-0 ${active ? 'text-white' : 'text-slate-300 group-hover:text-white'}`} />
         {!collapsed && (
           <div className="min-w-0 flex-1">
-            <div className="truncate text-[13px] font-medium leading-tight">{item.label}</div>
+            <div className="truncate text-[15px] font-semibold leading-tight">{item.label}</div>
             {item.subtitle && (
-              <div className="truncate text-[10px] text-slate-300/80 mt-0.5">{item.subtitle}</div>
+              <div className="truncate text-xs text-slate-300/90 mt-0.5">{item.subtitle}</div>
             )}
           </div>
         )}
         {!collapsed && item.badge !== undefined && (
-          <span className="shrink-0 rounded-full bg-[#EF4444] px-1.5 py-0.5 text-[10px] font-bold text-white tabular-nums leading-none">
+          <span className="shrink-0 rounded-full bg-[#EF4444] px-1.5 py-0.5 text-xs font-bold text-white tabular-nums leading-none">
             {item.badge}
           </span>
         )}
@@ -207,7 +207,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <div className="font-display text-lg font-bold tracking-tight text-white leading-none">
                 MITRA DRISHTI
               </div>
-              <div className="mt-1 text-[11px] font-medium text-teal-200/85 truncate">
+              <div className="mt-1 text-[10px] font-semibold tracking-wider text-teal-200/90 whitespace-nowrap">
                 {t.appTagline}
               </div>
             </div>
@@ -241,19 +241,53 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {secondaryItems.map(renderItem)}
       </nav>
 
-      {/* Bottom Promo Card from Reference Image */}
+      {/* Bottom Promo Card from Reference Image replaced with Premium Branded Card */}
       {!collapsed && (
         <div className="p-3">
-          <div className="overflow-hidden rounded-2xl border border-teal-500/30 bg-[#07243E] shadow-sm relative group cursor-pointer" onClick={() => onNavigate('prevent')}>
-            <img
-              src="/assets/dashboard/sidebar_card.png"
-              alt="A Healthier Tomorrow, Together"
-              className="w-full h-auto object-cover rounded-2xl"
-              onError={(e) => {
-                // Fallback styling if image fails
-                (e.target as HTMLElement).style.display = 'none';
-              }}
+          <div
+            className="group relative overflow-hidden rounded-2xl border border-teal-500/25 bg-gradient-to-br from-teal-900/40 via-teal-950/60 to-slate-900/80 p-3.5 shadow-xs transition-all duration-200 hover:border-teal-400/40 hover:shadow-teal-950/30 cursor-pointer"
+            onClick={() => onNavigate('prevent')}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onNavigate('prevent');
+              }
+            }}
+            aria-label="MITRA DRISHTI - Better Vision. Healthier Lives."
+          >
+            {/* Subtle decorative background accents */}
+            <div
+              className="pointer-events-none absolute -right-6 -top-6 h-20 w-20 rounded-full bg-teal-400/10 blur-xl transition-opacity duration-300 group-hover:bg-teal-400/20"
+              aria-hidden="true"
             />
+            <div
+              className="pointer-events-none absolute -bottom-4 -left-4 h-16 w-16 rounded-full bg-cyan-400/10 blur-lg"
+              aria-hidden="true"
+            />
+
+            <div className="relative z-10 flex flex-col gap-2">
+              <div className="flex items-center gap-2">
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-teal-400/30 bg-teal-500/15 text-teal-300 shadow-xs">
+                  <Eye className="h-3.5 w-3.5" aria-hidden="true" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <span className="block text-[11px] font-bold tracking-wider text-teal-200 uppercase truncate">
+                    MITRA DRISHTI
+                  </span>
+                </div>
+              </div>
+
+              <div>
+                <p className="text-xs font-semibold text-white leading-tight">
+                  Better Vision. Healthier Lives.
+                </p>
+                <p className="mt-1 text-[9px] font-medium tracking-wider text-teal-300/80 uppercase">
+                  PREVENT • DETECT • PROTECT
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -265,7 +299,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Desktop Sidebar */}
       <aside
         className={`hidden lg:block shrink-0 transition-[width] duration-200 border-r border-slate-900/15 ${
-          collapsed ? 'w-[76px]' : 'w-[235px]'
+          collapsed ? 'w-[76px]' : 'w-[252px]'
         }`}
       >
         <div className="sticky top-0 h-screen">{sidebarContent}</div>

@@ -390,24 +390,24 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
     <div className="space-y-5">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold text-[#0F766E]">
+          <p className="text-sm font-semibold text-[#12598C]">
             Pillar One · Type 2 Diabetes Lifestyle Risk &amp; 12-Month Prevention
           </p>
-          <h1 className="font-display text-2xl font-bold text-[#0B2540]">
+          <h1 className="font-display text-[28px] font-bold text-[#0B2540] leading-tight">
             PREVENT — Risk Assessment &amp; Prevention Programme
           </h1>
         </div>
 
         {data.patients.length > 1 && (
-          <div className="flex items-center gap-2">
-            <label htmlFor="prevent-patient-select" className="text-xs font-semibold text-slate-600">
+          <div className="flex items-center gap-2.5">
+            <label htmlFor="prevent-patient-select" className="text-[15px] font-semibold text-slate-700">
               Active Patient:
             </label>
             <select
               id="prevent-patient-select"
               value={patient?.id || ''}
               onChange={(e) => onSelectPatient(e.target.value)}
-              className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800 focus:border-[#0D9488] focus:outline-none"
+              className="rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-[15px] font-semibold text-slate-800 focus:border-[#0D9488] focus:outline-none"
             >
               {data.patients.map((p) => (
                 <option key={p.id} value={p.id}>
@@ -419,7 +419,7 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
         )}
       </div>
 
-      <div className="flex flex-wrap gap-1.5 rounded-xl bg-slate-200/70 p-1">
+      <div className="flex flex-wrap gap-2 rounded-xl bg-slate-200/70 p-1.5">
         {[
           { id: 'assessment', label: '9-Input Risk Assessment', icon: ClipboardCheck },
           { id: 'whatif', label: 'What-If Simulator', icon: Sliders },
@@ -437,11 +437,11 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
                 setSubTab(tab.id as typeof subTab);
                 setBannerMsg(null);
               }}
-              className={`inline-flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-xs font-semibold transition-colors whitespace-nowrap ${
+              className={`inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-[15px] font-semibold transition-colors whitespace-nowrap cursor-pointer ${
                 active ? 'bg-white text-[#0B2540] shadow-xs' : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              <Icon className="h-3.5 w-3.5 text-[#0D9488]" />
+              <Icon className="h-4 w-4 text-[#0D9488]" />
               {tab.label}
             </button>
           );
@@ -450,7 +450,7 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
 
       {bannerMsg && (
         <div
-          className={`rounded-xl border px-4 py-3 text-xs font-medium ${
+          className={`rounded-xl border px-4.5 py-3.5 text-[15px] font-medium ${
             bannerMsg.type === 'success'
               ? 'border-emerald-200 bg-emerald-50 text-emerald-900'
               : 'border-rose-200 bg-rose-50 text-rose-900'
@@ -461,8 +461,8 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
       )}
 
       {!isOnline && (
-        <div className="flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs text-amber-950">
-          <WifiOff className="h-4 w-4 text-amber-700 shrink-0" />
+        <div className="flex items-center gap-2.5 rounded-xl border border-amber-200 bg-amber-50 px-4.5 py-3 text-[14px] text-amber-950 leading-relaxed">
+          <WifiOff className="h-4.5 w-4.5 text-amber-700 shrink-0" />
           <span>
             <strong>Offline-First Active:</strong> 9-input lifestyle assessments, What-If simulations, and daily habit logs save locally in Dexie IndexedDB and synchronize automatically once connectivity returns.
           </span>
@@ -472,7 +472,7 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
       {subTab === 'assessment' && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
           <div className="lg:col-span-7 rounded-2xl border border-slate-200 bg-white p-6">
-            <div className="flex items-center justify-between text-xs text-slate-500 mb-2">
+            <div className="flex items-center justify-between text-[14px] text-slate-600 mb-2.5">
               <span className="font-semibold text-[#0F766E]">
                 Step {stepIdx + 1} of {QUESTIONS.length}
               </span>
@@ -480,24 +480,24 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
                 {Math.round(((stepIdx + 1) / QUESTIONS.length) * 100)}% complete
               </span>
             </div>
-            <div className="h-2 w-full rounded-full bg-slate-100 overflow-hidden mb-6">
+            <div className="h-2.5 w-full rounded-full bg-slate-100 overflow-hidden mb-6">
               <div
                 className="h-full rounded-full bg-[#0D9488] transition-all duration-200"
                 style={{ width: `${((stepIdx + 1) / QUESTIONS.length) * 100}%` }}
               />
             </div>
 
-            <h2 className="font-display text-lg font-bold text-[#0B2540]">
+            <h2 className="font-display text-[20px] font-bold text-[#0B2540]">
               {QUESTIONS[stepIdx].title}
             </h2>
-            <p className="mt-1 text-sm text-slate-600">{QUESTIONS[stepIdx].desc}</p>
+            <p className="mt-1 text-[15px] text-slate-600 leading-relaxed">{QUESTIONS[stepIdx].desc}</p>
 
             <div className="mt-6 min-h-[150px]">
               {stepIdx === 0 && (
-                <div className="space-y-3">
+                <div className="space-y-3.5">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium text-slate-600">Age</span>
-                    <span className="font-mono text-lg font-bold text-[#0B2540] tabular-nums">
+                    <span className="text-[14px] font-semibold text-slate-700">Age</span>
+                    <span className="font-mono text-[20px] font-bold text-[#0B2540] tabular-nums">
                       {inputs.age} years
                     </span>
                   </div>
@@ -513,7 +513,7 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
               )}
 
               {stepIdx === 1 && (
-                <div className="space-y-2.5">
+                <div className="space-y-3">
                   {[
                     {
                       val: 'balanced_traditional',
@@ -536,28 +536,28 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
                       type="button"
                       onClick={() =>
                         setInputs({
-                          ...inputs,
+                           ...inputs,
                           dietQuality: opt.val as LifestyleInput['dietQuality'],
                         })
                       }
-                      className={`w-full rounded-xl border p-3.5 text-left transition-colors ${
+                      className={`w-full rounded-xl border p-4 text-left transition-colors cursor-pointer ${
                         inputs.dietQuality === opt.val
                           ? 'border-[#0D9488] bg-teal-50/50'
                           : 'border-slate-200 hover:bg-slate-50'
                       }`}
                     >
-                      <div className="text-sm font-semibold text-slate-900">{opt.label}</div>
-                      <div className="mt-0.5 text-xs text-slate-600">{opt.sub}</div>
+                      <div className="text-[16px] font-bold text-slate-900">{opt.label}</div>
+                      <div className="mt-1 text-[14px] text-slate-600 leading-relaxed">{opt.sub}</div>
                     </button>
                   ))}
                 </div>
               )}
 
               {stepIdx === 2 && (
-                <div className="space-y-3">
+                <div className="space-y-3.5">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium text-slate-600">Nightly Sleep</span>
-                    <span className="font-mono text-lg font-bold text-[#0B2540] tabular-nums">
+                    <span className="text-[14px] font-semibold text-slate-700">Nightly Sleep</span>
+                    <span className="font-mono text-[20px] font-bold text-[#0B2540] tabular-nums">
                       {inputs.sleepHours} hours
                     </span>
                   </div>
@@ -574,10 +574,10 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
               )}
 
               {stepIdx === 3 && (
-                <div className="space-y-3">
+                <div className="space-y-3.5">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium text-slate-600">Average Daily Steps</span>
-                    <span className="font-mono text-lg font-bold text-[#0B2540] tabular-nums">
+                    <span className="text-[14px] font-semibold text-slate-700">Average Daily Steps</span>
+                    <span className="font-mono text-[20px] font-bold text-[#0B2540] tabular-nums">
                       {inputs.dailySteps.toLocaleString()} steps/day
                     </span>
                   </div>
@@ -596,38 +596,38 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
               {stepIdx === 4 && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">Weight (kg)</label>
+                    <label className="block text-[15px] font-semibold text-slate-700 mb-1.5">Weight (kg)</label>
                     <input
                       type="number"
                       min={30}
                       max={200}
                       value={inputs.weightKg}
                       onChange={(e) => setInputs({ ...inputs, weightKg: Number(e.target.value) })}
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm font-mono tabular-nums"
+                      className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-[15px] font-mono tabular-nums"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">Height (cm)</label>
+                    <label className="block text-[15px] font-semibold text-slate-700 mb-1.5">Height (cm)</label>
                     <input
                       type="number"
                       min={120}
                       max={220}
                       value={inputs.heightCm}
                       onChange={(e) => setInputs({ ...inputs, heightCm: Number(e.target.value) })}
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm font-mono tabular-nums"
+                      className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-[15px] font-mono tabular-nums"
                     />
                   </div>
-                  <div className="sm:col-span-2 rounded-xl bg-slate-50 border border-slate-200 px-4 py-2.5 text-xs text-slate-700">
-                    Calculated BMI: <strong className="font-mono tabular-nums">{baseEval.bmi} kg/m²</strong>
+                  <div className="sm:col-span-2 rounded-xl bg-slate-50 border border-slate-200 px-4 py-3 text-[14px] text-slate-700">
+                    Calculated BMI: <strong className="font-mono font-bold text-slate-900 tabular-nums">{baseEval.bmi} kg/m²</strong>
                   </div>
                 </div>
               )}
 
               {stepIdx === 5 && (
-                <div className="space-y-3">
+                <div className="space-y-3.5">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium text-slate-600">Waist Circumference</span>
-                    <span className="font-mono text-lg font-bold text-[#0B2540] tabular-nums">
+                    <span className="text-[14px] font-semibold text-slate-700">Waist Circumference</span>
+                    <span className="font-mono text-[20px] font-bold text-[#0B2540] tabular-nums">
                       {inputs.waistCm} cm
                     </span>
                   </div>
@@ -643,7 +643,7 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
               )}
 
               {stepIdx === 6 && (
-                <div className="grid grid-cols-1 gap-2.5">
+                <div className="grid grid-cols-1 gap-3">
                   {[
                     { val: 'none', label: 'No known family history of Type 2 diabetes' },
                     { val: 'one_parent', label: 'One parent has Type 2 diabetes' },
@@ -658,9 +658,9 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
                           familyHistory: opt.val as LifestyleInput['familyHistory'],
                         })
                       }
-                      className={`rounded-xl border p-3.5 text-left text-sm font-medium ${
+                      className={`rounded-xl border p-4 text-left text-[15px] font-medium cursor-pointer transition-colors ${
                         inputs.familyHistory === opt.val
-                          ? 'border-[#0D9488] bg-teal-50/50 text-[#0B2540]'
+                          ? 'border-[#0D9488] bg-teal-50/50 text-[#0B2540] font-semibold'
                           : 'border-slate-200 text-slate-700 hover:bg-slate-50'
                       }`}
                     >
@@ -671,13 +671,13 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
               )}
 
               {stepIdx === 7 && (
-                <div className="grid grid-cols-3 gap-2.5">
+                <div className="grid grid-cols-3 gap-3">
                   {(['never', 'former', 'current'] as const).map((val) => (
                     <button
                       key={val}
                       type="button"
                       onClick={() => setInputs({ ...inputs, smokingStatus: val })}
-                      className={`rounded-xl border p-3.5 text-center text-sm font-semibold capitalize ${
+                      className={`rounded-xl border p-4 text-center text-[15px] font-semibold capitalize cursor-pointer transition-colors ${
                         inputs.smokingStatus === val
                           ? 'border-[#0D9488] bg-teal-50/50 text-[#0B2540]'
                           : 'border-slate-200 text-slate-700 hover:bg-slate-50'
@@ -690,13 +690,13 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
               )}
 
               {stepIdx === 8 && (
-                <div className="grid grid-cols-3 gap-2.5">
+                <div className="grid grid-cols-3 gap-3">
                   {(['none', 'occasional', 'regular'] as const).map((val) => (
                     <button
                       key={val}
                       type="button"
                       onClick={() => setInputs({ ...inputs, alcoholUse: val })}
-                      className={`rounded-xl border p-3.5 text-center text-sm font-semibold capitalize ${
+                      className={`rounded-xl border p-4 text-center text-[15px] font-semibold capitalize cursor-pointer transition-colors ${
                         inputs.alcoholUse === val
                           ? 'border-[#0D9488] bg-teal-50/50 text-[#0B2540]'
                           : 'border-slate-200 text-slate-700 hover:bg-slate-50'
@@ -714,9 +714,9 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
                 type="button"
                 disabled={stepIdx === 0}
                 onClick={() => setStepIdx((s) => Math.max(0, s - 1))}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-40"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 px-4.5 py-2.5 text-[14px] font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-40 cursor-pointer"
               >
-                <ArrowLeft className="h-3.5 w-3.5" />
+                <ArrowLeft className="h-4 w-4" />
                 Previous
               </button>
 
@@ -724,17 +724,17 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
                 <button
                   type="button"
                   onClick={() => setStepIdx((s) => Math.min(QUESTIONS.length - 1, s + 1))}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-[#0B2540] px-5 py-2 text-xs font-semibold text-white hover:bg-[#113556]"
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-[#0B2540] px-5 py-2.5 text-[14px] font-semibold text-white hover:bg-[#113556] cursor-pointer"
                 >
                   Next Question
-                  <ArrowRight className="h-3.5 w-3.5" />
+                  <ArrowRight className="h-4 w-4" />
                 </button>
               ) : (
                 <button
                   type="button"
                   disabled={submitting}
                   onClick={() => void handleSaveAssessment()}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-[#0D9488] px-5 py-2 text-xs font-semibold text-white hover:bg-[#0F766E] disabled:opacity-60"
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-[#0D9488] px-5 py-2.5 text-[14px] font-semibold text-white hover:bg-[#0F766E] disabled:opacity-60 cursor-pointer"
                 >
                   <CheckCircle2 className="h-4 w-4" />
                   {submitting
@@ -748,29 +748,29 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
           </div>
 
           <div className="lg:col-span-5 space-y-4">
-            <div className="rounded-2xl border border-slate-200 bg-white p-5">
-              <div className="text-[11px] font-semibold text-amber-800">
+            <div className="rounded-2xl border border-slate-200 bg-white p-5.5">
+              <div className="text-[13px] font-semibold text-amber-800">
                 {baseEval.scoringModelLabel}
               </div>
               <div className="mt-3 flex items-baseline justify-between">
                 <div>
-                  <div className="font-display text-3xl font-bold text-[#0B2540] tabular-nums">
+                  <div className="font-display text-[32px] font-bold text-[#0B2540] tabular-nums">
                     {baseEval.experimentalScore}
-                    <span className="text-base font-normal text-slate-400"> / 100</span>
+                    <span className="text-[18px] font-normal text-slate-400"> / 100</span>
                   </div>
-                  <div className="mt-0.5 text-sm font-semibold text-[#0F766E]">
+                  <div className="mt-0.5 text-[16px] font-bold text-[#0F766E]">
                     {baseEval.riskCategory} Lifestyle Risk Tier
                   </div>
                 </div>
               </div>
 
-              <p className="mt-3 text-xs text-slate-600 leading-relaxed">{baseEval.explanation}</p>
+              <p className="mt-3 text-[14px] text-slate-700 leading-relaxed">{baseEval.explanation}</p>
 
               <div className="mt-4 pt-4 border-t border-slate-100">
-                <div className="text-xs font-bold text-[#0B2540] mb-2">
+                <div className="text-[15px] font-bold text-[#0B2540] mb-2">
                   Top 3 Modifiable Risk Factors
                 </div>
-                <ol className="list-decimal list-inside space-y-1 text-xs text-slate-700">
+                <ol className="list-decimal list-inside space-y-1 text-[14px] text-slate-700">
                   {baseEval.topModifiableFactors.map((f) => (
                     <li key={f} className="font-medium">
                       {f}
@@ -779,19 +779,19 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
                 </ol>
               </div>
 
-              <div className="mt-4 pt-4 border-t border-slate-100 space-y-2">
-                <div className="text-xs font-bold text-[#0B2540]">Contributing Factor Breakdown</div>
+              <div className="mt-4 pt-4 border-t border-slate-100 space-y-2.5">
+                <div className="text-[15px] font-bold text-[#0B2540]">Contributing Factor Breakdown</div>
                 {baseEval.contributions.slice(0, 6).map((c) => (
                   <div key={c.factor} className="space-y-1">
-                    <div className="flex items-center justify-between text-[11px]">
+                    <div className="flex items-center justify-between text-[13px]">
                       <span className="text-slate-700 font-medium">
                         {c.factor} {c.modifiable ? '(Modifiable)' : '(Baseline)'}
                       </span>
-                      <span className="font-mono tabular-nums text-slate-500">
+                      <span className="font-mono tabular-nums text-slate-600 font-semibold">
                         {c.points}/{c.maxPoints}
                       </span>
                     </div>
-                    <div className="h-1.5 w-full rounded-full bg-slate-100">
+                    <div className="h-2 w-full rounded-full bg-slate-100">
                       <div
                         className="h-full rounded-full bg-[#0D9488]"
                         style={{ width: `${(c.points / c.maxPoints) * 100}%` }}
@@ -802,13 +802,13 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
               </div>
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-white p-5">
-              <h3 className="font-display text-sm font-bold text-[#0B2540]">Recommended Next Steps</h3>
-              <ul className="mt-2.5 space-y-2 text-xs text-slate-700">
+            <div className="rounded-2xl border border-slate-200 bg-white p-5.5">
+              <h3 className="font-display text-[17px] font-bold text-[#0B2540]">Recommended Next Steps</h3>
+              <ul className="mt-3 space-y-2 text-[14px] text-slate-700">
                 {baseEval.recommendations.map((rec, idx) => (
-                  <li key={idx} className="flex items-start gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
-                    <span>{rec}</span>
+                  <li key={idx} className="flex items-start gap-2.5">
+                    <CheckCircle2 className="h-4.5 w-4.5 text-emerald-600 shrink-0 mt-0.5" />
+                    <span className="leading-relaxed">{rec}</span>
                   </li>
                 ))}
               </ul>
@@ -821,28 +821,28 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
         <div className="rounded-2xl border border-slate-200 bg-white p-6 space-y-5">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-100 pb-4">
             <div>
-              <h2 className="font-display text-lg font-bold text-[#0B2540]">
+              <h2 className="font-display text-[20px] font-bold text-[#0B2540]">
                 Interactive What-If Lifestyle Explorer
               </h2>
-              <p className="text-xs text-slate-600 mt-0.5">
+              <p className="text-[14px] text-slate-600 mt-1 leading-relaxed">
                 Illustrative scenario only — not a medical diagnosis or validated clinical prognosis. Adjust modifiable habits to observe experimental score changes.
               </p>
             </div>
             <button
               type="button"
               onClick={() => setWhatIf(inputs)}
-              className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 shrink-0"
+              className="rounded-xl border border-slate-200 px-3.5 py-2 text-[13px] font-semibold text-slate-700 hover:bg-slate-50 shrink-0 cursor-pointer"
             >
               Reset to Baseline
             </button>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
-            <div className="lg:col-span-7 space-y-4">
+            <div className="lg:col-span-7 space-y-4.5">
               <div>
-                <div className="flex justify-between text-xs font-semibold text-slate-700 mb-1">
+                <div className="flex justify-between text-[15px] font-semibold text-slate-700 mb-1.5">
                   <span>Daily Steps</span>
-                  <span className="font-mono tabular-nums">{whatIf.dailySteps.toLocaleString()} steps</span>
+                  <span className="font-mono tabular-nums text-slate-900">{whatIf.dailySteps.toLocaleString()} steps</span>
                 </div>
                 <input
                   type="range"
@@ -856,9 +856,9 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
               </div>
 
               <div>
-                <div className="flex justify-between text-xs font-semibold text-slate-700 mb-1">
+                <div className="flex justify-between text-[15px] font-semibold text-slate-700 mb-1.5">
                   <span>Nightly Sleep</span>
-                  <span className="font-mono tabular-nums">{whatIf.sleepHours} hrs</span>
+                  <span className="font-mono tabular-nums text-slate-900">{whatIf.sleepHours} hrs</span>
                 </div>
                 <input
                   type="range"
@@ -872,9 +872,9 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
               </div>
 
               <div>
-                <div className="flex justify-between text-xs font-semibold text-slate-700 mb-1">
+                <div className="flex justify-between text-[15px] font-semibold text-slate-700 mb-1.5">
                   <span>Target Weight</span>
-                  <span className="font-mono tabular-nums">{whatIf.weightKg} kg</span>
+                  <span className="font-mono tabular-nums text-slate-900">{whatIf.weightKg} kg</span>
                 </div>
                 <input
                   type="range"
@@ -887,9 +887,9 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
               </div>
 
               <div>
-                <div className="flex justify-between text-xs font-semibold text-slate-700 mb-1">
+                <div className="flex justify-between text-[15px] font-semibold text-slate-700 mb-1.5">
                   <span>Target Waist Circumference</span>
-                  <span className="font-mono tabular-nums">{whatIf.waistCm} cm</span>
+                  <span className="font-mono tabular-nums text-slate-900">{whatIf.waistCm} cm</span>
                 </div>
                 <input
                   type="range"
@@ -902,7 +902,7 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Dietary Pattern Shift</label>
+                <label className="block text-[15px] font-semibold text-slate-700 mb-1.5">Dietary Pattern Shift</label>
                 <select
                   value={whatIf.dietQuality}
                   onChange={(e) =>
@@ -911,7 +911,7 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
                       dietQuality: e.target.value as LifestyleInput['dietQuality'],
                     })
                   }
-                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium"
+                  className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-[15px] font-medium text-slate-900"
                 >
                   <option value="balanced_traditional">Balanced Traditional Indian Meals (Millets, Greens, Dal)</option>
                   <option value="moderate_refined">Moderate Refined Carbs</option>
@@ -923,28 +923,28 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
             <div className="lg:col-span-5 rounded-2xl border border-slate-200 bg-slate-50 p-5 space-y-4">
               <div className="grid grid-cols-2 gap-3 text-center">
                 <div className="rounded-xl bg-white border border-slate-200 p-4">
-                  <div className="text-[11px] font-semibold text-slate-500">Current Score</div>
-                  <div className="mt-1 font-display text-2xl font-bold text-slate-800 tabular-nums">
+                  <div className="text-[13px] font-semibold text-slate-500">Current Score</div>
+                  <div className="mt-1 font-display text-[28px] font-bold text-slate-800 tabular-nums">
                     {baseEval.experimentalScore}
                   </div>
-                  <div className="text-xs text-slate-500">{baseEval.riskCategory}</div>
+                  <div className="text-[14px] text-slate-600 font-medium">{baseEval.riskCategory}</div>
                 </div>
                 <div className="rounded-xl bg-white border border-[#0D9488] p-4">
-                  <div className="text-[11px] font-semibold text-[#0F766E]">Simulated Score</div>
-                  <div className="mt-1 font-display text-2xl font-bold text-[#0F766E] tabular-nums">
+                  <div className="text-[13px] font-semibold text-[#0F766E]">Simulated Score</div>
+                  <div className="mt-1 font-display text-[28px] font-bold text-[#0F766E] tabular-nums">
                     {whatIfEval.experimentalScore}
                   </div>
-                  <div className="text-xs text-[#0F766E] font-medium">{whatIfEval.riskCategory}</div>
+                  <div className="text-[14px] text-[#0F766E] font-semibold">{whatIfEval.riskCategory}</div>
                 </div>
               </div>
 
-              <div className="rounded-xl bg-white border border-slate-200 p-4 text-xs text-slate-700">
+              <div className="rounded-xl bg-white border border-slate-200 p-4 text-[14px] text-slate-800 leading-relaxed">
                 <strong>Illustrative Change:</strong>{' '}
                 <span className="font-mono font-bold tabular-nums">
                   {whatIfEval.experimentalScore - baseEval.experimentalScore > 0 ? '+' : ''}
                   {whatIfEval.experimentalScore - baseEval.experimentalScore} points
                 </span>{' '}
-                (Projected BMI <span className="font-mono tabular-nums">{whatIfEval.bmi}</span> kg/m²).
+                (Projected BMI <span className="font-mono font-bold tabular-nums">{whatIfEval.bmi}</span> kg/m²).
               </div>
             </div>
           </div>
@@ -954,27 +954,27 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
       {subTab === 'programme' && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
           <div className="lg:col-span-7 space-y-5">
-            <div className="rounded-2xl border border-slate-200 bg-white p-5">
+            <div className="rounded-2xl border border-slate-200 bg-white p-5.5">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
-                  <h2 className="font-display text-base font-bold text-[#0B2540]">
+                  <h2 className="font-display text-[19px] font-bold text-[#0B2540]">
                     12-Month Prevention Roadmap
                   </h2>
-                  <p className="text-xs text-slate-500">
+                  <p className="mt-0.5 text-[14px] text-slate-600">
                     Phase 1: Learning (Months 1–6) · Phase 2: Maintenance (Months 7–12)
                   </p>
                 </div>
-                <span className="font-mono text-xs font-bold text-[#0F766E] tabular-nums">
+                <span className="font-mono text-[14px] font-bold text-[#0F766E] tabular-nums">
                   Month {programme?.currentMonth ?? 1} / 12 · Adherence {programme?.adherencePercent ?? 50}%
                 </span>
               </div>
 
               {/* Checkpoint Milestone Cards */}
-              <div className="mt-4 grid grid-cols-1 sm:grid-cols-5 gap-2.5">
+              <div className="mt-4.5 grid grid-cols-1 sm:grid-cols-5 gap-3">
                 {(programme?.checkpoints || []).map((cp) => (
                   <div
                     key={cp.day}
-                    className={`rounded-xl border p-3 text-xs transition-all flex flex-col justify-between ${
+                    className={`rounded-xl border p-3.5 text-xs transition-all flex flex-col justify-between ${
                       cp.status === 'completed'
                         ? 'border-emerald-200 bg-emerald-50/70'
                         : cp.status === 'due'
@@ -986,9 +986,9 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
                   >
                     <div>
                       <div className="flex items-center justify-between gap-1">
-                        <span className="font-bold text-slate-900">{cp.title || cp.label}</span>
+                        <span className="font-bold text-slate-900 text-[14px]">{cp.title || cp.label}</span>
                         <span
-                          className={`rounded px-1.5 py-0.5 text-[10px] font-bold capitalize ${
+                          className={`rounded px-2 py-0.5 text-[11px] font-bold capitalize ${
                             cp.status === 'completed'
                               ? 'bg-emerald-200/60 text-emerald-800'
                               : cp.status === 'due'
@@ -1001,16 +1001,16 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
                           {cp.status}
                         </span>
                       </div>
-                      <div className="mt-1 text-[11px] text-slate-500 font-mono">
+                      <div className="mt-1 text-[12px] text-slate-600 font-mono">
                         Due: {cp.dueDate}
                       </div>
                       {cp.completedAt && (
-                        <div className="text-[10px] text-emerald-700">
+                        <div className="text-[12px] text-emerald-700 font-medium">
                           Completed: {cp.completedAt.slice(0, 10)}
                         </div>
                       )}
                       {cp.baselineComparison?.summary && (
-                        <div className="mt-1.5 rounded bg-emerald-100/70 p-1.5 text-[10px] font-medium text-emerald-800">
+                        <div className="mt-1.5 rounded-lg bg-emerald-100/70 p-2 text-[12px] font-medium text-emerald-900 leading-snug">
                           {cp.baselineComparison.summary}
                         </div>
                       )}
@@ -1020,7 +1020,7 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
                       <button
                         type="button"
                         onClick={() => openCheckpointForm(cp)}
-                        className="mt-2.5 w-full rounded-lg bg-[#0D9488] py-1 text-[11px] font-semibold text-white hover:bg-[#0F766E] shadow-sm transition-colors"
+                        className="mt-3 w-full rounded-lg bg-[#0D9488] py-1.5 text-[12px] font-semibold text-white hover:bg-[#0F766E] shadow-sm transition-colors cursor-pointer"
                       >
                         Complete Checkpoint
                       </button>
@@ -1033,27 +1033,27 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
               {activeCheckpointModal && (
                 <form
                   onSubmit={handleCompleteCp}
-                  className="mt-4 rounded-xl border border-teal-300 bg-teal-50/50 p-4 text-xs space-y-3"
+                  className="mt-4.5 rounded-xl border border-teal-300 bg-teal-50/50 p-4.5 text-xs space-y-3.5"
                 >
-                  <div className="flex items-center justify-between border-b border-teal-200/70 pb-2">
+                  <div className="flex items-center justify-between border-b border-teal-200/70 pb-2.5">
                     <div className="flex items-center gap-2">
-                      <ClipboardCheck className="h-4 w-4 text-[#0D9488]" />
-                      <span className="font-bold text-[#0B2540]">
+                      <ClipboardCheck className="h-5 w-5 text-[#0D9488]" />
+                      <span className="font-bold text-[16px] text-[#0B2540]">
                         Record {activeCheckpointModal.day}-Day Checkpoint ({activeCheckpointModal.title || activeCheckpointModal.label})
                       </span>
                     </div>
                     <button
                       type="button"
                       onClick={() => setActiveCheckpointModal(null)}
-                      className="text-slate-500 hover:text-slate-800"
+                      className="text-slate-500 hover:text-slate-800 p-1 cursor-pointer"
                     >
-                      <X className="h-4 w-4" />
+                      <X className="h-5 w-5" />
                     </button>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                     <div>
-                      <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                      <label className="block text-[14px] font-semibold text-slate-700 mb-1">
                         Weight (kg) · Baseline: {programme?.baselineWeightKg ?? '—'} kg
                       </label>
                       <input
@@ -1064,10 +1064,10 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
                         required
                         value={cpWeight}
                         onChange={(e) => setCpWeight(Number(e.target.value))}
-                        className="w-full rounded-lg border border-slate-300 bg-white px-3 py-1.5 font-mono"
+                        className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-[15px] font-mono text-slate-900"
                       />
                       {programme && (
-                        <div className="mt-1 text-[10px] font-mono font-medium text-slate-600">
+                        <div className="mt-1 text-[12px] font-mono font-medium text-slate-600">
                           Change vs baseline:{' '}
                           <span
                             className={
@@ -1083,7 +1083,7 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
                     </div>
 
                     <div>
-                      <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                      <label className="block text-[14px] font-semibold text-slate-700 mb-1">
                         Waist (cm) · Baseline: {programme?.baselineWaistCm ?? '—'} cm
                       </label>
                       <input
@@ -1094,10 +1094,10 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
                         required
                         value={cpWaist}
                         onChange={(e) => setCpWaist(Number(e.target.value))}
-                        className="w-full rounded-lg border border-slate-300 bg-white px-3 py-1.5 font-mono"
+                        className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-[15px] font-mono text-slate-900"
                       />
                       {programme && (
-                        <div className="mt-1 text-[10px] font-mono font-medium text-slate-600">
+                        <div className="mt-1 text-[12px] font-mono font-medium text-slate-600">
                           Change vs baseline:{' '}
                           <span
                             className={
@@ -1114,7 +1114,7 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                    <label className="block text-[14px] font-semibold text-slate-700 mb-1">
                       Checkpoint Observations &amp; Clinical Notes
                     </label>
                     <input
@@ -1122,22 +1122,22 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
                       value={cpNotes}
                       onChange={(e) => setCpNotes(e.target.value)}
                       placeholder="e.g. Consistent millet breakfast swaps, evening walks maintained without joint pain"
-                      className="w-full rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs"
+                      className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-[14px] text-slate-900"
                     />
                   </div>
 
-                  <div className="flex justify-end gap-2 pt-1">
+                  <div className="flex justify-end gap-2.5 pt-1">
                     <button
                       type="button"
                       onClick={() => setActiveCheckpointModal(null)}
-                      className="rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100"
+                      className="rounded-xl px-4 py-2 text-[14px] font-semibold text-slate-600 hover:bg-slate-100 cursor-pointer"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
                       disabled={submitting}
-                      className="rounded-lg bg-[#0D9488] px-4 py-1.5 text-xs font-semibold text-white hover:bg-[#0F766E] disabled:opacity-50"
+                      className="rounded-xl bg-[#0D9488] px-5 py-2 text-[14px] font-semibold text-white hover:bg-[#0F766E] disabled:opacity-50 cursor-pointer"
                     >
                       {submitting ? 'Saving Checkpoint...' : 'Submit & Complete Checkpoint'}
                     </button>
@@ -1147,19 +1147,19 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
 
               {/* Longitudinal Progress Chart with Steps, Weight, and Waist */}
               <div className="mt-5">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="text-xs font-bold text-slate-800">
+                <div className="flex items-center justify-between mb-2.5">
+                  <div className="text-[15px] font-bold text-slate-900">
                     Longitudinal Trajectory: Steps, Weight &amp; Waist
                   </div>
-                  <div className="flex items-center gap-3 text-[11px] font-medium">
-                    <span className="flex items-center gap-1 text-[#0B2540]">
-                      <span className="h-2 w-2 rounded-full bg-[#0B2540]" /> Weight (kg)
+                  <div className="flex items-center gap-3.5 text-[13px] font-medium">
+                    <span className="flex items-center gap-1.5 text-[#0B2540] font-semibold">
+                      <span className="h-2.5 w-2.5 rounded-full bg-[#0B2540]" /> Weight (kg)
                     </span>
-                    <span className="flex items-center gap-1 text-[#0D9488]">
-                      <span className="h-2 w-2 rounded-full bg-[#0D9488]" /> Waist (cm)
+                    <span className="flex items-center gap-1.5 text-[#0D9488] font-semibold">
+                      <span className="h-2.5 w-2.5 rounded-full bg-[#0D9488]" /> Waist (cm)
                     </span>
-                    <span className="flex items-center gap-1 text-[#2563EB]">
-                      <span className="h-2 w-2 rounded-full bg-[#2563EB]" /> Steps (×100)
+                    <span className="flex items-center gap-1.5 text-[#2563EB] font-semibold">
+                      <span className="h-2.5 w-2.5 rounded-full bg-[#2563EB]" /> Steps (×100)
                     </span>
                   </div>
                 </div>
@@ -1168,15 +1168,15 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={progressChartData} margin={{ top: 8, right: 12, left: -18, bottom: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
-                      <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#64748B' }} />
-                      <YAxis tick={{ fontSize: 11, fill: '#64748B' }} />
-                      <Tooltip contentStyle={{ borderRadius: '10px', fontSize: '12px' }} />
+                      <XAxis dataKey="date" tick={{ fontSize: 12, fill: '#475569' }} />
+                      <YAxis tick={{ fontSize: 12, fill: '#475569' }} />
+                      <Tooltip contentStyle={{ borderRadius: '10px', fontSize: '13px' }} />
                       <Line
                         type="monotone"
                         dataKey="weight"
                         name="Weight (kg)"
                         stroke="#0B2540"
-                        strokeWidth={2}
+                        strokeWidth={2.5}
                         connectNulls={true}
                       />
                       <Line
@@ -1184,7 +1184,7 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
                         dataKey="waist"
                         name="Waist (cm)"
                         stroke="#0D9488"
-                        strokeWidth={2}
+                        strokeWidth={2.5}
                         connectNulls={true}
                       />
                       <Line
@@ -1192,7 +1192,7 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
                         dataKey="steps"
                         name="Steps (×100)"
                         stroke="#2563EB"
-                        strokeWidth={2}
+                        strokeWidth={2.5}
                       />
                     </LineChart>
                   </ResponsiveContainer>
@@ -1201,48 +1201,48 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
 
               {/* Longitudinal Health Metrics Grid */}
               <div className="mt-5 grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4 border-t border-slate-100">
-                <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-3">
-                  <div className="flex items-center gap-1.5 text-slate-500 text-[11px] font-medium">
-                    <Flame className="h-3.5 w-3.5 text-blue-600" />
+                <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-3.5">
+                  <div className="flex items-center gap-1.5 text-slate-600 text-[13px] font-semibold">
+                    <Flame className="h-4 w-4 text-blue-600" />
                     <span>7-Day Steps Avg</span>
                   </div>
-                  <div className="mt-1 font-display text-lg font-bold text-slate-900 tabular-nums">
+                  <div className="mt-1.5 font-display text-[22px] font-bold text-slate-900 tabular-nums">
                     {avgSteps7d !== null ? `${avgSteps7d.toLocaleString()} /day` : '—'}
                   </div>
-                  <div className="text-[10px] text-slate-500">Benchmark: 7,000+</div>
+                  <div className="text-[12px] text-slate-500">Benchmark: 7,000+</div>
                 </div>
 
-                <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-3">
-                  <div className="flex items-center gap-1.5 text-slate-500 text-[11px] font-medium">
-                    <Clock className="h-3.5 w-3.5 text-indigo-600" />
+                <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-3.5">
+                  <div className="flex items-center gap-1.5 text-slate-600 text-[13px] font-semibold">
+                    <Clock className="h-4 w-4 text-indigo-600" />
                     <span>7-Day Sleep Avg</span>
                   </div>
-                  <div className="mt-1 font-display text-lg font-bold text-slate-900 tabular-nums">
+                  <div className="mt-1.5 font-display text-[22px] font-bold text-slate-900 tabular-nums">
                     {avgSleep7d !== null ? `${avgSleep7d} hrs` : '—'}
                   </div>
-                  <div className="text-[10px] text-slate-500">Target: 7–8.5 hrs</div>
+                  <div className="text-[12px] text-slate-500">Target: 7–8.5 hrs</div>
                 </div>
 
-                <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-3">
-                  <div className="flex items-center gap-1.5 text-slate-500 text-[11px] font-medium">
-                    <Heart className="h-3.5 w-3.5 text-emerald-600" />
+                <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-3.5">
+                  <div className="flex items-center gap-1.5 text-slate-600 text-[13px] font-semibold">
+                    <Heart className="h-4 w-4 text-emerald-600" />
                     <span>Plate Adherence</span>
                   </div>
-                  <div className="mt-1 font-display text-lg font-bold text-emerald-700 tabular-nums">
+                  <div className="mt-1.5 font-display text-[22px] font-bold text-emerald-700 tabular-nums">
                     {dietAdherence7d !== null ? `${dietAdherence7d}%` : '—'}
                   </div>
-                  <div className="text-[10px] text-slate-500">Traditional Plate</div>
+                  <div className="text-[12px] text-slate-500">Traditional Plate</div>
                 </div>
 
-                <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-3">
-                  <div className="flex items-center gap-1.5 text-slate-500 text-[11px] font-medium">
-                    <CheckSquare className="h-3.5 w-3.5 text-teal-600" />
+                <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-3.5">
+                  <div className="flex items-center gap-1.5 text-slate-600 text-[13px] font-semibold">
+                    <CheckSquare className="h-4 w-4 text-teal-600" />
                     <span>Habit Streak</span>
                   </div>
-                  <div className="mt-1 font-display text-lg font-bold text-slate-900 tabular-nums">
+                  <div className="mt-1.5 font-display text-[22px] font-bold text-slate-900 tabular-nums">
                     {loggingStreakDays} days
                   </div>
-                  <div className="text-[10px] text-slate-500">Consecutive log active</div>
+                  <div className="text-[12px] text-slate-500">Consecutive log active</div>
                 </div>
               </div>
 
@@ -1291,24 +1291,24 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
             </div>
 
             {/* Complete 52-Week Curriculum Component */}
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 space-y-4">
+            <div className="rounded-2xl border border-slate-200 bg-white p-5.5 space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
                   <div className="flex items-center gap-2">
                     <BookOpen className="h-5 w-5 text-[#0D9488]" />
-                    <h2 className="font-display text-base font-bold text-[#0B2540]">
+                    <h2 className="font-display text-[19px] font-bold text-[#0B2540]">
                       52-Week Indian Nutrition &amp; Prevention Curriculum
                     </h2>
                   </div>
-                  <p className="text-xs text-slate-500 mt-0.5">
+                  <p className="text-[14px] text-slate-600 mt-0.5">
                     Structured 12-month curriculum: Phase 1 (Weeks 1–24) &amp; Phase 2 (Weeks 25–52)
                   </p>
                 </div>
-                <div className="rounded-xl bg-teal-50 border border-teal-200 px-3 py-1.5 text-right">
-                  <div className="text-[11px] font-bold text-teal-900">
+                <div className="rounded-xl bg-teal-50 border border-teal-200 px-3.5 py-2 text-right">
+                  <div className="text-[13px] font-bold text-teal-900">
                     {completedLessonsCount} of 52 weeks completed
                   </div>
-                  <div className="mt-1 h-1.5 w-32 bg-teal-200 rounded-full overflow-hidden">
+                  <div className="mt-1 h-2 w-32 bg-teal-200 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-teal-600 rounded-full transition-all"
                       style={{ width: `${Math.round((completedLessonsCount / 52) * 100)}%` }}
@@ -1319,11 +1319,11 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
 
               {/* Phase Tabs & Category Filters */}
               <div className="flex flex-wrap items-center justify-between gap-2.5 pt-2 border-t border-slate-100">
-                <div className="flex rounded-lg bg-slate-100 p-0.5 text-xs font-semibold">
+                <div className="flex rounded-lg bg-slate-100 p-0.5 text-[13px] font-semibold">
                   <button
                     type="button"
                     onClick={() => setLessonPhaseTab(1)}
-                    className={`rounded-md px-3 py-1 transition-colors ${
+                    className={`rounded-md px-3.5 py-1.5 transition-colors cursor-pointer ${
                       lessonPhaseTab === 1 ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
                     }`}
                   >
@@ -1332,7 +1332,7 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
                   <button
                     type="button"
                     onClick={() => setLessonPhaseTab(2)}
-                    className={`rounded-md px-3 py-1 transition-colors ${
+                    className={`rounded-md px-3.5 py-1.5 transition-colors cursor-pointer ${
                       lessonPhaseTab === 2 ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
                     }`}
                   >
@@ -1341,7 +1341,7 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
                   <button
                     type="button"
                     onClick={() => setLessonPhaseTab(0)}
-                    className={`rounded-md px-3 py-1 transition-colors ${
+                    className={`rounded-md px-3.5 py-1.5 transition-colors cursor-pointer ${
                       lessonPhaseTab === 0 ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
                     }`}
                   >
@@ -1349,13 +1349,13 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
                   </button>
                 </div>
 
-                <div className="flex items-center gap-1.5 overflow-x-auto text-[11px]">
+                <div className="flex items-center gap-1.5 overflow-x-auto text-[13px]">
                   {['All', 'Indian Nutrition', 'Physical Activity', 'Sleep & Stress', 'Monitoring'].map((cat) => (
                     <button
                       key={cat}
                       type="button"
                       onClick={() => setLessonCategoryTab(cat)}
-                      className={`rounded-full px-2.5 py-0.5 font-medium transition-colors whitespace-nowrap ${
+                      className={`rounded-full px-3 py-1 font-medium transition-colors whitespace-nowrap cursor-pointer ${
                         lessonCategoryTab === cat
                           ? 'bg-[#0B2540] text-white'
                           : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
@@ -1374,50 +1374,50 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
                   placeholder="Search lessons by topic, millet, exercise, or Tamil keywords..."
                   value={lessonSearch}
                   onChange={(e) => setLessonSearch(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs focus:bg-white focus:outline-none focus:ring-1 focus:ring-teal-500"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-[14px] text-slate-900 focus:bg-white focus:outline-none focus:ring-1 focus:ring-teal-500"
                 />
               </div>
 
               {/* Lessons List */}
               <div className="divide-y divide-slate-100 max-h-[580px] overflow-y-auto pr-1">
                 {filteredLessons.length === 0 ? (
-                  <div className="py-8 text-center text-xs text-slate-500">
+                  <div className="py-8 text-center text-[14px] text-slate-500">
                     No lessons found matching the selected filters.
                   </div>
                 ) : (
                   filteredLessons.map((les) => (
-                    <div key={les.id} className="py-3.5 space-y-2">
+                    <div key={les.id} className="py-4 space-y-2.5">
                       <div className="flex items-start justify-between gap-4">
                         <div className="min-w-0">
-                          <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                          <div className="flex flex-wrap items-center gap-2 text-[13px] text-slate-500">
                             <span className="font-bold text-slate-800">Week {les.week}</span>
                             <span>·</span>
                             <span>Phase {les.phase} ({les.phase === 1 ? 'Learning' : 'Maintenance'})</span>
                             <span>·</span>
-                            <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-700">
+                            <span className="rounded bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-700">
                               {les.category}
                             </span>
                             <span>·</span>
                             <span>{les.durationMinutes} min</span>
                           </div>
 
-                          <div className="text-sm font-bold text-slate-900 mt-1">
+                          <div className="text-[16px] font-bold text-slate-900 mt-1">
                             {les.title}
                           </div>
-                          <div className="text-xs font-medium text-[#0F766E] mt-0.5">
+                          <div className="text-[14px] font-semibold text-[#0F766E] mt-0.5">
                             {les.titleTa}
                           </div>
 
-                          <p className="mt-1 text-xs text-slate-600">{les.summary}</p>
+                          <p className="mt-1 text-[14px] text-slate-700 leading-relaxed">{les.summary}</p>
                           {les.summaryTa && (
-                            <p className="mt-0.5 text-xs text-slate-500 italic">{les.summaryTa}</p>
+                            <p className="mt-0.5 text-[13px] text-slate-500 italic leading-relaxed">{les.summaryTa}</p>
                           )}
                         </div>
 
                         <button
                           type="button"
                           onClick={() => patient && void onToggleLesson(patient.id, les.id)}
-                          className={`shrink-0 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+                          className={`shrink-0 rounded-xl px-3.5 py-2 text-[13px] font-semibold transition-colors cursor-pointer ${
                             les.completed
                               ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
                               : 'bg-[#0B2540] text-white hover:bg-[#113556]'
@@ -1428,10 +1428,10 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
                       </div>
 
                       {/* Practical Activity & Measurable Target Cards */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] pt-1">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-[13px] pt-1">
                         {les.practicalActivity && (
-                          <div className="rounded-lg bg-teal-50/70 border border-teal-100 p-2 flex items-start gap-1.5 text-teal-900">
-                            <Activity className="h-3.5 w-3.5 text-teal-700 shrink-0 mt-0.5" />
+                          <div className="rounded-xl bg-teal-50/70 border border-teal-100 p-2.5 flex items-start gap-2 text-teal-900 leading-relaxed">
+                            <Activity className="h-4 w-4 text-teal-700 shrink-0 mt-0.5" />
                             <div>
                               <span className="font-bold">Activity: </span>
                               {les.practicalActivity}
@@ -1439,8 +1439,8 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
                           </div>
                         )}
                         {les.measurableHabitTarget && (
-                          <div className="rounded-lg bg-blue-50/70 border border-blue-100 p-2 flex items-start gap-1.5 text-blue-900">
-                            <Target className="h-3.5 w-3.5 text-blue-700 shrink-0 mt-0.5" />
+                          <div className="rounded-xl bg-blue-50/70 border border-blue-100 p-2.5 flex items-start gap-2 text-blue-900 leading-relaxed">
+                            <Target className="h-4 w-4 text-blue-700 shrink-0 mt-0.5" />
                             <div>
                               <span className="font-bold">Weekly Target: </span>
                               {les.measurableHabitTarget}
@@ -1458,41 +1458,41 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
           <div className="lg:col-span-5 space-y-5">
             <form
               onSubmit={handleSaveHabit}
-              className="rounded-2xl border border-slate-200 bg-white p-5 space-y-3.5"
+              className="rounded-2xl border border-slate-200 bg-white p-5.5 space-y-4"
             >
-              <h2 className="font-display text-base font-bold text-[#0B2540]">
+              <h2 className="font-display text-[18px] font-bold text-[#0B2540]">
                 Log Daily Habits &amp; Weekly Check-In
               </h2>
-              <p className="text-xs text-slate-500">
+              <p className="text-[14px] text-slate-600 leading-relaxed">
                 Works offline via IndexedDB. Reporting a barrier or low steps automatically evaluates the deterministic intervention ladder.
               </p>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-3.5">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Date</label>
+                  <label className="block text-[15px] font-semibold text-slate-700 mb-1.5">Date</label>
                   <input
                     type="date"
                     value={habitDate}
                     onChange={(e) => setHabitDate(e.target.value)}
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-xs font-mono"
+                    className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-[15px] font-mono text-slate-900"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Steps Achieved</label>
+                  <label className="block text-[15px] font-semibold text-slate-700 mb-1.5">Steps Achieved</label>
                   <input
                     type="number"
                     min={0}
                     max={40000}
                     value={habitSteps}
                     onChange={(e) => setHabitSteps(Number(e.target.value))}
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-xs font-mono tabular-nums"
+                    className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-[15px] font-mono tabular-nums text-slate-900"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-2.5">
+              <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Sleep (hrs)</label>
+                  <label className="block text-[15px] font-semibold text-slate-700 mb-1.5">Sleep (hrs)</label>
                   <input
                     type="number"
                     step={0.5}
@@ -1500,43 +1500,43 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
                     max={14}
                     value={habitSleep}
                     onChange={(e) => setHabitSleep(Number(e.target.value))}
-                    className="w-full rounded-lg border border-slate-300 px-2.5 py-2 text-xs font-mono tabular-nums"
+                    className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-[15px] font-mono tabular-nums text-slate-900"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Weight (kg)</label>
+                  <label className="block text-[15px] font-semibold text-slate-700 mb-1.5">Weight (kg)</label>
                   <input
                     type="number"
                     step={0.1}
                     value={habitWeight}
                     onChange={(e) => setHabitWeight(Number(e.target.value))}
-                    className="w-full rounded-lg border border-slate-300 px-2.5 py-2 text-xs font-mono tabular-nums"
+                    className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-[15px] font-mono tabular-nums text-slate-900"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Waist (cm)</label>
+                  <label className="block text-[15px] font-semibold text-slate-700 mb-1.5">Waist (cm)</label>
                   <input
                     type="number"
                     step={0.5}
                     value={habitWaist}
                     onChange={(e) => setHabitWaist(Number(e.target.value))}
-                    className="w-full rounded-lg border border-slate-300 px-2.5 py-2 text-xs font-mono tabular-nums"
+                    className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-[15px] font-mono tabular-nums text-slate-900"
                   />
                 </div>
               </div>
 
-              <label className="flex items-center gap-2 text-xs font-medium text-slate-700 cursor-pointer">
+              <label className="flex items-center gap-2.5 text-[14px] font-medium text-slate-800 cursor-pointer pt-1">
                 <input
                   type="checkbox"
                   checked={habitDiet}
                   onChange={(e) => setHabitDiet(e.target.checked)}
-                  className="h-4 w-4 rounded accent-[#0D9488]"
+                  className="h-4.5 w-4.5 rounded accent-[#0D9488]"
                 />
                 Followed balanced Indian plate (vegetables + dal + controlled rice/millet)
               </label>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-[15px] font-semibold text-slate-700 mb-1.5">
                   Barriers or Symptoms (Optional — e.g., &quot;rain&quot;, &quot;shift fatigue&quot;, or &quot;blurred vision&quot;)
                 </label>
                 <input
@@ -1544,48 +1544,48 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
                   value={habitBarrier}
                   onChange={(e) => setHabitBarrier(e.target.value)}
                   placeholder="Share any challenge so your coach can adapt activities"
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-xs"
+                  className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-[15px] text-slate-900"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full rounded-xl bg-[#0D9488] py-2.5 text-xs font-semibold text-white hover:bg-[#0F766E] disabled:opacity-60"
+                className="w-full rounded-xl bg-[#0D9488] py-3 text-[15px] font-semibold text-white hover:bg-[#0F766E] disabled:opacity-60 transition-colors cursor-pointer"
               >
                 {submitting ? 'Logging...' : isOnline ? 'Log Daily Check-In' : 'Queue Habit Log Offline'}
               </button>
             </form>
 
-            <div className="rounded-2xl border border-slate-200 bg-white p-5">
-              <h3 className="font-display text-sm font-bold text-[#0B2540]">
+            <div className="rounded-2xl border border-slate-200 bg-white p-5.5">
+              <h3 className="font-display text-[17px] font-bold text-[#0B2540]">
                 Deterministic Adaptive Intervention Ladder
               </h3>
-              <p className="mt-1 text-[11px] text-slate-500">
+              <p className="mt-1 text-[13px] text-slate-600 leading-relaxed">
                 Clinical escalations use strict deterministic rules. Experimental educational message selection is isolated to pre-approved coaching tips only.
               </p>
 
-              <div className="mt-3 space-y-2.5">
+              <div className="mt-3.5 space-y-3">
                 {patientInterventions.length === 0 ? (
-                  <p className="text-xs text-slate-500">
+                  <p className="text-[14px] text-slate-500">
                     No active barrier interventions triggered. Try logging &lt; 4,000 steps or a barrier note to test the ladder.
                   </p>
                 ) : (
                   patientInterventions.slice(0, 4).map((intv) => (
                     <div
                       key={intv.id}
-                      className={`rounded-xl border p-3 text-xs ${
+                      className={`rounded-xl border p-3.5 text-[14px] ${
                         intv.actionType === 'clinician_escalation'
                           ? 'border-rose-200 bg-rose-50/70'
                           : 'border-slate-200 bg-slate-50'
                       }`}
                     >
-                      <div className="font-semibold text-slate-900">
+                      <div className="font-bold text-slate-900">
                         Step {intv.ladderStep} · {intv.triggerRule}
                       </div>
-                      <p className="mt-1 text-slate-700">{intv.recommendedMessage}</p>
+                      <p className="mt-1 text-slate-700 leading-relaxed">{intv.recommendedMessage}</p>
                       {intv.experimentalBanditArm && (
-                        <div className="mt-1.5 text-[11px] text-[#0F766E]">
+                        <div className="mt-1.5 text-[13px] font-semibold text-[#0F766E]">
                           {intv.experimentalBanditArm}
                         </div>
                       )}
@@ -1599,28 +1599,28 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
       )}
 
       {subTab === 'labs' && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-          <div className="lg:col-span-7 space-y-4">
-            <div className="rounded-2xl border border-slate-200 bg-white p-5">
-              <h2 className="font-display text-base font-bold text-[#0B2540]">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div className="lg:col-span-7 space-y-5">
+            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+              <h2 className="font-display text-[19px] font-bold text-[#0B2540]">
                 Clinical Laboratory Testing Guidance
               </h2>
-              <p className="mt-1 text-xs text-slate-600 leading-relaxed">
+              <p className="mt-2 text-[14px] text-slate-700 leading-relaxed">
                 Lifestyle risk assessments can highlight modifiable habits, but <strong>never diagnose diabetes</strong>. Diagnostic confirmation requires laboratory blood testing ordered and interpreted by an authorised healthcare professional.
               </p>
 
-              <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+              <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-4 text-[14px]">
                 <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                  <div className="font-bold text-[#0B2540]">HbA1c (Glycated Haemoglobin)</div>
-                  <ul className="mt-2 space-y-1 text-slate-600 font-mono text-[11px]">
+                  <div className="font-bold text-[15px] text-[#0B2540]">HbA1c (Glycated Haemoglobin)</div>
+                  <ul className="mt-2 space-y-1.5 text-slate-700 font-mono text-[13px]">
                     <li>Normal reference: &lt; 5.7%</li>
                     <li>Prediabetes range: 5.7% – 6.4%</li>
                     <li>Diabetes threshold: ≥ 6.5%</li>
                   </ul>
                 </div>
                 <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                  <div className="font-bold text-[#0B2540]">Fasting Plasma Glucose (FPG)</div>
-                  <ul className="mt-2 space-y-1 text-slate-600 font-mono text-[11px]">
+                  <div className="font-bold text-[15px] text-[#0B2540]">Fasting Plasma Glucose (FPG)</div>
+                  <ul className="mt-2 space-y-1.5 text-slate-700 font-mono text-[13px]">
                     <li>Normal reference: &lt; 100 mg/dL</li>
                     <li>Impaired fasting: 100 – 125 mg/dL</li>
                     <li>Diabetes threshold: ≥ 126 mg/dL</li>
@@ -1629,27 +1629,27 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
               </div>
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-white p-5">
-              <h3 className="font-display text-sm font-bold text-[#0B2540] mb-3">
+            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+              <h3 className="font-display text-[18px] font-bold text-[#0B2540] mb-4">
                 Recorded Laboratory History ({patient?.name})
               </h3>
               {patientLabs.length === 0 ? (
-                <p className="text-xs text-slate-500">No laboratory records entered yet.</p>
+                <p className="text-[14px] text-slate-500">No laboratory records entered yet.</p>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-3.5">
                   {patientLabs.map((lab) => (
-                    <div key={lab.id} className="rounded-xl border border-slate-200 p-3.5 text-xs">
+                    <div key={lab.id} className="rounded-xl border border-slate-200 p-4 text-[14px] bg-slate-50/50">
                       <div className="flex flex-wrap items-center justify-between gap-2">
-                        <span className="font-mono font-bold text-[#0B2540] tabular-nums">
+                        <span className="font-mono font-bold text-[15px] text-[#0B2540] tabular-nums">
                           HbA1c: {lab.hba1cPercent ?? '—'}% · FPG: {lab.fastingGlucoseMgDl ?? '—'} mg/dL
                         </span>
-                        <span className="text-slate-500">
+                        <span className="text-[13px] text-slate-600">
                           {lab.testedAt.slice(0, 10)} · Recorded by {lab.recordedByName}
                         </span>
                       </div>
-                      <p className="mt-1.5 text-slate-700 font-medium">{lab.guidelineInterpretation}</p>
+                      <p className="mt-2 text-slate-800 font-medium text-[14px]">{lab.guidelineInterpretation}</p>
                       {lab.clinicalNotes && (
-                        <p className="mt-1 text-slate-500">Clinician notes: {lab.clinicalNotes}</p>
+                        <p className="mt-1 text-slate-600 text-[13px]">Clinician notes: {lab.clinicalNotes}</p>
                       )}
                     </div>
                   ))}
@@ -1658,32 +1658,32 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
             </div>
           </div>
 
-          <div className="lg:col-span-5 rounded-2xl border border-slate-200 bg-white p-5">
-            <h3 className="font-display text-base font-bold text-[#0B2540]">
+          <div className="lg:col-span-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h3 className="font-display text-[19px] font-bold text-[#0B2540]">
               Record Laboratory Result (Clinician Only)
             </h3>
             {data.user.role === 'patient' ? (
-              <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-xs text-amber-950 flex items-start gap-2.5">
-                <AlertTriangle className="h-4 w-4 text-amber-700 shrink-0 mt-0.5" />
-                <div>
+              <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-[14px] text-amber-950 flex items-start gap-3">
+                <AlertTriangle className="h-5 w-5 text-amber-700 shrink-0 mt-0.5" />
+                <div className="leading-relaxed">
                   <strong>Role Permission Boundary:</strong> Only authorised Doctors or Administrators may enter laboratory diagnostic values. Switch to the <strong>Doctor</strong> demo role in the top bar to test clinician lab recording.
                 </div>
               </div>
             ) : (
-              <form onSubmit={handleSaveLab} className="mt-4 space-y-3.5">
+              <form onSubmit={handleSaveLab} className="mt-4 space-y-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Test Date</label>
+                  <label className="block text-[15px] font-semibold text-slate-800 mb-1.5">Test Date</label>
                   <input
                     type="date"
                     required
                     value={labDate}
                     onChange={(e) => setLabDate(e.target.value)}
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-xs font-mono"
+                    className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-[15px] font-mono focus:border-[#0D9488] focus:ring-1 focus:ring-[#0D9488] outline-none"
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-3.5">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">HbA1c (%)</label>
+                    <label className="block text-[15px] font-semibold text-slate-800 mb-1.5">HbA1c (%)</label>
                     <input
                       type="number"
                       step="0.1"
@@ -1692,11 +1692,11 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
                       value={labHba1c}
                       onChange={(e) => setLabHba1c(e.target.value)}
                       placeholder="e.g., 6.4"
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-xs font-mono tabular-nums"
+                      className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-[15px] font-mono tabular-nums focus:border-[#0D9488] focus:ring-1 focus:ring-[#0D9488] outline-none"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">FPG (mg/dL)</label>
+                    <label className="block text-[15px] font-semibold text-slate-800 mb-1.5">FPG (mg/dL)</label>
                     <input
                       type="number"
                       min="40"
@@ -1704,12 +1704,12 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
                       value={labFpg}
                       onChange={(e) => setLabFpg(e.target.value)}
                       placeholder="e.g., 118"
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-xs font-mono tabular-nums"
+                      className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-[15px] font-mono tabular-nums focus:border-[#0D9488] focus:ring-1 focus:ring-[#0D9488] outline-none"
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-[15px] font-semibold text-slate-800 mb-1.5">
                     Clinician Interpretation Notes
                   </label>
                   <textarea
@@ -1717,13 +1717,13 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
                     value={labNotes}
                     onChange={(e) => setLabNotes(e.target.value)}
                     placeholder="Document guideline context and follow-up plan..."
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-xs"
+                    className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-[15px] focus:border-[#0D9488] focus:ring-1 focus:ring-[#0D9488] outline-none"
                   />
                 </div>
                 <button
                   type="submit"
                   disabled={submitting || !isOnline}
-                  className="w-full rounded-xl bg-[#0B2540] py-2.5 text-xs font-semibold text-white hover:bg-[#113556] disabled:opacity-50"
+                  className="w-full rounded-xl bg-[#0B2540] py-3 text-[15px] font-semibold text-white hover:bg-[#113556] disabled:opacity-50 transition-colors shadow-sm"
                 >
                   {submitting ? 'Saving...' : 'Save Clinician Lab Record'}
                 </button>
@@ -1736,20 +1736,20 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
       {subTab === 'register' && (
         <form
           onSubmit={handleRegister}
-          className="rounded-2xl border border-slate-200 bg-white p-6 max-w-3xl space-y-4"
+          className="rounded-2xl border border-slate-200 bg-white p-6 max-w-3xl space-y-5 shadow-sm"
         >
           <div>
-            <h2 className="font-display text-lg font-bold text-[#0B2540]">
+            <h2 className="font-display text-[20px] font-bold text-[#0B2540]">
               Patient Registration &amp; Informed Consent
             </h2>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <p className="text-[14px] text-slate-600 mt-1 leading-relaxed">
               Creates a shared longitudinal patient record across Prevent, Detect, and Protect. Primary languages: English and Tamil (Hindi ready).
             </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Full Name</label>
+              <label className="block text-[15px] font-semibold text-slate-800 mb-1.5">Full Name</label>
               <input
                 type="text"
                 required
@@ -1757,12 +1757,12 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
                 value={regForm.name}
                 onChange={(e) => setRegForm({ ...regForm, name: e.target.value })}
                 placeholder="e.g., Muthuvel Krishnan"
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-[15px] focus:border-[#0D9488] focus:ring-1 focus:ring-[#0D9488] outline-none"
               />
             </div>
-            <div className="grid grid-cols-2 gap-2.5">
+            <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Age</label>
+                <label className="block text-[15px] font-semibold text-slate-800 mb-1.5">Age</label>
                 <input
                   type="number"
                   required
@@ -1770,17 +1770,17 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
                   max={100}
                   value={regForm.age}
                   onChange={(e) => setRegForm({ ...regForm, age: Number(e.target.value) })}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm font-mono"
+                  className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-[15px] font-mono focus:border-[#0D9488] focus:ring-1 focus:ring-[#0D9488] outline-none"
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Sex</label>
+                <label className="block text-[15px] font-semibold text-slate-800 mb-1.5">Sex</label>
                 <select
                   value={regForm.sex}
                   onChange={(e) =>
                     setRegForm({ ...regForm, sex: e.target.value as 'Female' | 'Male' | 'Other' })
                   }
-                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+                  className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-[15px] focus:border-[#0D9488] focus:ring-1 focus:ring-[#0D9488] outline-none"
                 >
                   <option value="Female">Female</option>
                   <option value="Male">Male</option>
@@ -1790,23 +1790,23 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Phone</label>
+              <label className="block text-[15px] font-semibold text-slate-800 mb-1.5">Phone</label>
               <input
                 type="text"
                 required
                 value={regForm.phone}
                 onChange={(e) => setRegForm({ ...regForm, phone: e.target.value })}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm font-mono"
+                className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-[15px] font-mono focus:border-[#0D9488] focus:ring-1 focus:ring-[#0D9488] outline-none"
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Preferred Language</label>
+              <label className="block text-[15px] font-semibold text-slate-800 mb-1.5">Preferred Language</label>
               <select
                 value={regForm.language}
                 onChange={(e) =>
                   setRegForm({ ...regForm, language: e.target.value as LanguageCode })
                 }
-                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+                className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-[15px] focus:border-[#0D9488] focus:ring-1 focus:ring-[#0D9488] outline-none"
               >
                 <option value="en">English</option>
                 <option value="ta">தமிழ் (Tamil)</option>
@@ -1815,29 +1815,29 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">District</label>
+              <label className="block text-[15px] font-semibold text-slate-800 mb-1.5">District</label>
               <input
                 type="text"
                 required
                 value={regForm.district}
                 onChange={(e) => setRegForm({ ...regForm, district: e.target.value })}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-[15px] focus:border-[#0D9488] focus:ring-1 focus:ring-[#0D9488] outline-none"
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">PHC / Ward / Village</label>
+              <label className="block text-[15px] font-semibold text-slate-800 mb-1.5">PHC / Ward / Village</label>
               <input
                 type="text"
                 required
                 value={regForm.villageOrWard}
                 onChange={(e) => setRegForm({ ...regForm, villageOrWard: e.target.value })}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-[15px] focus:border-[#0D9488] focus:ring-1 focus:ring-[#0D9488] outline-none"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
+            <label className="block text-[15px] font-semibold text-slate-800 mb-1.5">
               Baseline Clinical Status (Recorded by Patient/Clinician)
             </label>
             <select
@@ -1848,7 +1848,7 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
                   diabetesStatus: e.target.value as 'at_risk' | 'prediabetes_lab' | 'diagnosed_t2d',
                 })
               }
-              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+              className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-[15px] focus:border-[#0D9488] focus:ring-1 focus:ring-[#0D9488] outline-none"
             >
               <option value="at_risk">Lifestyle Prevention Cohort (No Diabetes Diagnosis)</option>
               <option value="prediabetes_lab">Prediabetes (Lab Confirmed by Clinician)</option>
@@ -1856,38 +1856,38 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
             </select>
           </div>
 
-          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-2.5 text-xs text-slate-700">
-            <div className="font-bold text-[#0B2540]">Mandatory Informed Consent</div>
-            <label className="flex items-start gap-2 cursor-pointer">
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-3 text-[14px] text-slate-800">
+            <div className="font-bold text-[15px] text-[#0B2540]">Mandatory Informed Consent</div>
+            <label className="flex items-start gap-2.5 cursor-pointer">
               <input
                 type="checkbox"
                 required
                 checked={regForm.screeningConsent}
                 onChange={(e) => setRegForm({ ...regForm, screeningConsent: e.target.checked })}
-                className="mt-0.5 h-4 w-4 accent-[#0D9488]"
+                className="mt-1 h-4 w-4 accent-[#0D9488]"
               />
-              <span>I consent to participate in lifestyle risk screening and prevention programme tracking.</span>
+              <span className="leading-snug">I consent to participate in lifestyle risk screening and prevention programme tracking.</span>
             </label>
-            <label className="flex items-start gap-2 cursor-pointer">
+            <label className="flex items-start gap-2.5 cursor-pointer">
               <input
                 type="checkbox"
                 required
                 checked={regForm.dataStorageConsent}
                 onChange={(e) => setRegForm({ ...regForm, dataStorageConsent: e.target.checked })}
-                className="mt-0.5 h-4 w-4 accent-[#0D9488]"
+                className="mt-1 h-4 w-4 accent-[#0D9488]"
               />
-              <span>I consent to longitudinal record storage shared with my assigned healthcare team.</span>
+              <span className="leading-snug">I consent to longitudinal record storage shared with my assigned healthcare team.</span>
             </label>
-            <label className="flex items-start gap-2 cursor-pointer">
+            <label className="flex items-start gap-2.5 cursor-pointer">
               <input
                 type="checkbox"
                 checked={regForm.offlineCacheConsent}
                 onChange={(e) => setRegForm({ ...regForm, offlineCacheConsent: e.target.checked })}
-                className="mt-0.5 h-4 w-4 accent-[#0D9488]"
+                className="mt-1 h-4 w-4 accent-[#0D9488]"
               />
-              <span>Allow minimized local IndexedDB caching for offline habit tracking.</span>
+              <span className="leading-snug">Allow minimized local IndexedDB caching for offline habit tracking.</span>
             </label>
-            <label className="flex items-start gap-2 cursor-pointer">
+            <label className="flex items-start gap-2.5 cursor-pointer">
               <input
                 type="checkbox"
                 required
@@ -1895,9 +1895,9 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
                 onChange={(e) =>
                   setRegForm({ ...regForm, clinicalBoundaryAcknowledged: e.target.checked })
                 }
-                className="mt-0.5 h-4 w-4 accent-[#0D9488]"
+                className="mt-1 h-4 w-4 accent-[#0D9488]"
               />
-              <span>
+              <span className="leading-snug">
                 I understand MITRA DRISHTI is a non-diagnostic screening prototype and does not replace physician diagnosis.
               </span>
             </label>
@@ -1906,7 +1906,7 @@ export const PreventModule: React.FC<PreventModuleProps> = ({
           <button
             type="submit"
             disabled={submitting || !isOnline}
-            className="rounded-xl bg-[#0D9488] px-6 py-2.5 text-xs font-semibold text-white hover:bg-[#0F766E] disabled:opacity-50"
+            className="rounded-xl bg-[#0D9488] px-6 py-3 text-[15px] font-semibold text-white hover:bg-[#0F766E] disabled:opacity-50 transition-colors shadow-sm"
           >
             {submitting ? 'Registering...' : 'Register Patient & Create Programme'}
           </button>

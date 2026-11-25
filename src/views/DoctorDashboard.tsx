@@ -44,14 +44,14 @@ export const DoctorDashboard: React.FC<DoctorDashboardProps> = ({
       <section className="relative overflow-hidden rounded-3xl border border-blue-100/70 bg-gradient-to-r from-[#061727] via-[#0B2540] to-[#0D5C75] p-6 text-white shadow-xs">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <div className="inline-flex items-center gap-1.5 rounded-full bg-teal-400/15 border border-teal-300/30 px-3 py-0.5 text-xs font-semibold text-teal-200 mb-2">
-              <Stethoscope className="h-3.5 w-3.5" />
+            <div className="inline-flex items-center gap-1.5 rounded-full bg-teal-400/15 border border-teal-300/30 px-3.5 py-1 text-[13px] font-semibold text-teal-200 mb-2">
+              <Stethoscope className="h-4 w-4" />
               <span>Clinician &amp; Healthcare Worker Workspace · {data.user.facility || 'District Care Network'}</span>
             </div>
             <h1 className="font-display text-2xl sm:text-3xl font-extrabold tracking-tight">
               Welcome, {data.user.name}
             </h1>
-            <p className="mt-1 text-xs sm:text-sm text-slate-200 max-w-2xl leading-relaxed">
+            <p className="mt-1.5 text-[14px] sm:text-[15px] text-slate-100 max-w-2xl leading-relaxed">
               Review AI-assisted retinal screenings, validate Grad-CAM explanations, record laboratory HbA1c/FPG values, and coordinate ophthalmology referrals.
             </p>
           </div>
@@ -59,14 +59,14 @@ export const DoctorDashboard: React.FC<DoctorDashboardProps> = ({
             <button
               type="button"
               onClick={() => onNavigate('protect')}
-              className="inline-flex items-center gap-2 rounded-xl bg-[#0D9488] px-4 py-2.5 text-xs font-semibold text-white hover:bg-[#14B8A6] shadow-sm transition-all whitespace-nowrap cursor-pointer"
+              className="inline-flex items-center gap-2 rounded-xl bg-[#0D9488] px-4.5 py-2.5 text-[14px] font-semibold text-white hover:bg-[#14B8A6] shadow-sm transition-all whitespace-nowrap cursor-pointer"
             >
               <span>Open Clinical Review Queue ({pendingScreenings.length})</span>
             </button>
             <button
               type="button"
               onClick={() => onNavigate('detect')}
-              className="inline-flex items-center gap-2 rounded-xl border border-white/25 bg-white/10 px-4 py-2.5 text-xs font-semibold text-white hover:bg-white/20 transition-all whitespace-nowrap cursor-pointer"
+              className="inline-flex items-center gap-2 rounded-xl border border-white/25 bg-white/10 px-4.5 py-2.5 text-[14px] font-semibold text-white hover:bg-white/20 transition-all whitespace-nowrap cursor-pointer"
             >
               <span>New Retinal Screening</span>
             </button>
@@ -76,62 +76,62 @@ export const DoctorDashboard: React.FC<DoctorDashboardProps> = ({
 
       {/* 4 KPI Summary Strip */}
       <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 lg:gap-4.5">
-        <div className="rounded-2xl border border-blue-100/70 bg-white p-4.5 shadow-xs flex flex-col justify-between">
+        <div className="rounded-2xl border border-blue-100/70 bg-white p-5 shadow-xs flex flex-col justify-between">
           <div className="flex items-center justify-between text-slate-500">
-            <span className="text-xs font-semibold text-slate-700">Assigned Cohort</span>
+            <span className="text-[14px] font-semibold text-slate-700">Assigned Cohort</span>
             <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-teal-50 text-[#0D9488]">
               <Users className="h-4 w-4" />
             </div>
           </div>
-          <div className="mt-3 font-display text-2xl font-extrabold text-[#0B2540] tabular-nums">
+          <div className="mt-3 font-display text-[26px] font-bold text-[#0B2540] tabular-nums">
             {data.patients.length}
           </div>
-          <div className="mt-1 text-xs text-slate-500">
+          <div className="mt-1 text-[13px] text-slate-600">
             {data.patients.filter((p) => p.diabetesStatus === 'diagnosed_t2d').length} eligible for retinal screening
           </div>
         </div>
 
-        <div className="rounded-2xl border border-blue-100/70 bg-white p-4.5 shadow-xs flex flex-col justify-between">
+        <div className="rounded-2xl border border-blue-100/70 bg-white p-5 shadow-xs flex flex-col justify-between">
           <div className="flex items-center justify-between text-slate-500">
-            <span className="text-xs font-semibold text-slate-700">Unreviewed Screenings</span>
+            <span className="text-[14px] font-semibold text-slate-700">Unreviewed Screenings</span>
             <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-rose-50 text-rose-600">
               <Eye className="h-4 w-4" />
             </div>
           </div>
-          <div className="mt-3 font-display text-2xl font-extrabold text-rose-700 tabular-nums">
+          <div className="mt-3 font-display text-[26px] font-bold text-rose-700 tabular-nums">
             {pendingScreenings.length}
           </div>
-          <div className="mt-1 text-xs text-slate-500">
+          <div className="mt-1 text-[13px] text-slate-600">
             Mandatory physician confirmation required
           </div>
         </div>
 
-        <div className="rounded-2xl border border-blue-100/70 bg-white p-4.5 shadow-xs flex flex-col justify-between">
+        <div className="rounded-2xl border border-blue-100/70 bg-white p-5 shadow-xs flex flex-col justify-between">
           <div className="flex items-center justify-between text-slate-500">
-            <span className="text-xs font-semibold text-slate-700">Active Referrals</span>
+            <span className="text-[14px] font-semibold text-slate-700">Active Referrals</span>
             <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-sky-50 text-sky-600">
               <Send className="h-4 w-4" />
             </div>
           </div>
-          <div className="mt-3 font-display text-2xl font-extrabold text-[#0B2540] tabular-nums">
+          <div className="mt-3 font-display text-[26px] font-bold text-[#0B2540] tabular-nums">
             {openReferrals.length}
           </div>
-          <div className="mt-1 text-xs text-slate-500">
+          <div className="mt-1 text-[13px] text-slate-600">
             {data.referrals.filter((r) => r.status === 'Completed').length} completed with specialist feedback
           </div>
         </div>
 
-        <div className="rounded-2xl border border-blue-100/70 bg-white p-4.5 shadow-xs flex flex-col justify-between">
+        <div className="rounded-2xl border border-blue-100/70 bg-white p-5 shadow-xs flex flex-col justify-between">
           <div className="flex items-center justify-between text-slate-500">
-            <span className="text-xs font-semibold text-slate-700">Missed / Escalated</span>
+            <span className="text-[14px] font-semibold text-slate-700">Missed / Escalated</span>
             <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
               <CalendarClock className="h-4 w-4" />
             </div>
           </div>
-          <div className="mt-3 font-display text-2xl font-extrabold text-amber-700 tabular-nums">
+          <div className="mt-3 font-display text-[26px] font-bold text-amber-700 tabular-nums">
             {missedAppointments.length + activeEscalations.length}
           </div>
-          <div className="mt-1 text-xs text-slate-500">
+          <div className="mt-1 text-[13px] text-slate-600">
             {missedAppointments.length} missed visits · {activeEscalations.length} escalations
           </div>
         </div>
@@ -139,20 +139,20 @@ export const DoctorDashboard: React.FC<DoctorDashboardProps> = ({
 
       {/* Pending Clinical Review Cards */}
       <section className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-5">
-        <div className="lg:col-span-7 rounded-2xl border border-blue-100/70 bg-white p-4.5 lg:p-5 shadow-xs">
+        <div className="lg:col-span-7 rounded-2xl border border-blue-100/70 bg-white p-5 lg:p-6 shadow-xs">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="font-display text-base font-bold text-[#0B2540]">
+              <h2 className="font-display text-[18px] font-bold text-[#0B2540]">
                 Retinal Screenings Requiring Doctor Review
               </h2>
-              <p className="text-xs text-slate-500">
+              <p className="mt-0.5 text-[14px] text-slate-600">
                 AI outputs are screening assistance only — confirm, modify, or request recapture.
               </p>
             </div>
             <button
               type="button"
               onClick={() => onNavigate('protect')}
-              className="text-xs font-semibold text-[#0D9488] hover:underline"
+              className="text-[14px] font-semibold text-[#0D9488] hover:underline"
             >
               Open Protect →
             </button>
@@ -161,21 +161,21 @@ export const DoctorDashboard: React.FC<DoctorDashboardProps> = ({
           {pendingScreenings.length === 0 ? (
             <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-6 text-center">
               <CheckCircle2 className="mx-auto h-7 w-7 text-emerald-600" />
-              <div className="mt-2 text-sm font-semibold text-slate-900">
+              <div className="mt-2 text-[15px] font-semibold text-slate-900">
                 All retinal screenings reviewed
               </div>
-              <p className="mt-1 text-xs text-slate-600">
+              <p className="mt-1 text-[14px] text-slate-600">
                 No unreviewed AI-assisted findings remain in your queue.
               </p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-3.5">
               {pendingScreenings.map((scr) => {
                 const pat = data.patients.find((p) => p.id === scr.patientId);
                 return (
                   <div
                     key={scr.id}
-                    className="flex flex-col sm:flex-row items-start sm:items-center gap-4 rounded-xl border border-slate-200 p-3.5 hover:bg-slate-50/80 transition-colors"
+                    className="flex flex-col sm:flex-row items-start sm:items-center gap-4 rounded-xl border border-slate-200 p-4 hover:bg-slate-50/80 transition-colors"
                   >
                     <FundusVisualizer
                       preset={scr.imagePreset}
@@ -186,24 +186,24 @@ export const DoctorDashboard: React.FC<DoctorDashboardProps> = ({
                       className="h-24 w-24 shrink-0"
                     />
                     <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
-                        <span className="font-semibold text-slate-900 text-sm">
+                      <div className="flex flex-wrap items-center gap-2 text-[13px] text-slate-500">
+                        <span className="font-bold text-slate-900 text-[16px]">
                           {pat?.name || scr.patientId}
                         </span>
                         <span>·</span>
-                        <span className="font-mono">{pat?.mrn}</span>
+                        <span className="font-mono text-slate-700">{pat?.mrn}</span>
                         <span>·</span>
-                        <span>{scr.eye}</span>
+                        <span className="text-slate-700">{scr.eye}</span>
                       </div>
-                      <div className="mt-1 text-xs font-semibold text-rose-700">
+                      <div className="mt-1 text-[14px] font-bold text-rose-700">
                         {scr.modelPrediction.gradeLabel}
                       </div>
-                      <p className="mt-1 text-xs text-slate-600 line-clamp-2">{scr.summaryText}</p>
+                      <p className="mt-1 text-[14px] text-slate-700 leading-relaxed line-clamp-2">{scr.summaryText}</p>
                     </div>
                     <button
                       type="button"
                       onClick={() => onNavigate('protect', scr.patientId)}
-                      className="shrink-0 rounded-lg bg-[#0B2540] px-3.5 py-2 text-xs font-semibold text-white hover:bg-[#113556]"
+                      className="shrink-0 rounded-xl bg-[#0B2540] px-4 py-2.5 text-[14px] font-semibold text-white hover:bg-[#113556] transition-colors"
                     >
                       Review Case
                     </button>
@@ -215,38 +215,38 @@ export const DoctorDashboard: React.FC<DoctorDashboardProps> = ({
         </div>
 
         {/* Missed Appointments & Escalations */}
-        <div className="lg:col-span-5 rounded-2xl border border-blue-100/70 bg-white p-4.5 lg:p-5 shadow-xs">
+        <div className="lg:col-span-5 rounded-2xl border border-blue-100/70 bg-white p-5 lg:p-6 shadow-xs">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-display text-base font-bold text-[#0B2540]">
+            <h2 className="font-display text-[18px] font-bold text-[#0B2540]">
               Follow-up Escalations &amp; Missed Visits
             </h2>
             <button
               type="button"
               onClick={() => onNavigate('appointments')}
-              className="text-xs font-semibold text-[#0D9488] hover:underline"
+              className="text-[14px] font-semibold text-[#0D9488] hover:underline"
             >
               Manage →
             </button>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-3.5">
             {missedAppointments.map((apt) => {
               const pat = data.patients.find((p) => p.id === apt.patientId);
               return (
                 <div
                   key={apt.id}
-                  className="rounded-xl border border-amber-200 bg-amber-50/60 p-3.5"
+                  className="rounded-xl border border-amber-200 bg-amber-50/60 p-4"
                 >
-                  <div className="flex items-center gap-2 text-xs font-semibold text-amber-900">
-                    <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0" />
+                  <div className="flex items-center gap-2 text-[14px] font-bold text-amber-900">
+                    <AlertTriangle className="h-4.5 w-4.5 text-amber-600 shrink-0" />
                     <span>Missed: {apt.title}</span>
                   </div>
-                  <div className="mt-1 text-xs text-slate-700">
+                  <div className="mt-1 text-[14px] text-slate-700">
                     {pat?.name} ({pat?.mrn}) · Scheduled {apt.scheduledDate}
                   </div>
                   <button
                     type="button"
                     onClick={() => onNavigate('protect', apt.patientId)}
-                    className="mt-2 text-xs font-semibold text-[#0B2540] hover:underline"
+                    className="mt-2 text-[13px] font-semibold text-[#0B2540] hover:underline"
                   >
                     Open patient continuity record →
                   </button>
@@ -262,12 +262,12 @@ export const DoctorDashboard: React.FC<DoctorDashboardProps> = ({
                 return (
                   <div
                     key={intv.id}
-                    className="rounded-xl border border-slate-200 bg-slate-50/70 p-3.5"
+                    className="rounded-xl border border-slate-200 bg-slate-50/70 p-4"
                   >
-                    <div className="text-xs font-semibold text-slate-900">
+                    <div className="text-[14px] font-bold text-slate-900">
                       Adaptive Ladder Step {intv.ladderStep} · {pat?.name}
                     </div>
-                    <p className="mt-1 text-xs text-slate-600">{intv.recommendedMessage}</p>
+                    <p className="mt-1 text-[13px] text-slate-700 leading-relaxed">{intv.recommendedMessage}</p>
                   </div>
                 );
               })}
@@ -279,34 +279,34 @@ export const DoctorDashboard: React.FC<DoctorDashboardProps> = ({
       <section className="rounded-2xl border border-blue-100/70 bg-white shadow-xs overflow-hidden">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-blue-100/60 px-5 py-4 bg-slate-50/50">
           <div>
-            <h2 className="font-display text-base font-bold text-[#0B2540]">
+            <h2 className="font-display text-[18px] font-bold text-[#0B2540]">
               Shared Patient Registry (Prevent · Detect · Protect)
             </h2>
-            <p className="text-xs text-slate-500">
+            <p className="mt-0.5 text-[14px] text-slate-600">
               All three pillars read and write to unified longitudinal patient records.
             </p>
           </div>
-          <span className="text-xs font-mono text-slate-500 tabular-nums">
+          <span className="text-[13px] font-mono text-slate-600 tabular-nums">
             Showing {filteredPatients.length} of {data.patients.length} patient(s)
           </span>
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50 text-slate-600 border-b border-slate-200">
+          <table className="w-full text-left">
+            <thead className="bg-slate-50 text-slate-700 border-b border-slate-200 text-[13px] font-bold uppercase tracking-wider">
               <tr>
-                <th className="px-5 py-3 font-semibold">Patient / MRN</th>
-                <th className="px-4 py-3 font-semibold">Clinical Status</th>
-                <th className="px-4 py-3 font-semibold">Latest Risk Score</th>
-                <th className="px-4 py-3 font-semibold">Latest Lab (HbA1c / FPG)</th>
-                <th className="px-4 py-3 font-semibold">Retinal Review</th>
-                <th className="px-5 py-3 font-semibold text-right">Action</th>
+                <th className="px-5 py-3.5">Patient / MRN</th>
+                <th className="px-4 py-3.5">Clinical Status</th>
+                <th className="px-4 py-3.5">Latest Risk Score</th>
+                <th className="px-4 py-3.5">Latest Lab (HbA1c / FPG)</th>
+                <th className="px-4 py-3.5">Retinal Review</th>
+                <th className="px-5 py-3.5 text-right">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-slate-100 text-[15px]">
               {filteredPatients.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-5 py-8 text-center text-xs text-slate-500">
+                  <td colSpan={6} className="px-5 py-8 text-center text-[15px] text-slate-500">
                     No matching patient records found.
                   </td>
                 </tr>
@@ -317,28 +317,28 @@ export const DoctorDashboard: React.FC<DoctorDashboardProps> = ({
                   const scr = data.screenings.find((s) => s.patientId === pat.id);
                   return (
                     <tr key={pat.id} className="hover:bg-slate-50/80 transition-colors">
-                      <td className="px-5 py-3.5">
-                        <div className="font-semibold text-slate-900">{pat.name}</div>
-                        <div className="font-mono text-[11px] text-slate-500">
+                      <td className="px-5 py-4">
+                        <div className="font-bold text-slate-900 text-[15px]">{pat.name}</div>
+                        <div className="font-mono text-[13px] text-slate-600">
                           {pat.mrn} · {pat.age}y {pat.sex} · {pat.district}
                         </div>
                       </td>
-                      <td className="px-4 py-3.5 text-slate-700">
+                      <td className="px-4 py-4 text-slate-800 font-medium">
                         {pat.diabetesStatus === 'diagnosed_t2d'
                           ? 'Diagnosed Type 2 Diabetes'
                           : pat.diabetesStatus === 'prediabetes_lab'
                           ? 'Prediabetes (Lab Confirmed)'
                           : 'Lifestyle Prevention'}
                       </td>
-                      <td className="px-4 py-3.5 font-mono tabular-nums text-slate-800">
+                      <td className="px-4 py-4 font-mono tabular-nums text-slate-800 font-medium">
                         {asm ? `${asm.experimentalScore}/100 (${asm.riskCategory})` : 'Not assessed'}
                       </td>
-                      <td className="px-4 py-3.5 font-mono tabular-nums text-slate-800">
+                      <td className="px-4 py-4 font-mono tabular-nums text-slate-800 font-medium">
                         {lab
                           ? `${lab.hba1cPercent ?? '—'}% / ${lab.fastingGlucoseMgDl ?? '—'} mg/dL`
                           : 'Pending lab'}
                       </td>
-                      <td className="px-4 py-3.5">
+                      <td className="px-4 py-4 font-medium">
                         {scr ? (
                           <span
                             className={`font-semibold ${
@@ -353,13 +353,13 @@ export const DoctorDashboard: React.FC<DoctorDashboardProps> = ({
                           <span className="text-slate-400">Not screened</span>
                         )}
                       </td>
-                      <td className="px-5 py-3.5 text-right">
+                      <td className="px-5 py-4 text-right">
                         <button
                           type="button"
                           onClick={() => onNavigate('protect', pat.id)}
-                          className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-[#0B2540] hover:bg-slate-100"
+                          className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-[14px] font-semibold text-[#0B2540] hover:bg-slate-100 transition-colors shadow-2xs"
                         >
-                          <Stethoscope className="h-3.5 w-3.5 text-[#0D9488]" />
+                          <Stethoscope className="h-4 w-4 text-[#0D9488]" />
                           Open Chart
                         </button>
                       </td>

@@ -194,8 +194,8 @@ export interface ImageQualityAssessment {
   width: number;
   height: number;
   gradable: boolean;
-  rejectionReason?: string;
-  recaptureGuidance?: string;
+  rejectionReason?: string | null;
+  recaptureGuidance?: string | null;
 }
 
 export type ICDRGrade = 0 | 1 | 2 | 3 | 4 | null;
@@ -218,7 +218,7 @@ export interface RetinalScreening {
     hardExudatesFlag: boolean;
     haemorrhagesFlag: boolean;
     microaneurysmsExperimentalNote: string;
-    implementationStatus: 'Illustrative / Prototype Heuristic';
+    implementationStatus: string;
   };
   modelPrediction: {
     modelVersion: string;
@@ -229,11 +229,22 @@ export interface RetinalScreening {
     uncertainty: number; // 0-1
     oodFlag: boolean;
     gradeWithheld: boolean;
-    withholdReason?: string;
+    withholdReason?: string | null;
     isIllustrativeOutput: boolean;
+    activeModelFile?: string;
+    calibrationThreshold?: number;
+    isImprovedModel?: boolean;
+    calibratedProbabilities?: number[];
+    pReferable?: number;
+    isReferable?: boolean;
+    triageRecommendation?: string;
+    monteCarloVariance?: any;
+    predictiveEntropy?: number;
   };
+  inferenceDurationMs?: number;
   gradCam: {
     available: boolean;
+    heatmapDataUrl?: string;
     hotspots: { x: number; y: number; radius: number; intensity: number }[];
     limitationNotice: string;
   };

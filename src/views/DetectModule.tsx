@@ -32,6 +32,7 @@ interface DetectModuleProps {
     payload: Omit<RetinalScreening, 'id' | 'capturedAt' | 'humanReviewStatus' | 'summaryText'>
   ) => Promise<void>;
   onNavigateProtect: () => void;
+  authToken?: string | null;
 }
 
 const SEVEN_STEPS = [
@@ -120,6 +121,7 @@ export const DetectModule: React.FC<DetectModuleProps> = ({
   isOnline,
   onSubmitScreening,
   onNavigateProtect,
+  authToken,
 }) => {
   const [subTab, setSubTab] = useState<'pipeline' | 'datasets' | 'history'>('pipeline');
   const [preset, setPreset] = useState<
@@ -142,7 +144,7 @@ export const DetectModule: React.FC<DetectModuleProps> = ({
   useEffect(() => {
     if (subTab === 'datasets') {
       setLoadingStats(true);
-      const token = localStorage.getItem('mitra_drishti_token') || localStorage.getItem('mritidhristi_token');
+      const token = authToken || localStorage.getItem('mitra_drishti_token') || localStorage.getItem('mritidhristi_token');
       fetch('/api/detect/dataset-stats', {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       })
@@ -155,7 +157,7 @@ export const DetectModule: React.FC<DetectModuleProps> = ({
         .catch(() => undefined)
         .finally(() => setLoadingStats(false));
     }
-  }, [subTab]);
+  }, [subTab, authToken]);
 
   const hiddenCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
@@ -180,12 +182,12 @@ export const DetectModule: React.FC<DetectModuleProps> = ({
         setAnalysis(analyzeRetinalCanvasPixels(canvas, 'uploaded_custom'));
 
         if (isOnline) {
-          const token = localStorage.getItem('mitra_drishti_token') || localStorage.getItem('mritidhristi_token');
+          const effectiveToken = authToken || localStorage.getItem('mitra_drishti_token') || localStorage.getItem('mritidhristi_token');
           fetch('/api/detect/predict', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+              ...(effectiveToken ? { Authorization: `Bearer ${effectiveToken}` } : {}),
             },
             body: JSON.stringify({ imageDataUrl: customDataUrl }),
           })
@@ -198,6 +200,7 @@ export const DetectModule: React.FC<DetectModuleProps> = ({
                   lesionFindings: res.lesionFindings,
                   modelPrediction: res.modelPrediction,
                   gradCam: res.gradCam,
+                  inferenceDurationMs: res.inferenceDurationMs,
                 });
               }
             })
@@ -213,7 +216,7 @@ export const DetectModule: React.FC<DetectModuleProps> = ({
       renderSyntheticFundusToCanvas(canvas, demoKey, { stage: 'raw' });
       setAnalysis(analyzeRetinalCanvasPixels(canvas, demoKey));
     }
-  }, [preset, customDataUrl]);
+  }, [preset, customDataUrl, authToken, isOnline]);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFeedback(null);
@@ -286,24 +289,24 @@ export const DetectModule: React.FC<DetectModuleProps> = ({
 
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold text-[#12598C]">
+          <p className="text-sm font-semibold text-[#12598C]">
             Pillar Two · AI-Assisted Diabetic Retinopathy Screening (7-Step Pipeline)
           </p>
-          <h1 className="font-display text-2xl font-bold text-[#0B2540]">
+          <h1 className="font-display text-[28px] font-bold text-[#0B2540] leading-tight">
             DETECT — Retinal Screening &amp; Explainable AI
           </h1>
         </div>
 
         {data.patients.length > 1 && (
-          <div className="flex items-center gap-2">
-            <label htmlFor="detect-patient" className="text-xs font-semibold text-slate-600">
+          <div className="flex items-center gap-2.5">
+            <label htmlFor="detect-patient" className="text-[15px] font-semibold text-slate-700">
               Patient:
             </label>
             <select
               id="detect-patient"
               value={patient?.id || ''}
               onChange={(e) => onSelectPatient(e.target.value)}
-              className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800"
+              className="rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-[15px] font-semibold text-slate-800 shadow-2xs"
             >
               {data.patients.map((p) => (
                 <option key={p.id} value={p.id}>
@@ -316,15 +319,15 @@ export const DetectModule: React.FC<DetectModuleProps> = ({
       </div>
 
       {!isEligible && patient && (
-        <div className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-xs text-amber-950 flex items-start gap-2.5">
-          <AlertTriangle className="h-4 w-4 text-amber-700 shrink-0 mt-0.5" />
+        <div className="rounded-xl border border-amber-300 bg-amber-50 px-4.5 py-3.5 text-[15px] text-amber-950 flex items-start gap-3 leading-relaxed">
+          <AlertTriangle className="h-5 w-5 text-amber-700 shrink-0 mt-0.5" />
           <div>
             <strong>Eligibility Clinical Boundary:</strong> Diabetic retinopathy screening is intended for individuals already diagnosed with diabetes. <strong>{patient.name}</strong> is currently classified as <em>{patient.diabetesStatus}</em>. Confirm clinical eligibility or laboratory diagnosis before screening.
           </div>
         </div>
       )}
 
-      <div className="flex flex-wrap gap-1.5 rounded-xl bg-slate-200/70 p-1">
+      <div className="flex flex-wrap gap-2 rounded-xl bg-slate-200/70 p-1.5">
         {[
           { id: 'pipeline', label: 'Acquisition & 7-Step Pipeline', icon: Layers },
           { id: 'datasets', label: 'Dataset Architecture (APTOS/IDRiD/DRIVE/Messidor-2)', icon: Database },
@@ -337,11 +340,11 @@ export const DetectModule: React.FC<DetectModuleProps> = ({
               key={tab.id}
               type="button"
               onClick={() => setSubTab(tab.id as typeof subTab)}
-              className={`inline-flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-xs font-semibold transition-colors whitespace-nowrap ${
+              className={`inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-[15px] font-semibold transition-colors whitespace-nowrap cursor-pointer ${
                 active ? 'bg-white text-[#0B2540] shadow-xs' : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              <Icon className="h-3.5 w-3.5 text-[#12598C]" />
+              <Icon className="h-4 w-4 text-[#12598C]" />
               {tab.label}
             </button>
           );
@@ -350,7 +353,7 @@ export const DetectModule: React.FC<DetectModuleProps> = ({
 
       {feedback && (
         <div
-          className={`rounded-xl border px-4 py-3 text-xs font-medium flex items-center justify-between gap-3 ${
+          className={`rounded-xl border px-4.5 py-3.5 text-[15px] font-medium flex items-center justify-between gap-3 ${
             feedback.type === 'success'
               ? 'border-emerald-200 bg-emerald-50 text-emerald-900'
               : 'border-rose-200 bg-rose-50 text-rose-900'
@@ -361,7 +364,7 @@ export const DetectModule: React.FC<DetectModuleProps> = ({
             <button
               type="button"
               onClick={onNavigateProtect}
-              className="shrink-0 rounded-lg bg-[#0B2540] px-3 py-1.5 text-xs font-semibold text-white"
+              className="shrink-0 rounded-lg bg-[#0B2540] px-4 py-2 text-sm font-semibold text-white hover:bg-[#123658]"
             >
               Go to Doctor Review →
             </button>
@@ -372,28 +375,28 @@ export const DetectModule: React.FC<DetectModuleProps> = ({
       {subTab === 'pipeline' && (
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
           <div className="xl:col-span-4 space-y-4">
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 space-y-3.5">
-              <h2 className="font-display text-base font-bold text-[#0B2540]">
+            <div className="rounded-2xl border border-slate-200 bg-white p-5.5 space-y-4">
+              <h2 className="font-display text-[19px] font-bold text-[#0B2540]">
                 A. Retinal Image Acquisition
               </h2>
-              <p className="text-xs text-slate-500">
+              <p className="text-[14px] text-slate-600 leading-relaxed">
                 Upload a retinal image (PNG/JPEG/WebP, max 4.5MB) or select a synthetic demonstration capture to inspect all 7 stages.
               </p>
 
-              <div className="grid grid-cols-2 gap-2.5">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-600 mb-1">Eye</label>
+                  <label className="block text-[14px] font-semibold text-slate-700 mb-1.5">Eye</label>
                   <select
                     value={eye}
                     onChange={(e) => setEye(e.target.value as 'Left (OS)' | 'Right (OD)')}
-                    className="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-medium"
+                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-[15px] font-medium text-slate-800"
                   >
                     <option value="Left (OS)">Left (OS)</option>
                     <option value="Right (OD)">Right (OD)</option>
                   </select>
                 </div>
-                <div>
-                  <label className="block text-[11px] font-semibold text-slate-600 mb-1">Demo Sample</label>
+                <div className="sm:col-span-2">
+                  <label className="block text-[14px] font-semibold text-slate-700 mb-1.5">Demo Sample</label>
                   <select
                     value={preset}
                     onChange={(e) => {
@@ -403,7 +406,7 @@ export const DetectModule: React.FC<DetectModuleProps> = ({
                         setCameraSource('Remidio FOP Non-Mydriatic Fundus Camera (Synthetic Demo)');
                       }
                     }}
-                    className="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-medium"
+                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-[15px] font-medium text-slate-800"
                   >
                     <option value="normal_demo">Synthetic: Normal (Grade 0)</option>
                     <option value="moderate_npdr_demo">Synthetic: Moderate NPDR</option>
@@ -413,8 +416,8 @@ export const DetectModule: React.FC<DetectModuleProps> = ({
                 </div>
               </div>
 
-              <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-xs font-semibold text-[#0B2540] hover:bg-slate-100 transition-colors">
-                <Upload className="h-4 w-4 text-[#0D9488]" />
+              <label className="flex cursor-pointer items-center justify-center gap-2.5 rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-3.5 text-[15px] font-semibold text-[#0B2540] hover:bg-slate-100 transition-colors">
+                <Upload className="h-4.5 w-4.5 text-[#0D9488]" />
                 <span>Upload Retinal Image File</span>
                 <input
                   type="file"
@@ -425,23 +428,23 @@ export const DetectModule: React.FC<DetectModuleProps> = ({
               </label>
 
               <div>
-                <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                <label className="block text-[14px] font-semibold text-slate-700 mb-1.5">
                   Camera / Source Metadata
                 </label>
                 <input
                   type="text"
                   value={cameraSource}
                   onChange={(e) => setCameraSource(e.target.value)}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-1.5 text-xs"
+                  className="w-full rounded-lg border border-slate-300 px-3.5 py-2 text-[15px] text-slate-800"
                 />
               </div>
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-white p-5">
-              <h2 className="font-display text-sm font-bold text-[#0B2540] mb-3">
+            <div className="rounded-2xl border border-slate-200 bg-white p-5.5">
+              <h2 className="font-display text-[19px] font-bold text-[#0B2540] mb-3.5">
                 B. Seven-Step Processing Pipeline
               </h2>
-              <div className="space-y-1.5">
+              <div className="space-y-2">
                 {SEVEN_STEPS.map((st) => {
                   const active = activeStep === st.num;
                   const blocked =
@@ -451,14 +454,14 @@ export const DetectModule: React.FC<DetectModuleProps> = ({
                       key={st.num}
                       type="button"
                       onClick={() => setActiveStep(st.num)}
-                      className={`flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-xs transition-colors ${
+                      className={`flex w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-left text-[15px] transition-colors cursor-pointer ${
                         active
-                          ? 'bg-[#0B2540] text-white font-semibold'
+                          ? 'bg-[#0B2540] text-white font-semibold shadow-xs'
                           : 'text-slate-700 hover:bg-slate-100'
                       }`}
                     >
                       <span
-                        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full font-mono text-[11px] ${
+                        className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full font-mono text-xs font-bold ${
                           active
                             ? 'bg-[#0D9488] text-white'
                             : blocked
@@ -468,9 +471,9 @@ export const DetectModule: React.FC<DetectModuleProps> = ({
                       >
                         {st.num}
                       </span>
-                      <span className="truncate flex-1">{st.title}</span>
+                      <span className="flex-1 font-medium leading-snug">{st.title}</span>
                       {blocked && (
-                        <span className="text-[10px] font-semibold text-rose-500">Halted</span>
+                        <span className="text-xs font-bold text-rose-500 bg-rose-50 px-1.5 py-0.5 rounded">Halted</span>
                       )}
                     </button>
                   );
@@ -480,27 +483,27 @@ export const DetectModule: React.FC<DetectModuleProps> = ({
           </div>
 
           <div className="xl:col-span-8 space-y-5">
-            <div className="rounded-2xl border border-slate-200 bg-white p-5">
-              <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <div className="rounded-2xl border border-slate-200 bg-white p-6">
+              <div className="flex flex-wrap items-center justify-between gap-3 mb-4.5">
                 <div>
-                  <div className="text-xs font-semibold text-[#12598C]">
+                  <div className="text-sm font-semibold text-[#12598C]">
                     Step {activeStep} of 7 · Prototype Demonstration Mode (Illustrative Outputs Clearly Labelled)
                   </div>
-                  <h2 className="font-display text-lg font-bold text-[#0B2540]">
+                  <h2 className="font-display text-[22px] font-bold text-[#0B2540]">
                     {SEVEN_STEPS[activeStep - 1].title}
                   </h2>
                 </div>
 
                 {activeStep === 6 && (
-                  <div className="flex items-center gap-3 text-xs">
-                    <label className="flex items-center gap-1.5 cursor-pointer">
+                  <div className="flex items-center gap-4 text-sm font-medium text-slate-700">
+                    <label className="flex items-center gap-2 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={compareSideBySide}
                         onChange={(e) => setCompareSideBySide(e.target.checked)}
-                        className="accent-[#0D9488]"
+                        className="accent-[#0D9488] h-4 w-4"
                       />
-                      Side-by-side
+                      <span>Side-by-side</span>
                     </label>
                     <label className="flex items-center gap-2">
                       <span>Heatmap</span>
@@ -511,7 +514,7 @@ export const DetectModule: React.FC<DetectModuleProps> = ({
                         step={0.05}
                         value={gradCamOpacity}
                         onChange={(e) => setGradCamOpacity(Number(e.target.value))}
-                        className="w-20 accent-[#0D9488]"
+                        className="w-24 accent-[#0D9488]"
                       />
                     </label>
                   </div>
@@ -519,7 +522,7 @@ export const DetectModule: React.FC<DetectModuleProps> = ({
               </div>
 
               <div
-                className={`grid gap-4 ${
+                className={`grid gap-4.5 ${
                   activeStep === 6 && compareSideBySide
                     ? 'grid-cols-1 sm:grid-cols-2'
                     : 'grid-cols-1 md:grid-cols-12 items-start'
@@ -561,37 +564,37 @@ export const DetectModule: React.FC<DetectModuleProps> = ({
                       />
                     </div>
 
-                    <div className="md:col-span-6 space-y-3 text-xs">
+                    <div className="md:col-span-6 space-y-3.5 text-[15px]">
                       {analysis && (
                         <>
                           <div
-                            className={`rounded-xl border p-4 ${
+                            className={`rounded-xl border p-4.5 ${
                               analysis.quality.gradable
                                 ? 'border-emerald-200 bg-emerald-50/50'
                                 : 'border-rose-300 bg-rose-50'
                             }`}
                           >
-                            <div className="flex items-center gap-2 font-bold text-slate-900">
+                            <div className="flex items-center gap-2 text-[17px] font-bold text-slate-900">
                               {analysis.quality.gradable ? (
-                                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                                <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
                               ) : (
-                                <ShieldAlert className="h-4 w-4 text-rose-600" />
+                                <ShieldAlert className="h-5 w-5 text-rose-600 shrink-0" />
                               )}
                               <span>
                                 Step 1 Quality Gate:{' '}
                                 {analysis.quality.gradable ? 'GRADABLE' : 'UNGRADABLE — REJECTED'}
                               </span>
                             </div>
-                            <div className="mt-2 grid grid-cols-2 gap-2 font-mono text-[11px] text-slate-700 tabular-nums">
+                            <div className="mt-2.5 grid grid-cols-2 gap-2.5 font-mono text-[15px] font-semibold text-slate-800 tabular-nums">
                               <div>Sharpness: {analysis.quality.sharpnessScore}/100</div>
                               <div>Brightness: {analysis.quality.brightnessMean}/255</div>
-                              <div>Clipped Exposure: {analysis.quality.exposureClipPercent}%</div>
+                              <div>Clipped: {analysis.quality.exposureClipPercent}%</div>
                               <div>
-                                Resolution: {analysis.quality.width}×{analysis.quality.height}
+                                Res: {analysis.quality.width}×{analysis.quality.height}
                               </div>
                             </div>
                             {!analysis.quality.gradable && (
-                              <div className="mt-2.5 text-rose-900 space-y-1">
+                              <div className="mt-3 text-[14px] text-rose-900 space-y-1 leading-relaxed">
                                 <div>
                                   <strong>Reason:</strong> {analysis.quality.rejectionReason}
                                 </div>
@@ -602,55 +605,121 @@ export const DetectModule: React.FC<DetectModuleProps> = ({
                             )}
                           </div>
 
-                          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-1.5">
-                            <div className="font-bold text-[#0B2540]">
+                          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4.5 space-y-2">
+                            <div className="text-[17px] font-bold text-[#0B2540]">
                               Anatomy &amp; Lesion Candidates ({analysis.lesionFindings.implementationStatus})
                             </div>
-                            <div className="text-slate-700">
-                              Optic Disc: {analysis.anatomicalStructures.opticDiscDetected ? 'Localized' : 'Not resolved'} ·
-                              Macula: {analysis.anatomicalStructures.maculaCentered ? 'Centered' : 'Off-axis'} ·
+                            <div className="text-[15px] text-slate-800 leading-relaxed">
+                              Optic Disc: <strong>{analysis.anatomicalStructures.opticDiscDetected ? 'Localized' : 'Not resolved'}</strong> ·
+                              Macula: <strong>{analysis.anatomicalStructures.maculaCentered ? 'Centered' : 'Off-axis'}</strong> ·
                               Vessel Index:{' '}
-                              <span className="font-mono tabular-nums">
+                              <span className="font-mono font-semibold tabular-nums">
                                 {analysis.anatomicalStructures.vesselDensityIndex}
                               </span>
                             </div>
-                            <div className="text-slate-700">
+                            <div className="text-[15px] text-slate-800 leading-relaxed">
                               Hard Exudates:{' '}
-                              <strong>{analysis.lesionFindings.hardExudatesFlag ? 'Candidate Flagged' : 'None Flagged'}</strong>{' '}
+                              <strong className={analysis.lesionFindings.hardExudatesFlag ? 'text-amber-700' : 'text-slate-700'}>
+                                {analysis.lesionFindings.hardExudatesFlag ? 'Candidate Flagged' : 'None Flagged'}
+                              </strong>{' '}
                               · Haemorrhages:{' '}
-                              <strong>{analysis.lesionFindings.haemorrhagesFlag ? 'Candidate Flagged' : 'None Flagged'}</strong>
+                              <strong className={analysis.lesionFindings.haemorrhagesFlag ? 'text-rose-700' : 'text-slate-700'}>
+                                {analysis.lesionFindings.haemorrhagesFlag ? 'Candidate Flagged' : 'None Flagged'}
+                              </strong>
                             </div>
-                            <p className="text-[11px] text-slate-500">
+                            <p className="text-[13px] text-slate-600 leading-relaxed">
                               {analysis.lesionFindings.microaneurysmsExperimentalNote}
                             </p>
                           </div>
 
                           <div
-                            className={`rounded-xl border p-4 space-y-1.5 ${
+                            className={`rounded-xl border p-4.5 space-y-3 ${
                               analysis.modelPrediction.gradeWithheld
                                 ? 'border-amber-300 bg-amber-50/80'
                                 : 'border-sky-200 bg-sky-50/60'
                             }`}
                           >
-                            <div className="font-bold text-[#0B2540]">
-                              Step 5 Screening Output &amp; Reliability Gate
+                            <div className="flex items-center justify-between">
+                              <div className="text-[17px] font-bold text-[#0B2540]">
+                                Step 5 Screening Output &amp; Reliability Gate
+                              </div>
+                              {analysis.inferenceDurationMs && (
+                                <span className="font-mono text-[12px] font-semibold text-slate-700 bg-white/90 px-2.5 py-0.5 rounded-full border border-slate-200">
+                                  Latency: {analysis.inferenceDurationMs} ms
+                                </span>
+                              )}
                             </div>
-                            <div className="text-sm font-bold text-slate-900">
+                            <div className="text-[19px] font-bold text-slate-900">
                               {analysis.modelPrediction.gradeLabel}
                             </div>
-                            <div className="font-mono text-[11px] text-slate-600 tabular-nums">
+                            <div className="font-mono text-[15px] font-semibold text-slate-800 tabular-nums">
                               Confidence: {Math.round(analysis.modelPrediction.confidence * 100)}% ·
                               Uncertainty: {Math.round(analysis.modelPrediction.uncertainty * 100)}% ·
                               OOD Flag: {analysis.modelPrediction.oodFlag ? 'YES (Withheld)' : 'No'}
                             </div>
+
+                            {/* Five-Class Probability Distribution */}
+                            {analysis.modelPrediction.calibratedProbabilities && analysis.modelPrediction.calibratedProbabilities.length === 5 && (
+                              <div className="rounded-lg border border-slate-200/80 bg-white/95 p-3 space-y-2">
+                                <div className="text-[12px] font-bold text-slate-600 uppercase tracking-wide">
+                                  Five-Class Probability Distribution (Temperature Calibrated)
+                                </div>
+                                <div className="grid grid-cols-5 gap-1.5 text-center text-[12px]">
+                                  {[
+                                    { grade: 0, label: 'G0: None' },
+                                    { grade: 1, label: 'G1: Mild' },
+                                    { grade: 2, label: 'G2: Moderate' },
+                                    { grade: 3, label: 'G3: Severe' },
+                                    { grade: 4, label: 'G4: PDR' },
+                                  ].map(({ grade, label }) => {
+                                    const prob = analysis.modelPrediction.calibratedProbabilities![grade];
+                                    const isPredicted = analysis.modelPrediction.icdrGrade === grade;
+                                    return (
+                                      <div
+                                        key={grade}
+                                        className={`rounded-md p-1.5 border ${
+                                          isPredicted
+                                            ? 'border-teal-500 bg-teal-50/90 font-bold text-teal-900 shadow-xs'
+                                            : 'border-slate-100 bg-slate-50 text-slate-600'
+                                        }`}
+                                      >
+                                        <div className="truncate text-[11px] font-medium">{label}</div>
+                                        <div className="font-mono text-[13px] font-bold mt-0.5">{Math.round(prob * 100)}%</div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                                {typeof analysis.modelPrediction.pReferable === 'number' && (
+                                  <div className="text-[13px] pt-1.5 text-slate-700 flex flex-wrap items-center justify-between border-t border-slate-100 gap-2">
+                                    <span>
+                                      Referable DR Risk (G ≥ 2): <strong>{Math.round(analysis.modelPrediction.pReferable * 100)}%</strong> (τ* = {analysis.modelPrediction.calibrationThreshold || 0.38})
+                                    </span>
+                                    <span className={`px-2.5 py-0.5 rounded-full font-semibold text-[12px] ${
+                                      analysis.modelPrediction.isReferable ? 'bg-rose-100 text-rose-800' : 'bg-emerald-100 text-emerald-800'
+                                    }`}>
+                                      {analysis.modelPrediction.isReferable ? 'Referable DR Suspected' : 'Non-Referable DR'}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+
                             {analysis.modelPrediction.withholdReason && (
-                              <p className="text-amber-950 font-medium">
+                              <p className="text-[14px] text-amber-950 font-semibold leading-relaxed">
                                 Safe Withholding Active: {analysis.modelPrediction.withholdReason}
                               </p>
                             )}
-                            <p className="text-[11px] text-slate-600">
-                              Model: {analysis.modelPrediction.modelVersion} · Requires mandatory clinician review.
-                            </p>
+                            <div className="text-[13px] text-slate-600 space-y-0.5 border-t border-slate-200/60 pt-2">
+                              <div>
+                                <strong>Model:</strong> {analysis.modelPrediction.modelVersion} ({analysis.modelPrediction.activeModelFile || 'dr_classifier_improved.keras'})
+                              </div>
+                              <div className="truncate text-slate-500 text-[12px]">
+                                <strong>Architecture:</strong> {analysis.modelPrediction.architectureReference}
+                              </div>
+                              <div className="text-amber-800 font-medium text-[12px] pt-0.5">
+                                ⚠️ <em>Clinical Notice: Experimental AI research screening prototype. Mandatory Doctor Review required prior to clinical triage.</em>
+                              </div>
+                            </div>
                           </div>
                         </>
                       )}
@@ -660,22 +729,22 @@ export const DetectModule: React.FC<DetectModuleProps> = ({
               </div>
 
               {activeStep >= 6 && analysis && (
-                <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-xs text-slate-700">
+                <div className="mt-4.5 rounded-xl border border-slate-200 bg-slate-50 px-4.5 py-3 text-[14px] text-slate-700 leading-relaxed">
                   <strong>Grad-CAM Explainability Limitation:</strong> {analysis.gradCam.limitationNotice}
                 </div>
               )}
 
-              <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4">
-                <div className="text-xs text-slate-500">
+              <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4.5">
+                <div className="text-[14px] text-slate-600">
                   Submitting creates a shared annotated report linked to <strong>{patient?.name}</strong> and notifies the reviewing doctor.
                 </div>
                 <button
                   type="button"
                   disabled={submitting || !analysis || !isOnline}
                   onClick={() => void handleSubmitReport()}
-                  className="inline-flex items-center gap-2 rounded-xl bg-[#0D9488] px-5 py-2.5 text-xs font-semibold text-white hover:bg-[#0F766E] disabled:opacity-50"
+                  className="inline-flex items-center gap-2 rounded-xl bg-[#0D9488] px-6 py-3 text-[15px] font-semibold text-white hover:bg-[#0F766E] disabled:opacity-50 transition-colors cursor-pointer"
                 >
-                  <Eye className="h-4 w-4" />
+                  <Eye className="h-4.5 w-4.5" />
                   {submitting
                     ? 'Generating Report...'
                     : isOnline
@@ -695,84 +764,84 @@ export const DetectModule: React.FC<DetectModuleProps> = ({
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-teal-100/90 px-3 py-1 text-[11px] font-semibold text-teal-900">
-                    <ShieldCheck className="h-3.5 w-3.5 text-teal-700" />
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-teal-100/90 px-3.5 py-1 text-[13px] font-semibold text-teal-900">
+                    <ShieldCheck className="h-4 w-4 text-teal-700" />
                     Phase 5 Curated Retinal Pipeline
                   </span>
-                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100/90 px-2.5 py-1 text-[11px] font-semibold text-emerald-900">
-                    <CheckCircle2 className="h-3 w-3 text-emerald-700" />
+                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100/90 px-3 py-1 text-[13px] font-semibold text-emerald-900">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-700" />
                     Zero Split Leakage Verified
                   </span>
                 </div>
-                <h2 className="mt-2 font-display text-xl font-bold text-[#0B2540]">
+                <h2 className="mt-2.5 font-display text-[22px] font-bold text-[#0B2540] leading-tight">
                   {datasetStats.manifest?.dataset_name || 'APTOS 2019 Blindness Detection (MITRA DRISHTI Curated)'}
                 </h2>
-                <p className="mt-1 text-xs text-slate-600 max-w-2xl leading-relaxed">
+                <p className="mt-1.5 text-[14px] text-slate-700 max-w-2xl leading-relaxed">
                   <strong>Cohort Origin:</strong> Aravind Eye Hospital clinics across Tamil Nadu, India. 3,662 genuine clinical retinal fundus examinations graded under the International Clinical Diabetic Retinopathy (ICDR) scale. Zero synthetic images; audited for genuine CNN training.
                 </p>
               </div>
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-                <span className="rounded-xl border border-teal-200 bg-white/80 px-3.5 py-2 text-xs font-medium text-slate-700 shadow-xs">
-                  <span className="text-slate-500 font-mono text-[11px] block">Curated Version</span>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2.5">
+                <span className="rounded-xl border border-teal-200 bg-white/90 px-4 py-2.5 text-[14px] font-semibold text-slate-800 shadow-xs">
+                  <span className="text-slate-500 font-mono text-[12px] block">Curated Version</span>
                   v5.0.0 (Leakage-Free)
                 </span>
-                <span className="rounded-xl border border-amber-200 bg-amber-50/80 px-3.5 py-2 text-xs font-semibold text-amber-900 shadow-xs">
-                  <span className="text-amber-700 font-mono text-[11px] block">CNN Model Training</span>
+                <span className="rounded-xl border border-amber-200 bg-amber-50/90 px-4 py-2.5 text-[14px] font-semibold text-amber-900 shadow-xs">
+                  <span className="text-amber-700 font-mono text-[12px] block">CNN Model Training</span>
                   Phase 6 Scheduled
                 </span>
               </div>
             </div>
 
             {/* 4 KPI Metrics */}
-            <div className="mt-5 grid grid-cols-2 lg:grid-cols-4 gap-3.5">
-              <div className="rounded-xl border border-slate-200/90 bg-white p-3.5 shadow-xs">
-                <div className="flex items-center justify-between text-slate-500 text-xs font-medium">
+            <div className="mt-6 grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="rounded-xl border border-slate-200/90 bg-white p-4 shadow-xs">
+                <div className="flex items-center justify-between text-slate-600 text-[14px] font-semibold">
                   <span>Total Scans</span>
-                  <Database className="h-4 w-4 text-teal-600" />
+                  <Database className="h-4.5 w-4.5 text-teal-600" />
                 </div>
-                <div className="mt-1.5 text-2xl font-bold text-slate-900 font-display">
+                <div className="mt-2 text-[26px] font-bold text-slate-900 font-display">
                   {datasetStats.manifest?.total_inspected_images?.toLocaleString() || '3,662'}
                 </div>
-                <div className="mt-0.5 text-[11px] text-emerald-700 font-medium">
+                <div className="mt-1 text-[13px] text-emerald-700 font-medium">
                   100% Genuine Clinical Fundus Scans
                 </div>
               </div>
 
-              <div className="rounded-xl border border-slate-200/90 bg-white p-3.5 shadow-xs">
-                <div className="flex items-center justify-between text-slate-500 text-xs font-medium">
+              <div className="rounded-xl border border-slate-200/90 bg-white p-4 shadow-xs">
+                <div className="flex items-center justify-between text-slate-600 text-[14px] font-semibold">
                   <span>Partition Split</span>
-                  <Split className="h-4 w-4 text-indigo-600" />
+                  <Split className="h-4.5 w-4.5 text-indigo-600" />
                 </div>
-                <div className="mt-1.5 text-lg font-bold text-slate-900 font-display">
+                <div className="mt-2 text-[20px] font-bold text-slate-900 font-display">
                   73.9% / 11.6% / 14.5%
                 </div>
-                <div className="mt-0.5 text-[11px] text-slate-600">
+                <div className="mt-1 text-[13px] text-slate-600">
                   Train ({datasetStats.manifest?.splits?.train_count || 2706}) · Val ({datasetStats.manifest?.splits?.val_count || 424}) · Test ({datasetStats.manifest?.splits?.test_count || 532})
                 </div>
               </div>
 
-              <div className="rounded-xl border border-slate-200/90 bg-white p-3.5 shadow-xs">
-                <div className="flex items-center justify-between text-slate-500 text-xs font-medium">
+              <div className="rounded-xl border border-slate-200/90 bg-white p-4 shadow-xs">
+                <div className="flex items-center justify-between text-slate-600 text-[14px] font-semibold">
                   <span>Quality Audit Gate</span>
-                  <Activity className="h-4 w-4 text-emerald-600" />
+                  <Activity className="h-4.5 w-4.5 text-emerald-600" />
                 </div>
-                <div className="mt-1.5 text-2xl font-bold text-emerald-700 font-display">
+                <div className="mt-2 text-[26px] font-bold text-emerald-700 font-display">
                   {datasetStats.qualityReport?.pass_rate_pct || 100}% Passed
                 </div>
-                <div className="mt-0.5 text-[11px] text-slate-600">
+                <div className="mt-1 text-[13px] text-slate-600">
                   Mean Blur Var: {datasetStats.qualityReport?.mean_laplacian_variance || 260.7} · Lum: {datasetStats.qualityReport?.mean_fov_luminance || 87.7}
                 </div>
               </div>
 
-              <div className="rounded-xl border border-slate-200/90 bg-white p-3.5 shadow-xs">
-                <div className="flex items-center justify-between text-slate-500 text-xs font-medium">
+              <div className="rounded-xl border border-slate-200/90 bg-white p-4 shadow-xs">
+                <div className="flex items-center justify-between text-slate-600 text-[14px] font-semibold">
                   <span>Duplicate Clusters</span>
-                  <Layers className="h-4 w-4 text-sky-600" />
+                  <Layers className="h-4.5 w-4.5 text-sky-600" />
                 </div>
-                <div className="mt-1.5 text-2xl font-bold text-slate-900 font-display">
+                <div className="mt-2 text-[26px] font-bold text-slate-900 font-display">
                   2,429
                 </div>
-                <div className="mt-0.5 text-[11px] text-teal-700 font-medium">
+                <div className="mt-1 text-[13px] text-teal-700 font-medium">
                   dHash &amp; MD5 Bound (0 Leaks)
                 </div>
               </div>
@@ -783,34 +852,34 @@ export const DetectModule: React.FC<DetectModuleProps> = ({
           <div className="rounded-2xl border border-slate-200 bg-white p-6 space-y-4 shadow-sm">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
-                <h3 className="font-display text-base font-bold text-[#0B2540]">
+                <h3 className="font-display text-[19px] font-bold text-[#0B2540]">
                   ICDR 5-Class Distribution &amp; Clinical Class Weighting
                 </h3>
-                <p className="text-xs text-slate-600">
+                <p className="mt-1 text-[14px] text-slate-600">
                   Calculated inverse frequency and effective sample weights (Cui et al., CVPR) for Phase 6 CNN training.
                 </p>
               </div>
-              <span className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-500">
-                <BarChart3 className="h-3.5 w-3.5 text-teal-600" />
+              <span className="inline-flex items-center gap-1.5 text-[13px] font-medium text-slate-600">
+                <BarChart3 className="h-4 w-4 text-teal-600" />
                 Quarantined Held-Out Test Set: 532 Scans
               </span>
             </div>
 
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs border-collapse">
+              <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-slate-200 bg-slate-50/70 text-[11px] font-semibold text-slate-700 uppercase tracking-wider">
-                    <th className="py-2.5 px-3">Grade</th>
-                    <th className="py-2.5 px-3">ICDR Classification</th>
-                    <th className="py-2.5 px-3">Overall Scans</th>
-                    <th className="py-2.5 px-3">Train Scans</th>
-                    <th className="py-2.5 px-3">Train Proportion</th>
-                    <th className="py-2.5 px-3">Inverse Weight (wc)</th>
-                    <th className="py-2.5 px-3">Effective Weight</th>
-                    <th className="py-2.5 px-3">Clinical Action</th>
+                  <tr className="border-b border-slate-200 bg-slate-50/70 text-[13px] font-bold text-slate-700 uppercase tracking-wider">
+                    <th className="py-3 px-3.5">Grade</th>
+                    <th className="py-3 px-3.5">ICDR Classification</th>
+                    <th className="py-3 px-3.5">Overall Scans</th>
+                    <th className="py-3 px-3.5">Train Scans</th>
+                    <th className="py-3 px-3.5">Train Proportion</th>
+                    <th className="py-3 px-3.5">Inverse Weight (wc)</th>
+                    <th className="py-3 px-3.5">Effective Weight</th>
+                    <th className="py-3 px-3.5">Clinical Action</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 font-medium">
+                <tbody className="divide-y divide-slate-100 text-[15px] font-medium">
                   {[
                     { grade: 0, name: 'No DR', count: 1805, train: 1382, pct: '51.1%', inv: '0.3916', eff: '0.2129', action: 'Annual Routine Screening' },
                     { grade: 1, name: 'Mild NPDR', count: 370, train: 266, pct: '9.8%', inv: '2.0346', eff: '1.0470', action: 'Lifestyle / PREVENT Glycemic Control' },
@@ -819,32 +888,32 @@ export const DetectModule: React.FC<DetectModuleProps> = ({
                     { grade: 4, name: 'Proliferative DR', count: 295, train: 208, pct: '7.7%', inv: '2.6019', eff: '1.3350', action: 'Immediate PRP Laser / Anti-VEGF' },
                   ].map((row) => (
                     <tr key={row.grade} className="hover:bg-slate-50/60 transition-colors">
-                      <td className="py-2.5 px-3">
-                        <span className="inline-flex h-6 w-6 items-center justify-center rounded-lg bg-slate-100 font-bold text-slate-800 text-xs">
+                      <td className="py-3 px-3.5">
+                        <span className="inline-flex h-6.5 w-6.5 items-center justify-center rounded-lg bg-slate-100 font-bold text-slate-800 text-[13px]">
                           {row.grade}
                         </span>
                       </td>
-                      <td className="py-2.5 px-3 font-semibold text-slate-900">{row.name}</td>
-                      <td className="py-2.5 px-3 font-mono text-slate-700">{row.count.toLocaleString()}</td>
-                      <td className="py-2.5 px-3 font-mono text-slate-700">{row.train.toLocaleString()}</td>
-                      <td className="py-2.5 px-3 text-slate-600">{row.pct}</td>
-                      <td className="py-2.5 px-3 font-mono text-teal-800 font-semibold">{row.inv}</td>
-                      <td className="py-2.5 px-3 font-mono text-indigo-700">{row.eff}</td>
-                      <td className="py-2.5 px-3 text-[11px] text-slate-600">{row.action}</td>
+                      <td className="py-3 px-3.5 font-semibold text-slate-900">{row.name}</td>
+                      <td className="py-3 px-3.5 font-mono text-slate-700">{row.count.toLocaleString()}</td>
+                      <td className="py-3 px-3.5 font-mono text-slate-700">{row.train.toLocaleString()}</td>
+                      <td className="py-3 px-3.5 text-slate-700">{row.pct}</td>
+                      <td className="py-3 px-3.5 font-mono text-teal-800 font-semibold">{row.inv}</td>
+                      <td className="py-3 px-3.5 font-mono text-indigo-700 font-semibold">{row.eff}</td>
+                      <td className="py-3 px-3.5 text-[13px] text-slate-700 font-medium">{row.action}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
 
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-xs text-slate-700 space-y-1 leading-relaxed">
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4.5 text-[14px] text-slate-700 space-y-1.5 leading-relaxed">
               <div className="font-semibold text-slate-900">Clinical AI Governance &amp; Leakage Prevention:</div>
-              <ul className="list-disc pl-4 space-y-1 text-slate-600">
+              <ul className="list-disc pl-5 space-y-1 text-slate-700">
                 <li>
                   <strong>Duplicate Cluster Protection:</strong> 128 exact duplicates and 1,233 near-duplicate links (dHash Hamming distance &le; 2) are bound into atomic clusters, ensuring duplicate scans never cross between train, validation, and test splits.
                 </li>
                 <li>
-                  <strong>Quarantined Test Set:</strong> The held-out test split (<code className="rounded bg-slate-200/80 px-1 py-0.5 text-[11px] font-mono">datasets/splits/test.csv</code>) contains 532 scans and is strictly quarantined from hyperparameter tuning and augmentations.
+                  <strong>Quarantined Test Set:</strong> The held-out test split (<code className="rounded bg-slate-200/80 px-1 py-0.5 text-[12px] font-mono">datasets/splits/test.csv</code>) contains 532 scans and is strictly quarantined from hyperparameter tuning and augmentations.
                 </li>
                 <li>
                   <strong>Class Imbalance Strategy:</strong> Training will combine Focal Loss (&gamma;=2.0) with inverse frequency class weights to prevent majority-class dominance on Grade 0 scans.
@@ -856,17 +925,17 @@ export const DetectModule: React.FC<DetectModuleProps> = ({
           {/* Multi-Cohort Benchmark Specifications */}
           <div className="rounded-2xl border border-slate-200 bg-white p-6 space-y-4 shadow-sm">
             <div>
-              <h3 className="font-display text-base font-bold text-[#0B2540]">
+              <h3 className="font-display text-[19px] font-bold text-[#0B2540]">
                 Multi-Cohort Retinal Dataset Governance
               </h3>
-              <p className="mt-1 text-xs text-slate-600 leading-relaxed max-w-3xl">
+              <p className="mt-1 text-[14px] text-slate-600 leading-relaxed max-w-3xl">
                 MITRA DRISHTI evaluates models across distinct Indian and international cohorts to ensure generalizability across non-mydriatic camera hardware.
               </p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {DATASET_SPECS.map((ds) => (
-                <div key={ds.name} className="rounded-xl border border-slate-200 p-4 space-y-2 text-xs">
-                  <div className="font-display text-sm font-bold text-[#0B2540]">{ds.name}</div>
+                <div key={ds.name} className="rounded-xl border border-slate-200 p-4.5 space-y-2 text-[14px]">
+                  <div className="font-display text-[16px] font-bold text-[#0B2540]">{ds.name}</div>
                   <div className="text-slate-700">
                     <strong>Role:</strong> {ds.role}
                   </div>
@@ -885,18 +954,18 @@ export const DetectModule: React.FC<DetectModuleProps> = ({
       )}
 
       {subTab === 'history' && (
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 space-y-3">
-          <h2 className="font-display text-base font-bold text-[#0B2540]">
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 space-y-4 shadow-sm">
+          <h2 className="font-display text-[19px] font-bold text-[#0B2540]">
             Retinal Screening History — {patient?.name}
           </h2>
           {patientScreenings.length === 0 ? (
-            <p className="text-xs text-slate-500">No retinal screenings recorded for this patient yet.</p>
+            <p className="text-[15px] text-slate-500">No retinal screenings recorded for this patient yet.</p>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-3.5">
               {patientScreenings.map((scr) => (
                 <div
                   key={scr.id}
-                  className="flex flex-col sm:flex-row items-start sm:items-center gap-4 rounded-xl border border-slate-200 p-4 text-xs"
+                  className="flex flex-col sm:flex-row items-start sm:items-center gap-4 rounded-xl border border-slate-200 p-4 text-[15px]"
                 >
                   <FundusVisualizer
                     preset={scr.imagePreset}
@@ -907,14 +976,14 @@ export const DetectModule: React.FC<DetectModuleProps> = ({
                     className="h-20 w-20 shrink-0"
                   />
                   <div className="min-w-0 flex-1 space-y-1">
-                    <div className="font-semibold text-slate-900">
+                    <div className="text-[16px] font-bold text-slate-900">
                       {scr.eye} · {scr.modelPrediction.gradeLabel}
                     </div>
-                    <div className="text-slate-500 font-mono text-[11px] tabular-nums">
+                    <div className="text-slate-500 font-mono text-[13px] tabular-nums">
                       {new Date(scr.capturedAt).toLocaleString()} · Sharpness {scr.quality.sharpnessScore}/100 ·
                       Review: <strong className="text-slate-800">{scr.humanReviewStatus}</strong>
                     </div>
-                    <p className="text-slate-600">{scr.summaryText}</p>
+                    <p className="text-[14px] text-slate-700 leading-relaxed">{scr.summaryText}</p>
                   </div>
                 </div>
               ))}
