@@ -136,6 +136,8 @@ export const DetectModule: React.FC<DetectModuleProps> = ({
   const [gradCamOpacity, setGradCamOpacity] = useState(0.65);
   const [compareSideBySide, setCompareSideBySide] = useState(true);
   const [analysis, setAnalysis] = useState<PipelineAnalysisOutput | null>(null);
+  const [inferenceLoading, setInferenceLoading] = useState(false);
+  const [inferenceError, setInferenceError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [datasetStats, setDatasetStats] = useState<typeof FALLBACK_DATASET_STATS>(FALLBACK_DATASET_STATS);
@@ -173,13 +175,16 @@ export const DetectModule: React.FC<DetectModuleProps> = ({
     if (!ctx) return;
 
     if (preset === 'uploaded_custom' && customDataUrl) {
+      setInferenceLoading(true);
+      setInferenceError(null);
       const img = new Image();
       img.onload = () => {
         canvas.width = Math.min(512, img.width);
         canvas.height = Math.min(512, img.height);
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        setAnalysis(analyzeRetinalCanvasPixels(canvas, 'uploaded_custom'));
+        const preliminaryClientAnalysis = analyzeRetinalCanvasPixels(canvas, 'uploaded_custom');
+        setAnalysis(preliminaryClientAnalysis);
 
         if (isOnline) {
           const effectiveToken = authToken || localStorage.getItem('mitra_drishti_token') || localStorage.getItem('mritidhristi_token');
@@ -191,7 +196,13 @@ export const DetectModule: React.FC<DetectModuleProps> = ({
             },
             body: JSON.stringify({ imageDataUrl: customDataUrl }),
           })
-            .then((r) => (r.ok ? r.json() : null))
+            .then(async (r) => {
+              if (!r.ok) {
+                const err = await r.json().catch(() => ({ error: `Inference failed with HTTP ${r.status}` }));
+                throw new Error(err.error || `Server returned HTTP ${r.status}`);
+              }
+              return r.json();
+            })
             .then((res) => {
               if (res?.success) {
                 setAnalysis({
@@ -202,13 +213,24 @@ export const DetectModule: React.FC<DetectModuleProps> = ({
                   gradCam: res.gradCam,
                   inferenceDurationMs: res.inferenceDurationMs,
                 });
+                setInferenceLoading(false);
+              } else {
+                throw new Error(res?.error || 'Inference engine did not return valid prediction results.');
               }
             })
-            .catch(() => undefined);
+            .catch((err) => {
+              console.error('CNN inference failed:', err);
+              setInferenceError(err instanceof Error ? err.message : 'CNN retinal inference failed.');
+              setInferenceLoading(false);
+            });
+        } else {
+          setInferenceLoading(false);
         }
       };
       img.src = customDataUrl;
     } else {
+      setInferenceLoading(false);
+      setInferenceError(null);
       canvas.width = 384;
       canvas.height = 384;
       const demoKey: RetinalPresetKey =
@@ -606,12 +628,19 @@ export const DetectModule: React.FC<DetectModuleProps> = ({
                           </div>
 
                           <div className="rounded-xl border border-slate-200 bg-slate-50 p-4.5 space-y-2">
-                            <div className="text-[17px] font-bold text-[#0B2540]">
-                              Anatomy &amp; Lesion Candidates ({analysis.lesionFindings.implementationStatus})
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <div className="text-[17px] font-bold text-[#0B2540]">
+                                Anatomical Structures &amp; Lesion Candidates
+                              </div>
+                              <span className="text-[11px] font-semibold text-slate-600 bg-slate-200/90 px-2.5 py-0.5 rounded-full">
+                                {analysis.lesionFindings.implementationStatus.includes('Illustrative')
+                                  ? 'Illustrative / Morphological Heuristic'
+                                  : `${analysis.lesionFindings.implementationStatus} (Heuristic Morphological Filter)`}
+                              </span>
                             </div>
                             <div className="text-[15px] text-slate-800 leading-relaxed">
-                              Optic Disc: <strong>{analysis.anatomicalStructures.opticDiscDetected ? 'Localized' : 'Not resolved'}</strong> ·
-                              Macula: <strong>{analysis.anatomicalStructures.maculaCentered ? 'Centered' : 'Off-axis'}</strong> ·
+                              Optic Disc: <strong>{analysis.anatomicalStructures.opticDiscDetected ? 'Localized (Heuristic)' : 'Not resolved'}</strong> ·
+                              Macula: <strong>{analysis.anatomicalStructures.maculaCentered ? 'Centered (Heuristic)' : 'Off-axis'}</strong> ·
                               Vessel Index:{' '}
                               <span className="font-mono font-semibold tabular-nums">
                                 {analysis.anatomicalStructures.vesselDensityIndex}
@@ -620,107 +649,144 @@ export const DetectModule: React.FC<DetectModuleProps> = ({
                             <div className="text-[15px] text-slate-800 leading-relaxed">
                               Hard Exudates:{' '}
                               <strong className={analysis.lesionFindings.hardExudatesFlag ? 'text-amber-700' : 'text-slate-700'}>
-                                {analysis.lesionFindings.hardExudatesFlag ? 'Candidate Flagged' : 'None Flagged'}
+                                {analysis.lesionFindings.hardExudatesFlag ? 'Candidate Flagged (Heuristic)' : 'None Flagged'}
                               </strong>{' '}
                               · Haemorrhages:{' '}
                               <strong className={analysis.lesionFindings.haemorrhagesFlag ? 'text-rose-700' : 'text-slate-700'}>
-                                {analysis.lesionFindings.haemorrhagesFlag ? 'Candidate Flagged' : 'None Flagged'}
+                                {analysis.lesionFindings.haemorrhagesFlag ? 'Candidate Flagged (Heuristic)' : 'None Flagged'}
                               </strong>
                             </div>
-                            <p className="text-[13px] text-slate-600 leading-relaxed">
-                              {analysis.lesionFindings.microaneurysmsExperimentalNote}
+                            <p className="text-[12px] text-slate-500 leading-relaxed italic">
+                              ℹ️ Note: Anatomical structures and lesion candidates are illustrative morphological pre-filters. Full clinical diagnosis requires ophthalmologist review and calibrated U-Net segmentation.
                             </p>
                           </div>
 
-                          <div
-                            className={`rounded-xl border p-4.5 space-y-3 ${
-                              analysis.modelPrediction.gradeWithheld
-                                ? 'border-amber-300 bg-amber-50/80'
-                                : 'border-sky-200 bg-sky-50/60'
-                            }`}
-                          >
-                            <div className="flex items-center justify-between">
-                              <div className="text-[17px] font-bold text-[#0B2540]">
-                                Step 5 Screening Output &amp; Reliability Gate
-                              </div>
-                              {analysis.inferenceDurationMs && (
-                                <span className="font-mono text-[12px] font-semibold text-slate-700 bg-white/90 px-2.5 py-0.5 rounded-full border border-slate-200">
-                                  Latency: {analysis.inferenceDurationMs} ms
+                          {inferenceLoading ? (
+                            <div className="rounded-xl border border-teal-200 bg-teal-50/70 p-5 space-y-3 animate-pulse">
+                              <div className="flex items-center justify-between">
+                                <div className="text-[17px] font-bold text-teal-950 flex items-center gap-2.5">
+                                  <RefreshCw className="h-5 w-5 text-teal-600 animate-spin" />
+                                  Evaluating MobileNetV2 Retinal Inference...
+                                </div>
+                                <span className="font-mono text-[12px] font-semibold text-teal-800 bg-teal-100/90 px-2.5 py-0.5 rounded-full border border-teal-200">
+                                  Inference In-Flight
                                 </span>
-                              )}
-                            </div>
-                            <div className="text-[19px] font-bold text-slate-900">
-                              {analysis.modelPrediction.gradeLabel}
-                            </div>
-                            <div className="font-mono text-[15px] font-semibold text-slate-800 tabular-nums">
-                              Confidence: {Math.round(analysis.modelPrediction.confidence * 100)}% ·
-                              Uncertainty: {Math.round(analysis.modelPrediction.uncertainty * 100)}% ·
-                              OOD Flag: {analysis.modelPrediction.oodFlag ? 'YES (Withheld)' : 'No'}
-                            </div>
-
-                            {/* Five-Class Probability Distribution */}
-                            {analysis.modelPrediction.calibratedProbabilities && analysis.modelPrediction.calibratedProbabilities.length === 5 && (
-                              <div className="rounded-lg border border-slate-200/80 bg-white/95 p-3 space-y-2">
-                                <div className="text-[12px] font-bold text-slate-600 uppercase tracking-wide">
-                                  Five-Class Probability Distribution (Temperature Calibrated)
-                                </div>
-                                <div className="grid grid-cols-5 gap-1.5 text-center text-[12px]">
-                                  {[
-                                    { grade: 0, label: 'G0: None' },
-                                    { grade: 1, label: 'G1: Mild' },
-                                    { grade: 2, label: 'G2: Moderate' },
-                                    { grade: 3, label: 'G3: Severe' },
-                                    { grade: 4, label: 'G4: PDR' },
-                                  ].map(({ grade, label }) => {
-                                    const prob = analysis.modelPrediction.calibratedProbabilities![grade];
-                                    const isPredicted = analysis.modelPrediction.icdrGrade === grade;
-                                    return (
-                                      <div
-                                        key={grade}
-                                        className={`rounded-md p-1.5 border ${
-                                          isPredicted
-                                            ? 'border-teal-500 bg-teal-50/90 font-bold text-teal-900 shadow-xs'
-                                            : 'border-slate-100 bg-slate-50 text-slate-600'
-                                        }`}
-                                      >
-                                        <div className="truncate text-[11px] font-medium">{label}</div>
-                                        <div className="font-mono text-[13px] font-bold mt-0.5">{Math.round(prob * 100)}%</div>
-                                      </div>
-                                    );
-                                  })}
-                                </div>
-                                {typeof analysis.modelPrediction.pReferable === 'number' && (
-                                  <div className="text-[13px] pt-1.5 text-slate-700 flex flex-wrap items-center justify-between border-t border-slate-100 gap-2">
-                                    <span>
-                                      Referable DR Risk (G ≥ 2): <strong>{Math.round(analysis.modelPrediction.pReferable * 100)}%</strong> (τ* = {analysis.modelPrediction.calibrationThreshold || 0.38})
-                                    </span>
-                                    <span className={`px-2.5 py-0.5 rounded-full font-semibold text-[12px] ${
-                                      analysis.modelPrediction.isReferable ? 'bg-rose-100 text-rose-800' : 'bg-emerald-100 text-emerald-800'
-                                    }`}>
-                                      {analysis.modelPrediction.isReferable ? 'Referable DR Suspected' : 'Non-Referable DR'}
-                                    </span>
-                                  </div>
-                                )}
                               </div>
-                            )}
-
-                            {analysis.modelPrediction.withholdReason && (
-                              <p className="text-[14px] text-amber-950 font-semibold leading-relaxed">
-                                Safe Withholding Active: {analysis.modelPrediction.withholdReason}
+                              <p className="text-[14px] text-teal-900 leading-relaxed">
+                                Executing deep convolutional forward pass on active <code>dr_classifier_improved.keras</code>, computing 10-pass Monte Carlo epistemic uncertainty, temperature-calibrated five-class probabilities, and Grad-CAM spatial activation mapping on the backend server.
                               </p>
-                            )}
-                            <div className="text-[13px] text-slate-600 space-y-0.5 border-t border-slate-200/60 pt-2">
-                              <div>
-                                <strong>Model:</strong> {analysis.modelPrediction.modelVersion} ({analysis.modelPrediction.activeModelFile || 'dr_classifier_improved.keras'})
-                              </div>
-                              <div className="truncate text-slate-500 text-[12px]">
-                                <strong>Architecture:</strong> {analysis.modelPrediction.architectureReference}
-                              </div>
-                              <div className="text-amber-800 font-medium text-[12px] pt-0.5">
-                                ⚠️ <em>Clinical Notice: Experimental AI research screening prototype. Mandatory Doctor Review required prior to clinical triage.</em>
+                              <div className="text-[12px] text-teal-700 font-medium pt-1 border-t border-teal-200/50">
+                                Architecture: <strong>MobileNetV2 (Active Deep CNN Weights Loading...)</strong>
                               </div>
                             </div>
-                          </div>
+                          ) : inferenceError ? (
+                            <div className="rounded-xl border border-rose-300 bg-rose-50/90 p-5 space-y-2.5">
+                              <div className="text-[17px] font-bold text-rose-900 flex items-center gap-2">
+                                <AlertTriangle className="h-5 w-5 text-rose-600" />
+                                CNN Retinal Inference Error
+                              </div>
+                              <p className="text-[14px] text-rose-800 leading-relaxed font-mono">
+                                {inferenceError}
+                              </p>
+                              <p className="text-[12px] text-rose-600">
+                                Please ensure the uploaded file is a valid non-mydriatic fundus photograph and that the backend inference service is running.
+                              </p>
+                            </div>
+                          ) : (
+                            <div
+                              className={`rounded-xl border p-4.5 space-y-3 ${
+                                analysis.modelPrediction.gradeWithheld
+                                  ? 'border-amber-300 bg-amber-50/80'
+                                  : 'border-sky-200 bg-sky-50/60'
+                              }`}
+                            >
+                              <div className="flex items-center justify-between">
+                                <div className="text-[17px] font-bold text-[#0B2540]">
+                                  Step 5 Screening Output &amp; Reliability Gate
+                                </div>
+                                {analysis.inferenceDurationMs ? (
+                                  <span className="font-mono text-[12px] font-semibold text-slate-700 bg-white/90 px-2.5 py-0.5 rounded-full border border-slate-200">
+                                    Latency: {analysis.inferenceDurationMs} ms
+                                  </span>
+                                ) : analysis.modelPrediction.isIllustrativeOutput ? (
+                                  <span className="text-[11px] font-semibold text-slate-600 bg-slate-200/90 px-2.5 py-0.5 rounded-full">
+                                    Interactive Preset Demo
+                                  </span>
+                                ) : null}
+                              </div>
+                              <div className="text-[19px] font-bold text-slate-900">
+                                {analysis.modelPrediction.gradeLabel}
+                              </div>
+                              <div className="font-mono text-[15px] font-semibold text-slate-800 tabular-nums">
+                                Confidence: {Math.round(analysis.modelPrediction.confidence * 100)}% ·
+                                Uncertainty: {Math.round(analysis.modelPrediction.uncertainty * 100)}% ·
+                                OOD Flag: {analysis.modelPrediction.oodFlag ? 'YES (Withheld)' : 'No'}
+                              </div>
+
+                              {/* Five-Class Probability Distribution */}
+                              {analysis.modelPrediction.calibratedProbabilities && analysis.modelPrediction.calibratedProbabilities.length === 5 && (
+                                <div className="rounded-lg border border-slate-200/80 bg-white/95 p-3 space-y-2">
+                                  <div className="text-[12px] font-bold text-slate-600 uppercase tracking-wide">
+                                    Five-Class Probability Distribution (Temperature Calibrated)
+                                  </div>
+                                  <div className="grid grid-cols-5 gap-1.5 text-center text-[12px]">
+                                    {[
+                                      { grade: 0, label: 'G0: None' },
+                                      { grade: 1, label: 'G1: Mild' },
+                                      { grade: 2, label: 'G2: Moderate' },
+                                      { grade: 3, label: 'G3: Severe' },
+                                      { grade: 4, label: 'G4: PDR' },
+                                    ].map(({ grade, label }) => {
+                                      const prob = analysis.modelPrediction.calibratedProbabilities![grade];
+                                      const isPredicted = analysis.modelPrediction.icdrGrade === grade;
+                                      return (
+                                        <div
+                                          key={grade}
+                                          className={`rounded-md p-1.5 border ${
+                                            isPredicted
+                                              ? 'border-teal-500 bg-teal-50/90 font-bold text-teal-900 shadow-xs'
+                                              : 'border-slate-100 bg-slate-50 text-slate-600'
+                                          }`}
+                                        >
+                                          <div className="truncate text-[11px] font-medium">{label}</div>
+                                          <div className="font-mono text-[13px] font-bold mt-0.5">{Math.round(prob * 100)}%</div>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                  {typeof analysis.modelPrediction.pReferable === 'number' && (
+                                    <div className="text-[13px] pt-1.5 text-slate-700 flex flex-wrap items-center justify-between border-t border-slate-100 gap-2">
+                                      <span>
+                                        Referable DR Risk (G ≥ 2): <strong>{Math.round(analysis.modelPrediction.pReferable * 100)}%</strong> (τ* = {analysis.modelPrediction.calibrationThreshold || 0.38})
+                                      </span>
+                                      <span className={`px-2.5 py-0.5 rounded-full font-semibold text-[12px] ${
+                                        analysis.modelPrediction.isReferable ? 'bg-rose-100 text-rose-800' : 'bg-emerald-100 text-emerald-800'
+                                      }`}>
+                                        {analysis.modelPrediction.isReferable ? 'Referable DR Suspected' : 'Non-Referable DR'}
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+
+                              {analysis.modelPrediction.withholdReason && (
+                                <p className="text-[14px] text-amber-950 font-semibold leading-relaxed">
+                                  Safe Withholding Active: {analysis.modelPrediction.withholdReason}
+                                </p>
+                              )}
+                              <div className="text-[13px] text-slate-600 space-y-0.5 border-t border-slate-200/60 pt-2">
+                                <div>
+                                  <strong>Model:</strong> {analysis.modelPrediction.modelVersion} ({analysis.modelPrediction.activeModelFile || 'dr_classifier_improved.keras'})
+                                </div>
+                                <div className="truncate text-slate-500 text-[12px]">
+                                  <strong>Architecture:</strong> {analysis.modelPrediction.architectureReference}
+                                </div>
+                                <div className="text-amber-800 font-medium text-[12px] pt-0.5">
+                                  ⚠️ <em>Clinical Notice: Experimental AI research screening prototype. Mandatory Doctor Review required prior to clinical triage.</em>
+                                </div>
+                              </div>
+                            </div>
+                          )}
                         </>
                       )}
                     </div>

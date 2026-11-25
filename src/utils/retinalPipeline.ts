@@ -429,13 +429,13 @@ export function analyzeRetinalCanvasPixels(
     if (oodFlag) {
       icdrGrade = null;
       gradeLabel = 'Grade Withheld — Out-of-Distribution (Non-Retinal Image Detected)';
-      confidence = 0.38;
+      confidence = 0.0;
     } else {
       // Preliminary client preview prior to genuine CNN inference execution
       icdrGrade = null;
       gradeLabel = 'Evaluating MobileNetV2 Retinal Inference...';
-      confidence = 0.50;
-      hotspots = [{ x: 0.5, y: 0.5, radius: 0.2, intensity: 0.5 }];
+      confidence = 0.0;
+      hotspots = [];
     }
   }
 
@@ -444,8 +444,8 @@ export function analyzeRetinalCanvasPixels(
     ? rejectionReason
     : oodFlag
     ? 'Color/structure distribution outside retinal fundus domain (OOD detection triggered).'
-    : confidence < 0.7 && presetMode === 'uploaded_custom'
-    ? 'Evaluating live CNN predictions from backend server. Complete model results will populate upon inference completion.'
+    : presetMode === 'uploaded_custom'
+    ? 'Awaiting live MobileNetV2 inference response from backend server.'
     : confidence < 0.7
     ? 'Prototype safety rule: low confidence withheld from automated grading. Routed directly to clinician review.'
     : undefined;
@@ -474,8 +474,11 @@ export function analyzeRetinalCanvasPixels(
       implementationStatus: 'Illustrative / Prototype Heuristic',
     },
     modelPrediction: {
-      modelVersion: 'mitra-drishti-prototype-icdr-v0.1 (Illustrative)',
-      architectureReference: 'EfficientNet-B3 / ResNet-50 Pipeline Interface (No Clinical Weights)',
+      modelVersion: presetMode === 'uploaded_custom' ? 'Mritidhristi-MobileNetV2-ICDR5 (Pending)' : 'mitra-drishti-prototype-icdr-v0.1 (Synthetic Demo)',
+      architectureReference:
+        presetMode === 'uploaded_custom'
+          ? 'MobileNetV2 (Active Deep CNN Weights Pending)'
+          : 'MobileNetV2 Retinal Screening Architecture (Synthetic Canvas Simulation)',
       icdrGrade: gradeWithheld ? null : icdrGrade,
       gradeLabel: !gradable ? 'Grade Withheld — Ungradable Image Quality' : gradeLabel,
       confidence,
@@ -486,7 +489,7 @@ export function analyzeRetinalCanvasPixels(
       isIllustrativeOutput: true,
     },
     gradCam: {
-      available: gradable && !oodFlag,
+      available: gradable && !oodFlag && presetMode !== 'uploaded_custom',
       hotspots,
       limitationNotice:
         'Grad-CAM highlights coarse spatial regions influencing model activation; it does not localize exact micro-lesion borders or confirm clinical diagnosis.',
