@@ -200,6 +200,61 @@ export interface ImageQualityAssessment {
 
 export type ICDRGrade = 0 | 1 | 2 | 3 | 4 | null;
 
+export interface RetinalLandmarks {
+  available: boolean;
+  modelName?: string;
+  modelArchitecture?: string;
+  opticDisc?: {
+    x: number;
+    y: number;
+    normalizedX: number;
+    normalizedY: number;
+  };
+  fovea?: {
+    x: number;
+    y: number;
+    normalizedX: number;
+    normalizedY: number;
+  };
+  distancePx?: number;
+  distanceNorm?: number;
+  isAnatomicallyPlausible?: boolean;
+  inferredEyeSide?: string;
+  latencyMs?: number;
+  limitationNotice?: string;
+  error?: string;
+}
+
+export interface LesionClassStat {
+  key: string;
+  name: string;
+  clinical_name: string;
+  description: string;
+  color_hex: string;
+  operating_threshold: number;
+  detected: boolean;
+  pixel_count: number;
+  retinal_surface_pct: number;
+  mean_confidence: number;
+  peak_probability: number;
+}
+
+export interface UnetSegmentationResult {
+  available: boolean;
+  modelName?: string;
+  modelArchitecture?: string;
+  provenance?: string;
+  operatingThresholds?: Record<string, number>;
+  overlayDataUrl?: string;
+  lesionStats?: LesionClassStat[];
+  totalLesionPixels?: number;
+  overallLesionCoveragePct?: number;
+  drLesionStage?: string;
+  latencyMs?: number;
+  limitationNotice?: string;
+  error?: string;
+}
+
 export interface RetinalScreening {
   id: string;
   patientId: string;
@@ -213,13 +268,19 @@ export interface RetinalScreening {
     opticDiscDetected: boolean;
     vesselDensityIndex: number;
     maculaCentered: boolean;
+    landmarks?: RetinalLandmarks;
   };
   lesionFindings: {
     hardExudatesFlag: boolean;
     haemorrhagesFlag: boolean;
     microaneurysmsExperimentalNote: string;
     implementationStatus: string;
+    microaneurysmsCount?: number;
+    neovascularisationFlag?: boolean;
+    unetSegmentation?: UnetSegmentationResult;
   };
+  landmarks?: RetinalLandmarks;
+  unetSegmentation?: UnetSegmentationResult;
   modelPrediction: {
     modelVersion: string;
     architectureReference: string;

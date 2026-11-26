@@ -62,9 +62,11 @@ def get_localizer_model():
 
 
 def preprocess_image_input(image_input):
-    """Parses PIL Image, filepath, or base64 data URL and scales to [-1, 1]."""
+    """Parses PIL Image, numpy array, filepath, or base64 data URL and scales to [-1, 1]."""
     if isinstance(image_input, Image.Image):
         pil_img = image_input.convert("RGB")
+    elif isinstance(image_input, np.ndarray):
+        pil_img = Image.fromarray(image_input.astype(np.uint8)).convert("RGB")
     elif isinstance(image_input, str):
         if image_input.startswith("data:image") or (len(image_input) > 500 and not os.path.exists(image_input)):
             raw_b64 = image_input.split(",", 1)[-1] if "," in image_input else image_input

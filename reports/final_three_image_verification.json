@@ -1,0 +1,218 @@
+{
+  "IDRiD_001.jpg": {
+    "image": "IDRiD_001.jpg",
+    "sharpnessScore": 63.7,
+    "gradable": true,
+    "predictedGrade": 4,
+    "gradeLabel": "Proliferative Diabetic Retinopathy (PDR)",
+    "calibratedProbabilities": [
+      0.0062,
+      0.0067,
+      0.0423,
+      0.2223,
+      0.7224
+    ],
+    "confidence": 0.7224,
+    "pReferable": 0.9985,
+    "isReferable": true,
+    "landmarks": {
+      "available": true,
+      "opticDisc": {
+        "x": 122.3,
+        "y": 233.7,
+        "normalizedX": 0.2392,
+        "normalizedY": 0.5473
+      },
+      "fovea": {
+        "x": 244.6,
+        "y": 227.4,
+        "normalizedX": 0.4786,
+        "normalizedY": 0.5325
+      },
+      "distancePx": 122.5,
+      "distanceNorm": 0.2399,
+      "isAnatomicallyPlausible": true,
+      "inferredEyeSide": "Left Eye (OS)",
+      "limitationNotice": "MobileNetV2 CoordConv regression trained on IDRiD Component C. Predicted landmark centres are experimental estimations; subject to clinical verification."
+    },
+    "unet": {
+      "available": true,
+      "drLesionStage": "High Risk / Referable DR (Multiple Microvascular Lesion Classes)",
+      "totalLesionPixels": 3822,
+      "overallLesionCoveragePct": 5.832,
+      "operatingThresholds": {
+        "MA": 0.25,
+        "HE": 0.1,
+        "EX": 0.05,
+        "SE": 0.5
+      },
+      "lesionStats": [
+        [
+          "MA",
+          568,
+          true
+        ],
+        [
+          "HE",
+          3016,
+          true
+        ],
+        [
+          "EX",
+          177,
+          true
+        ],
+        [
+          "SE",
+          61,
+          true
+        ]
+      ],
+      "limitationNotice": "Enhanced Residual U-Net trained on official IDRiD pixel annotations. Calibrated thresholds: MA=0.25, HE=0.10, EX=0.05, SE=0.50. Overlays represent experimental AI microvascular masks; not clinically validated."
+    }
+  },
+  "IDRiD_008.jpg": {
+    "image": "IDRiD_008.jpg",
+    "sharpnessScore": 100.0,
+    "gradable": true,
+    "predictedGrade": 2,
+    "gradeLabel": "Moderate Non-Proliferative Diabetic Retinopathy (NPDR)",
+    "calibratedProbabilities": [
+      0.0443,
+      0.2738,
+      0.5152,
+      0.0701,
+      0.0966
+    ],
+    "confidence": 0.5152,
+    "pReferable": 0.6168,
+    "isReferable": true,
+    "landmarks": {
+      "available": true,
+      "opticDisc": {
+        "x": 157.5,
+        "y": 207.0,
+        "normalizedX": 0.3077,
+        "normalizedY": 0.4858
+      },
+      "fovea": {
+        "x": 269.8,
+        "y": 208.9,
+        "normalizedX": 0.5269,
+        "normalizedY": 0.4905
+      },
+      "distancePx": 112.3,
+      "distanceNorm": 0.2192,
+      "isAnatomicallyPlausible": true,
+      "inferredEyeSide": "Left Eye (OS)",
+      "limitationNotice": "MobileNetV2 CoordConv regression trained on IDRiD Component C. Predicted landmark centres are experimental estimations; subject to clinical verification."
+    },
+    "unet": {
+      "available": true,
+      "drLesionStage": "High Risk / Referable DR (Multiple Microvascular Lesion Classes)",
+      "totalLesionPixels": 491,
+      "overallLesionCoveragePct": 0.749,
+      "operatingThresholds": {
+        "MA": 0.25,
+        "HE": 0.1,
+        "EX": 0.05,
+        "SE": 0.5
+      },
+      "lesionStats": [
+        [
+          "MA",
+          80,
+          true
+        ],
+        [
+          "HE",
+          176,
+          true
+        ],
+        [
+          "EX",
+          104,
+          true
+        ],
+        [
+          "SE",
+          131,
+          true
+        ]
+      ],
+      "limitationNotice": "Enhanced Residual U-Net trained on official IDRiD pixel annotations. Calibrated thresholds: MA=0.25, HE=0.10, EX=0.05, SE=0.50. Overlays represent experimental AI microvascular masks; not clinically validated."
+    }
+  },
+  "IDRiD_029.jpg": {
+    "image": "IDRiD_029.jpg",
+    "sharpnessScore": 100.0,
+    "gradable": true,
+    "predictedGrade": 0,
+    "gradeLabel": "No Apparent Diabetic Retinopathy",
+    "calibratedProbabilities": [
+      0.5561,
+      0.2948,
+      0.0338,
+      0.056,
+      0.0592
+    ],
+    "confidence": 0.5561,
+    "pReferable": 0.0532,
+    "isReferable": false,
+    "landmarks": {
+      "available": true,
+      "opticDisc": {
+        "x": 163.6,
+        "y": 225.0,
+        "normalizedX": 0.3196,
+        "normalizedY": 0.5283
+      },
+      "fovea": {
+        "x": 271.4,
+        "y": 215.5,
+        "normalizedX": 0.53,
+        "normalizedY": 0.5059
+      },
+      "distancePx": 108.2,
+      "distanceNorm": 0.2116,
+      "isAnatomicallyPlausible": true,
+      "inferredEyeSide": "Left Eye (OS)",
+      "limitationNotice": "MobileNetV2 CoordConv regression trained on IDRiD Component C. Predicted landmark centres are experimental estimations; subject to clinical verification."
+    },
+    "unet": {
+      "available": true,
+      "drLesionStage": "Moderate Risk NPDR (Haemorrhages or Soft Exudates Identified)",
+      "totalLesionPixels": 24,
+      "overallLesionCoveragePct": 0.037,
+      "operatingThresholds": {
+        "MA": 0.25,
+        "HE": 0.1,
+        "EX": 0.05,
+        "SE": 0.5
+      },
+      "lesionStats": [
+        [
+          "MA",
+          9,
+          false
+        ],
+        [
+          "HE",
+          24,
+          true
+        ],
+        [
+          "EX",
+          0,
+          false
+        ],
+        [
+          "SE",
+          3,
+          false
+        ]
+      ],
+      "limitationNotice": "Enhanced Residual U-Net trained on official IDRiD pixel annotations. Calibrated thresholds: MA=0.25, HE=0.10, EX=0.05, SE=0.50. Overlays represent experimental AI microvascular masks; not clinically validated."
+    }
+  }
+}

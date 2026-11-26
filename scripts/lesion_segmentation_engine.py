@@ -201,6 +201,8 @@ def segment_retinal_lesions(image_input, threshold=DEFAULT_THRESHOLD, alpha=0.45
     # 1. Load Image
     if isinstance(image_input, Image.Image):
         pil_img = image_input.convert("RGB")
+    elif isinstance(image_input, np.ndarray):
+        pil_img = Image.fromarray(image_input.astype(np.uint8)).convert("RGB")
     elif isinstance(image_input, str):
         if image_input.startswith("data:image") or len(image_input) > 500 and not os.path.exists(image_input):
             raw_b64 = image_input.split(",", 1)[-1] if "," in image_input else image_input

@@ -34,6 +34,12 @@ import keras
 import tensorflow as tf
 
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if ROOT_DIR not in sys.path:
+    sys.path.insert(0, ROOT_DIR)
+SCRIPTS_DIR = os.path.dirname(os.path.abspath(__file__))
+if SCRIPTS_DIR not in sys.path:
+    sys.path.insert(0, SCRIPTS_DIR)
+
 IMPROVED_MODEL_PATH = os.path.join(ROOT_DIR, "models", "dr_classifier_improved.keras")
 BASELINE_MODEL_PATH = os.path.join(ROOT_DIR, "models", "dr_classifier.keras")
 MODEL_PATH = IMPROVED_MODEL_PATH if os.path.exists(IMPROVED_MODEL_PATH) else BASELINE_MODEL_PATH
@@ -238,8 +244,13 @@ def assess_image_quality_and_ood(rgb_np):
     mean_b = float(np.mean(rgb_np[:, :, 2])) + 1e-5
     blue_to_red_ratio = mean_b / mean_r
 
-    # Sharpness score normalized to 0-100
-    sharpness_score = min(100.0, max(0.0, round(lap_var / 3.0, 1)))
+    # Sharpness score normalized to 0-100 (continuous piecewise scale, 45 is the passing threshold)
+    # lap_var < 3.0: ungradable blur/cataract (maps to 0 - 44)
+    # lap_var >= 3.0: gradable clinical clarity (maps to 45 - 100)
+    if lap_var < 3.0:
+        sharpness_score = round((lap_var / 3.0) * 44.0, 1)
+    else:
+        sharpness_score = min(100.0, max(45.0, round(45.0 + (lap_var - 3.0) * 3.5, 1)))
 
     # OOD Detection:
     # A genuine retinal scan has blue_to_red_ratio typically < 0.35. Non-retinal images (text, landscapes, skin) have > 0.45.
@@ -253,7 +264,7 @@ def assess_image_quality_and_ood(rgb_np):
         gradable = False
         rejection_reason = "Out-of-Distribution Rejection: Uploaded scan does not match retinal fundus chromatic profile."
         recapture_guidance = "Please capture standard posterior-pole retinal fundus imaging using certified non-mydriatic fundus camera."
-    elif lap_var < 3.0:
+    elif lap_var < 3.0 or sharpness_score < 45.0:
         gradable = False
         rejection_reason = "Image Quality Rejection: Severe Optical Blur / Cataract Media Opacity."
         recapture_guidance = "Clean camera optics, adjust diopter focus wheel on retinal arcade, and retake in dim lighting."
@@ -290,14 +301,24 @@ def assess_image_quality_and_ood(rgb_np):
 # ---------------------------------------------------------------------------
 def run_mc_dropout_inference(head_model, conv_features, mc_passes=10):
     """
-    Performs T stochastic forward passes with dropout enabled (training=True)
-    to estimate epistemic uncertainty and predictive entropy.
+    Performs T stochastic forward passes with dropout enabled (training=True exclusively on Dropout layers)
+    while keeping BatchNormalization in inference mode (training=False).
+    This prevents batch statistics collapse when batch size is 1, resolving identical predictions across distinct images.
     """
     pass_preds = []
     for _ in range(mc_passes):
-        # training=True activates dropout layers
-        p = head_model(conv_features, training=True).numpy()[0]
-        pass_preds.append(p)
+        x = conv_features
+        for l in head_model.layers:
+            if isinstance(l, keras.layers.InputLayer):
+                continue
+            cname = type(l).__name__.lower()
+            if "dropout" in cname:
+                x = l(x, training=True)
+            elif "batchnormalization" in cname:
+                x = l(x, training=False)
+            else:
+                x = l(x)
+        pass_preds.append(x.numpy()[0])
 
     pass_preds = np.array(pass_preds, dtype=np.float32)  # Shape (mc_passes, 5)
     mean_probs = np.mean(pass_preds, axis=0)
@@ -492,6 +513,14 @@ def run_retinal_inference(image_input, model_path=None):
                 "hotspots": [],
                 "limitationNotice": "Grad-CAM not available for rejected/ungradable fundus scans.",
             },
+            "landmarks": {
+                "available": False,
+                "limitationNotice": "Landmark localization not computed for ungradable scan.",
+            },
+            "unetSegmentation": {
+                "available": False,
+                "limitationNotice": "Lesion segmentation not computed for ungradable scan.",
+            },
             "inferenceDurationMs": round((time.time() - t0) * 1000, 1),
         }
 
@@ -533,7 +562,94 @@ def run_retinal_inference(image_input, model_path=None):
     cam_2d = compute_gradcam(base_feature_extractor, head_model, input_tensor, target_class_idx=predicted_grade)
     heatmap_data_url, hotspots = generate_gradcam_overlay_and_hotspots(original_crop, cam_2d, opacity=0.60)
 
-    # 7. MATLAB Structure & Lesion Segmentation Analysis (SIH26038 Matched Filtering & Top-Hat)
+    # 7. Deep-Learning Landmark Localisation (Optic Disc & Fovea)
+    landmarks_result = {
+        "available": False,
+        "limitationNotice": "Landmark localisation not computed.",
+    }
+    try:
+        try:
+            from scripts.optic_disc_fovea_inference import predict_landmarks
+        except ImportError:
+            from optic_disc_fovea_inference import predict_landmarks
+        raw_landmarks = predict_landmarks(original_crop)
+        if raw_landmarks and raw_landmarks.get("status") == "success":
+            od_px = raw_landmarks["landmarks"]["optic_disc"]["pixel_coordinates"]
+            od_norm = raw_landmarks["landmarks"]["optic_disc"]["normalized_coordinates"]
+            fov_px = raw_landmarks["landmarks"]["fovea"]["pixel_coordinates"]
+            fov_norm = raw_landmarks["landmarks"]["fovea"]["normalized_coordinates"]
+            metrics = raw_landmarks.get("inter_landmark_metrics", {})
+            landmarks_result = {
+                "available": True,
+                "modelName": raw_landmarks.get("model_name", "Mritidhristi-IDRiD-Landmark-Localizer"),
+                "modelArchitecture": raw_landmarks.get("model_architecture", "MobileNetV2 CoordConv Spatial Embedding"),
+                "opticDisc": {
+                    "x": od_px["x"],
+                    "y": od_px["y"],
+                    "normalizedX": od_norm["x"],
+                    "normalizedY": od_norm["y"],
+                },
+                "fovea": {
+                    "x": fov_px["x"],
+                    "y": fov_px["y"],
+                    "normalizedX": fov_norm["x"],
+                    "normalizedY": fov_norm["y"],
+                },
+                "distancePx": metrics.get("euclidean_distance_px"),
+                "distanceNorm": metrics.get("normalized_distance"),
+                "isAnatomicallyPlausible": metrics.get("anatomical_plausibility", True),
+                "inferredEyeSide": metrics.get("inferred_eye_laterality", "Indeterminate"),
+                "latencyMs": raw_landmarks.get("total_latency_ms", 0.0),
+                "limitationNotice": (
+                    "MobileNetV2 CoordConv regression trained on IDRiD Component C. "
+                    "Predicted landmark centres are experimental estimations; subject to clinical verification."
+                ),
+            }
+    except Exception as lm_err:
+        landmarks_result = {
+            "available": False,
+            "error": str(lm_err),
+            "limitationNotice": "Optic disc & fovea localisation model unavailable.",
+        }
+
+    # 8. Genuine Residual U-Net Lesion Segmentation (MA, HE, EX, SE)
+    unet_result = {
+        "available": False,
+        "limitationNotice": "Lesion segmentation not computed.",
+    }
+    try:
+        try:
+            from scripts.lesion_segmentation_engine import segment_retinal_lesions
+        except ImportError:
+            from lesion_segmentation_engine import segment_retinal_lesions
+        seg_output, _ = segment_retinal_lesions(original_crop)
+        if seg_output and seg_output.get("status") == "success":
+            unet_result = {
+                "available": True,
+                "modelName": seg_output.get("model_name", "Mritidhristi-IDRiD-UNet-Lesions-Improved"),
+                "modelArchitecture": seg_output.get("model_architecture", "Enhanced Residual Convolutional U-Net"),
+                "provenance": seg_output.get("provenance", "Indian Diabetic Retinopathy Image Dataset (IDRiD)"),
+                "operatingThresholds": seg_output.get("operating_thresholds", {"MA": 0.25, "HE": 0.10, "EX": 0.05, "SE": 0.50}),
+                "overlayDataUrl": seg_output.get("overlay_base64"),
+                "lesionStats": seg_output.get("lesions", []),
+                "totalLesionPixels": seg_output.get("total_lesion_pixel_count", 0),
+                "overallLesionCoveragePct": seg_output.get("overall_lesion_coverage_pct", 0.0),
+                "drLesionStage": seg_output.get("clinical_assessment", "Indeterminate"),
+                "latencyMs": seg_output.get("total_latency_ms", 0.0),
+                "limitationNotice": (
+                    "Enhanced Residual U-Net trained on official IDRiD pixel annotations. "
+                    "Calibrated thresholds: MA=0.25, HE=0.10, EX=0.05, SE=0.50. "
+                    "Overlays represent experimental AI microvascular masks; not clinically validated."
+                ),
+            }
+    except Exception as unet_err:
+        unet_result = {
+            "available": False,
+            "error": str(unet_err),
+            "limitationNotice": "U-Net lesion segmentation model unavailable.",
+        }
+
+    # 9. Structure & Lesion Analysis Synthesis
     try:
         from scripts.matlab_retinal_processor import process_retinal_structures_and_lesions
         seg_findings = process_retinal_structures_and_lesions(original_crop)
@@ -549,9 +665,21 @@ def run_retinal_inference(image_input, model_path=None):
         haemorrhages = predicted_grade in [2, 3, 4]
         microaneurysms_count = 1 if predicted_grade >= 1 else 0
         vessel_density = round(float(np.mean(original_crop[:, :, 1] < 60)), 3)
-        optic_disc_detected = True
-        fovea_detected = True
+        optic_disc_detected = landmarks_result.get("available", True)
+        fovea_detected = landmarks_result.get("isAnatomicallyPlausible", True)
         neovascularisation = predicted_grade == 4
+
+    # If U-Net detected lesions, synchronize flags
+    if unet_result.get("available"):
+        ex_detected = any(l.get("detected", False) and l.get("key") == "EX" for l in unet_result.get("lesionStats", []))
+        he_detected = any(l.get("detected", False) and l.get("key") == "HE" for l in unet_result.get("lesionStats", []))
+        ma_count = next((l.get("pixel_count", 0) for l in unet_result.get("lesionStats", []) if l.get("key") == "MA"), 0)
+        if ex_detected:
+            hard_exudates = True
+        if he_detected:
+            haemorrhages = True
+        if ma_count > 0:
+            microaneurysms_count = ma_count
 
     model_version = (
         "Mritidhristi-MobileNetV2-ICDR5 (v2.0-improved)"
@@ -577,9 +705,10 @@ def run_retinal_inference(image_input, model_path=None):
             "recaptureGuidance": None,
         },
         "anatomicalStructures": {
-            "opticDiscDetected": optic_disc_detected,
+            "opticDiscDetected": optic_disc_detected or landmarks_result.get("available", False),
             "vesselDensityIndex": vessel_density,
-            "maculaCentered": fovea_detected,
+            "maculaCentered": fovea_detected or landmarks_result.get("isAnatomicallyPlausible", True),
+            "landmarks": landmarks_result,
         },
         "lesionFindings": {
             "hardExudatesFlag": hard_exudates,
@@ -587,11 +716,17 @@ def run_retinal_inference(image_input, model_path=None):
             "microaneurysmsCount": microaneurysms_count,
             "neovascularisationFlag": neovascularisation,
             "microaneurysmsExperimentalNote": (
+                f"Residual U-Net segmented {microaneurysms_count} MA pixels (tau=0.25); "
+                f"correlated with ICDR Grade {predicted_grade} criteria."
+            ) if unet_result.get("available") else (
                 f"Sub-pixel morphological top-hat detected {microaneurysms_count} candidate microaneurysm(s); "
                 f"correlated with ICDR Grade {predicted_grade} criteria."
             ),
-            "implementationStatus": "SIH26038 Matched-Filter & Top-Hat Segmentation",
+            "implementationStatus": "IDRiD Residual U-Net Multi-Lesion AI + Morphology",
+            "unetSegmentation": unet_result,
         },
+        "landmarks": landmarks_result,
+        "unetSegmentation": unet_result,
         "modelPrediction": {
             "modelVersion": model_version,
             "architectureReference": arch_ref,

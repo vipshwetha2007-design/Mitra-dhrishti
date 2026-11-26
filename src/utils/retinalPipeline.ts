@@ -1,4 +1,10 @@
-import type { ICDRGrade, ImageQualityAssessment, RetinalScreening } from '../types/domain';
+import type {
+  ICDRGrade,
+  ImageQualityAssessment,
+  RetinalLandmarks,
+  RetinalScreening,
+  UnetSegmentationResult,
+} from '../types/domain';
 
 export type RetinalPresetKey = 'normal_demo' | 'moderate_npdr_demo' | 'ungradable_blur_demo';
 
@@ -6,6 +12,8 @@ export interface PipelineAnalysisOutput {
   quality: ImageQualityAssessment;
   anatomicalStructures: RetinalScreening['anatomicalStructures'];
   lesionFindings: RetinalScreening['lesionFindings'];
+  landmarks?: RetinalLandmarks;
+  unetSegmentation?: UnetSegmentationResult;
   modelPrediction: RetinalScreening['modelPrediction'];
   gradCam: RetinalScreening['gradCam'];
   inferenceDurationMs?: number;

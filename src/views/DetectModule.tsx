@@ -38,8 +38,8 @@ interface DetectModuleProps {
 const SEVEN_STEPS = [
   { num: 1, title: 'Image Quality Assessment', stage: 'raw' as const },
   { num: 2, title: 'Enhancement & CLAHE Preprocessing', stage: 'preprocessed' as const },
-  { num: 3, title: 'Anatomical Structure Detection', stage: 'anatomy' as const },
-  { num: 4, title: 'Lesion Detection (Illustrative)', stage: 'lesions' as const },
+  { num: 3, title: 'Anatomical Landmark Localisation', stage: 'anatomy' as const },
+  { num: 4, title: 'U-Net Retinal Lesion Segmentation', stage: 'lesions' as const },
   { num: 5, title: 'CNN ICDR 5-Class DR Grading', stage: 'raw' as const },
   { num: 6, title: 'Grad-CAM Explainability', stage: 'gradcam' as const },
   { num: 7, title: 'Annotated Report Generation', stage: 'gradcam' as const },
@@ -209,6 +209,8 @@ export const DetectModule: React.FC<DetectModuleProps> = ({
                   quality: res.quality,
                   anatomicalStructures: res.anatomicalStructures,
                   lesionFindings: res.lesionFindings,
+                  landmarks: res.landmarks,
+                  unetSegmentation: res.unetSegmentation,
                   modelPrediction: res.modelPrediction,
                   gradCam: res.gradCam,
                   inferenceDurationMs: res.inferenceDurationMs,
@@ -556,6 +558,8 @@ export const DetectModule: React.FC<DetectModuleProps> = ({
                       preset={preset}
                       imageDataUrl={customDataUrl}
                       stage="raw"
+                      landmarks={analysis?.landmarks}
+                      unetSegmentation={analysis?.unetSegmentation}
                       size={320}
                       className="aspect-square w-full max-w-[340px] mx-auto"
                       label="Original Fundus Capture"
@@ -566,6 +570,8 @@ export const DetectModule: React.FC<DetectModuleProps> = ({
                       stage="gradcam"
                       gradCamOpacity={gradCamOpacity}
                       hotspots={analysis?.gradCam.hotspots}
+                      landmarks={analysis?.landmarks}
+                      unetSegmentation={analysis?.unetSegmentation}
                       size={320}
                       className="aspect-square w-full max-w-[340px] mx-auto"
                       label="Grad-CAM Explainability Overlay (Illustrative)"
@@ -580,6 +586,8 @@ export const DetectModule: React.FC<DetectModuleProps> = ({
                         stage={currentStage}
                         gradCamOpacity={gradCamOpacity}
                         hotspots={analysis?.gradCam.hotspots}
+                        landmarks={analysis?.landmarks}
+                        unetSegmentation={analysis?.unetSegmentation}
                         size={340}
                         className="aspect-square w-full max-w-[340px] mx-auto"
                         label={`Stage ${activeStep}: ${SEVEN_STEPS[activeStep - 1].title}`}
@@ -627,39 +635,173 @@ export const DetectModule: React.FC<DetectModuleProps> = ({
                             )}
                           </div>
 
-                          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4.5 space-y-2">
-                            <div className="flex flex-wrap items-center justify-between gap-2">
-                              <div className="text-[17px] font-bold text-[#0B2540]">
-                                Anatomical Structures &amp; Lesion Candidates
+                          {/* Step 3: Optic Disc & Fovea Localisation Block */}
+                          {activeStep === 3 && analysis.landmarks?.available ? (
+                            <div className="rounded-xl border border-sky-300 bg-sky-50/70 p-4.5 space-y-3">
+                              <div className="flex flex-wrap items-center justify-between gap-2">
+                                <div className="text-[17px] font-bold text-sky-950 flex items-center gap-2">
+                                  <Eye className="h-5 w-5 text-sky-700" />
+                                  Optic Disc &amp; Fovea Deep-Learning Localisation
+                                </div>
+                                <span className="text-[11px] font-semibold text-sky-900 bg-sky-200/90 px-2.5 py-0.5 rounded-full border border-sky-300">
+                                  IDRiD CoordConv CNN (Experimental)
+                                </span>
                               </div>
-                              <span className="text-[11px] font-semibold text-slate-600 bg-slate-200/90 px-2.5 py-0.5 rounded-full">
-                                {analysis.lesionFindings.implementationStatus.includes('Illustrative')
-                                  ? 'Illustrative / Morphological Heuristic'
-                                  : `${analysis.lesionFindings.implementationStatus} (Heuristic Morphological Filter)`}
-                              </span>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-[14px]">
+                                <div className="rounded-lg bg-white/90 p-3 border border-sky-200 shadow-2xs">
+                                  <div className="text-[12px] font-bold text-cyan-800 uppercase tracking-wide flex items-center gap-1.5">
+                                    <span className="inline-block h-2.5 w-2.5 rounded-full bg-cyan-500" />
+                                    Optic Disc (OD) Centre
+                                  </div>
+                                  <div className="font-mono text-[15px] font-bold text-slate-900 mt-1">
+                                    ({analysis.landmarks.opticDisc?.x}, {analysis.landmarks.opticDisc?.y}) px
+                                  </div>
+                                  <div className="text-[12px] text-slate-500 font-mono mt-0.5">
+                                    Norm: [{analysis.landmarks.opticDisc?.normalizedX}, {analysis.landmarks.opticDisc?.normalizedY}]
+                                  </div>
+                                </div>
+                                <div className="rounded-lg bg-white/90 p-3 border border-sky-200 shadow-2xs">
+                                  <div className="text-[12px] font-bold text-amber-800 uppercase tracking-wide flex items-center gap-1.5">
+                                    <span className="inline-block h-2.5 w-2.5 rounded-full bg-amber-500" />
+                                    Fovea Centralis Centre
+                                  </div>
+                                  <div className="font-mono text-[15px] font-bold text-slate-900 mt-1">
+                                    ({analysis.landmarks.fovea?.x}, {analysis.landmarks.fovea?.y}) px
+                                  </div>
+                                  <div className="text-[12px] text-slate-500 font-mono mt-0.5">
+                                    Norm: [{analysis.landmarks.fovea?.normalizedX}, {analysis.landmarks.fovea?.normalizedY}]
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="rounded-lg bg-white/80 p-3 border border-sky-200/80 text-[13px] text-slate-800 space-y-1">
+                                <div className="flex flex-wrap items-center justify-between gap-2">
+                                  <span>
+                                    Inter-Landmark Euclidean Distance: <strong>{analysis.landmarks.distancePx} px</strong> ({analysis.landmarks.distanceNorm} norm)
+                                  </span>
+                                  <span className={`px-2 py-0.5 rounded-md font-semibold text-[11px] ${
+                                    analysis.landmarks.isAnatomicallyPlausible ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                                  }`}>
+                                    {analysis.landmarks.isAnatomicallyPlausible ? 'Anatomically Plausible (20-45% FOV)' : 'Alignment Review Required'}
+                                  </span>
+                                </div>
+                                <div className="text-slate-600">
+                                  Inferred Retinal Laterality: <strong>{analysis.landmarks.inferredEyeSide}</strong>
+                                </div>
+                              </div>
+                              <p className="text-[12px] text-sky-900/90 leading-relaxed italic bg-sky-100/60 p-2.5 rounded-lg border border-sky-200/50">
+                                ⚠️ <strong>Experimental Notice:</strong> {analysis.landmarks.limitationNotice}
+                              </p>
                             </div>
-                            <div className="text-[15px] text-slate-800 leading-relaxed">
-                              Optic Disc: <strong>{analysis.anatomicalStructures.opticDiscDetected ? 'Localized (Heuristic)' : 'Not resolved'}</strong> ·
-                              Macula: <strong>{analysis.anatomicalStructures.maculaCentered ? 'Centered (Heuristic)' : 'Off-axis'}</strong> ·
-                              Vessel Index:{' '}
-                              <span className="font-mono font-semibold tabular-nums">
-                                {analysis.anatomicalStructures.vesselDensityIndex}
-                              </span>
+                          ) : activeStep === 4 && analysis.unetSegmentation?.available ? (
+                            /* Step 4: Actual U-Net Lesion Segmentation Block */
+                            <div className="rounded-xl border border-purple-300 bg-purple-50/70 p-4.5 space-y-3">
+                              <div className="flex flex-wrap items-center justify-between gap-2">
+                                <div className="text-[17px] font-bold text-purple-950 flex items-center gap-2">
+                                  <Activity className="h-5 w-5 text-purple-700" />
+                                  IDRiD Residual U-Net Multi-Lesion Segmentation
+                                </div>
+                                <span className="text-[11px] font-semibold text-purple-900 bg-purple-200/90 px-2.5 py-0.5 rounded-full border border-purple-300">
+                                  Official IDRiD Calibrated U-Net
+                                </span>
+                              </div>
+                              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[13px]">
+                                {[
+                                  { key: 'MA', label: 'Microaneurysms', color: '#FF00FF', bg: 'bg-fuchsia-50', border: 'border-fuchsia-300', text: 'text-fuchsia-900', tau: '0.25' },
+                                  { key: 'HE', label: 'Haemorrhages', color: '#FF2828', bg: 'bg-rose-50', border: 'border-rose-300', text: 'text-rose-900', tau: '0.10' },
+                                  { key: 'EX', label: 'Hard Exudates', color: '#FFE600', bg: 'bg-amber-50', border: 'border-amber-300', text: 'text-amber-900', tau: '0.05' },
+                                  { key: 'SE', label: 'Soft Exudates', color: '#00E6FF', bg: 'bg-cyan-50', border: 'border-cyan-300', text: 'text-cyan-900', tau: '0.50' },
+                                ].map((cls) => {
+                                  const stat = analysis.unetSegmentation?.lesionStats?.find((s) => s.key === cls.key);
+                                  const px = stat?.pixel_count ?? 0;
+                                  const isDet = stat?.detected ?? false;
+                                  return (
+                                    <div key={cls.key} className={`rounded-lg p-2.5 border ${cls.bg} ${cls.border} shadow-2xs`}>
+                                      <div className="flex items-center gap-1.5 font-bold text-[11px] uppercase truncate" style={{ color: cls.color === '#FFE600' ? '#B45309' : cls.color }}>
+                                        <span className="inline-block h-2.5 w-2.5 rounded-xs" style={{ backgroundColor: cls.color }} />
+                                        {cls.key}
+                                      </div>
+                                      <div className="font-mono text-[14px] font-bold text-slate-900 mt-1">
+                                        {px.toLocaleString()} px
+                                      </div>
+                                      <div className="text-[10px] text-slate-500 mt-0.5">
+                                        τ = {cls.tau} · {isDet ? 'Detected' : 'Below cutoff'}
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                              <div className="rounded-lg bg-white/80 p-3 border border-purple-200/80 text-[13px] text-slate-800 space-y-1">
+                                <div className="flex flex-wrap items-center justify-between gap-2">
+                                  <span>
+                                    Total Segmented Lesions: <strong>{analysis.unetSegmentation.totalLesionPixels?.toLocaleString()} px</strong> ({analysis.unetSegmentation.overallLesionCoveragePct}% coverage)
+                                  </span>
+                                  <span className="px-2 py-0.5 rounded-md font-semibold text-[11px] bg-purple-100 text-purple-900">
+                                    {analysis.unetSegmentation.drLesionStage}
+                                  </span>
+                                </div>
+                              </div>
+                              <p className="text-[12px] text-purple-900/90 leading-relaxed italic bg-purple-100/60 p-2.5 rounded-lg border border-purple-200/50">
+                                ⚠️ <strong>Experimental Notice:</strong> {analysis.unetSegmentation.limitationNotice}
+                              </p>
                             </div>
-                            <div className="text-[15px] text-slate-800 leading-relaxed">
-                              Hard Exudates:{' '}
-                              <strong className={analysis.lesionFindings.hardExudatesFlag ? 'text-amber-700' : 'text-slate-700'}>
-                                {analysis.lesionFindings.hardExudatesFlag ? 'Candidate Flagged (Heuristic)' : 'None Flagged'}
-                              </strong>{' '}
-                              · Haemorrhages:{' '}
-                              <strong className={analysis.lesionFindings.haemorrhagesFlag ? 'text-rose-700' : 'text-slate-700'}>
-                                {analysis.lesionFindings.haemorrhagesFlag ? 'Candidate Flagged (Heuristic)' : 'None Flagged'}
-                              </strong>
+                          ) : (
+                            /* General Anatomical & Lesion Overview Panel */
+                            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4.5 space-y-2">
+                              <div className="flex flex-wrap items-center justify-between gap-2">
+                                <div className="text-[17px] font-bold text-[#0B2540]">
+                                  Anatomical Structures &amp; Lesion Candidates
+                                </div>
+                                <span className="text-[11px] font-semibold text-slate-600 bg-slate-200/90 px-2.5 py-0.5 rounded-full">
+                                  {analysis.unetSegmentation?.available
+                                    ? 'IDRiD Residual U-Net AI + Classical Morphology'
+                                    : 'Illustrative / Morphological Heuristic'}
+                                </span>
+                              </div>
+                              <div className="text-[15px] text-slate-800 leading-relaxed">
+                                Optic Disc:{' '}
+                                <strong>
+                                  {analysis.landmarks?.available
+                                    ? `Localised via CoordConv CNN (${analysis.landmarks.opticDisc?.x}, ${analysis.landmarks.opticDisc?.y})`
+                                    : analysis.anatomicalStructures.opticDiscDetected
+                                    ? 'Localised (Heuristic)'
+                                    : 'Not resolved'}
+                                </strong>{' '}
+                                · Macula:{' '}
+                                <strong>
+                                  {analysis.landmarks?.available
+                                    ? `Localised via CoordConv CNN (${analysis.landmarks.fovea?.x}, ${analysis.landmarks.fovea?.y})`
+                                    : analysis.anatomicalStructures.maculaCentered
+                                    ? 'Centered (Heuristic)'
+                                    : 'Off-axis'}
+                                </strong>{' '}
+                                · Vessel Index:{' '}
+                                <span className="font-mono font-semibold tabular-nums">
+                                  {analysis.anatomicalStructures.vesselDensityIndex}
+                                </span>
+                              </div>
+                              <div className="text-[15px] text-slate-800 leading-relaxed">
+                                Hard Exudates:{' '}
+                                <strong className={analysis.lesionFindings.hardExudatesFlag ? 'text-amber-700' : 'text-slate-700'}>
+                                  {analysis.unetSegmentation?.available
+                                    ? `${analysis.unetSegmentation.lesionStats?.find((s) => s.key === 'EX')?.pixel_count || 0} px (U-Net τ=0.05)`
+                                    : analysis.lesionFindings.hardExudatesFlag
+                                    ? 'Candidate Flagged (Heuristic)'
+                                    : 'None Flagged'}
+                                </strong>{' '}
+                                · Haemorrhages:{' '}
+                                <strong className={analysis.lesionFindings.haemorrhagesFlag ? 'text-rose-700' : 'text-slate-700'}>
+                                  {analysis.unetSegmentation?.available
+                                    ? `${analysis.unetSegmentation.lesionStats?.find((s) => s.key === 'HE')?.pixel_count || 0} px (U-Net τ=0.10)`
+                                    : analysis.lesionFindings.haemorrhagesFlag
+                                    ? 'Candidate Flagged (Heuristic)'
+                                    : 'None Flagged'}
+                                </strong>
+                              </div>
+                              <p className="text-[12px] text-slate-500 leading-relaxed italic">
+                                ℹ️ Note: Deep-learning landmark localization (MobileNetV2 CoordConv) and multi-lesion segmentation (IDRiD Residual U-Net) provide experimental candidate contours for clinical review; not certified clinical diagnostics.
+                              </p>
                             </div>
-                            <p className="text-[12px] text-slate-500 leading-relaxed italic">
-                              ℹ️ Note: Anatomical structures and lesion candidates are illustrative morphological pre-filters. Full clinical diagnosis requires ophthalmologist review and calibrated U-Net segmentation.
-                            </p>
-                          </div>
+                          )}
 
                           {inferenceLoading ? (
                             <div className="rounded-xl border border-teal-200 bg-teal-50/70 p-5 space-y-3 animate-pulse">
