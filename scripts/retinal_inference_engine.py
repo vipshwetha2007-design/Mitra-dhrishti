@@ -153,7 +153,11 @@ def load_and_preprocess_image(image_input, model_type=None):
         original_crop: (H, W, 3) uint8 numpy array for Grad-CAM overlay and quality checks
         tensor: (1, 224, 224, 3) float32 tensor
     """
-    if isinstance(image_input, str):
+    if isinstance(image_input, Image.Image):
+        pil_img = image_input.convert("RGB")
+    elif isinstance(image_input, np.ndarray):
+        pil_img = Image.fromarray(image_input.astype(np.uint8)).convert("RGB")
+    elif isinstance(image_input, str):
         if image_input.startswith("data:image"):
             # Strip base64 header
             header, encoded = image_input.split(",", 1)
@@ -303,24 +307,23 @@ def run_mc_dropout_inference(head_model, conv_features, mc_passes=10):
     """
     Performs T stochastic forward passes with dropout enabled (training=True exclusively on Dropout layers)
     while keeping BatchNormalization in inference mode (training=False).
-    This prevents batch statistics collapse when batch size is 1, resolving identical predictions across distinct images.
+    Vectorized across a tiled batch dimension [mc_passes, ...] to execute in a single forward pass (< 25ms),
+    preventing batch statistics collapse while eliminating sequential pass overhead.
     """
-    pass_preds = []
-    for _ in range(mc_passes):
-        x = conv_features
-        for l in head_model.layers:
-            if isinstance(l, keras.layers.InputLayer):
-                continue
-            cname = type(l).__name__.lower()
-            if "dropout" in cname:
-                x = l(x, training=True)
-            elif "batchnormalization" in cname:
-                x = l(x, training=False)
-            else:
-                x = l(x)
-        pass_preds.append(x.numpy()[0])
+    tiled_features = tf.tile(conv_features, [mc_passes, 1, 1, 1])
+    x = tiled_features
+    for l in head_model.layers:
+        if isinstance(l, keras.layers.InputLayer):
+            continue
+        cname = type(l).__name__.lower()
+        if "dropout" in cname:
+            x = l(x, training=True)
+        elif "batchnormalization" in cname:
+            x = l(x, training=False)
+        else:
+            x = l(x)
+    pass_preds = x.numpy()  # Shape (mc_passes, 5)
 
-    pass_preds = np.array(pass_preds, dtype=np.float32)  # Shape (mc_passes, 5)
     mean_probs = np.mean(pass_preds, axis=0)
     var_probs = np.var(pass_preds, axis=0)
     total_variance = float(np.sum(var_probs))

@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import express from 'express';
 import type { Request, Response, NextFunction } from 'express';
-import { spawn } from 'child_process';
+import { spawn, type ChildProcess } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import { createServer as createViteServer } from 'vite';
@@ -1265,11 +1265,184 @@ export async function createMritidhristiApp(options: { skipFrontend?: boolean } 
   });
 
   // --- PILLAR 2: DETECT (RETINAL SCREENING PIPELINE) ---
+  const INFERENCE_TIMEOUT_MS = parseInt(process.env.INFERENCE_TIMEOUT_MS || '90000', 10);
+
+  class RetinalInferenceWorker {
+    private process: ChildProcess | null = null;
+    private isReady: boolean = false;
+    private stdoutBuffer: string = '';
+    private pendingRequests = new Map<
+      string,
+      {
+        resolve: (val: any) => void;
+        reject: (err: any) => void;
+        timer: NodeJS.Timeout;
+      }
+    >();
+
+    constructor() {
+      this.startWorker();
+    }
+
+    public startWorker() {
+      if (this.process) return;
+
+      console.log('[AI Worker] Spawning persistent warm retinal inference daemon...');
+      this.process = spawn('python', ['scripts/retinal_inference_daemon.py'], {
+        cwd: process.cwd(),
+        env: {
+          ...process.env,
+          KERAS_HOME: path.join(process.cwd(), '.keras'),
+          TF_CPP_MIN_LOG_LEVEL: '3',
+        },
+      });
+
+      this.process.stdout?.on('data', (chunk: Buffer) => {
+        this.stdoutBuffer += chunk.toString();
+        const lines = this.stdoutBuffer.split('\n');
+        this.stdoutBuffer = lines.pop() || '';
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed) continue;
+          try {
+            const firstBrace = trimmed.indexOf('{');
+            const lastBrace = trimmed.lastIndexOf('}');
+            if (firstBrace === -1 || lastBrace === -1) continue;
+            const jsonStr = trimmed.slice(firstBrace, lastBrace + 1);
+            const msg = JSON.parse(jsonStr);
+
+            if (msg.status === 'ready') {
+              this.isReady = true;
+              console.log(
+                `[AI Worker] Retinal inference daemon ready (PID ${msg.pid}, active: ${msg.activeModel}, warmup: ${msg.warmupDurationMs}ms)`
+              );
+            } else if (msg.id && this.pendingRequests.has(msg.id)) {
+              const req = this.pendingRequests.get(msg.id)!;
+              clearTimeout(req.timer);
+              this.pendingRequests.delete(msg.id);
+              req.resolve(msg);
+            }
+          } catch {
+            // Non-JSON worker output
+          }
+        }
+      });
+
+      this.process.stderr?.on('data', (chunk: Buffer) => {
+        const text = chunk.toString().trim();
+        if (text && !text.includes('oneDNN')) {
+          console.log(`[AI Worker] ${text}`);
+        }
+      });
+
+      this.process.on('close', (code) => {
+        console.warn(`[AI Worker] Retinal inference daemon exited with code ${code}.`);
+        this.isReady = false;
+        this.process = null;
+        for (const [, req] of this.pendingRequests.entries()) {
+          clearTimeout(req.timer);
+          req.reject(new Error(`Inference daemon exited unexpectedly with code ${code}`));
+        }
+        this.pendingRequests.clear();
+        // Auto-restart after brief delay
+        setTimeout(() => this.startWorker(), 3000);
+      });
+    }
+
+    public async predict(imageDataUrl: string, timeoutMs: number = INFERENCE_TIMEOUT_MS): Promise<any> {
+      if (!this.process || !this.process.stdin || !this.isReady) {
+        // If daemon is not yet ready, execute via direct process runner with configurable timeout
+        return runDirectInference(imageDataUrl, timeoutMs);
+      }
+
+      const id = `req-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+      return new Promise((resolve, reject) => {
+        const timer = setTimeout(() => {
+          this.pendingRequests.delete(id);
+          reject(new Error(`Inference timed out after ${Math.round(timeoutMs / 1000)} seconds.`));
+        }, timeoutMs);
+
+        this.pendingRequests.set(id, { resolve, reject, timer });
+
+        const payload = JSON.stringify({ id, imageDataUrl }) + '\n';
+        this.process!.stdin!.write(payload);
+      });
+    }
+
+    public getStatus() {
+      return {
+        active: !!this.process,
+        ready: this.isReady,
+        pendingCount: this.pendingRequests.size,
+      };
+    }
+  }
+
+  function runDirectInference(imageDataUrl: string, timeoutMs: number = INFERENCE_TIMEOUT_MS): Promise<any> {
+    return new Promise((resolve, reject) => {
+      const pyProcess = spawn('python', ['scripts/retinal_inference_engine.py', '--stdin'], {
+        cwd: process.cwd(),
+        env: {
+          ...process.env,
+          KERAS_HOME: path.join(process.cwd(), '.keras'),
+          TF_CPP_MIN_LOG_LEVEL: '3',
+        },
+      });
+
+      let stdoutData = '';
+      let stderrData = '';
+
+      pyProcess.stdout.on('data', (chunk) => {
+        stdoutData += chunk.toString();
+      });
+
+      pyProcess.stderr.on('data', (chunk) => {
+        stderrData += chunk.toString();
+      });
+
+      pyProcess.stdin.on('error', () => {});
+
+      const timer = setTimeout(() => {
+        pyProcess.kill();
+        reject(new Error(`Inference timed out after ${Math.round(timeoutMs / 1000)} seconds.`));
+      }, timeoutMs);
+
+      pyProcess.on('close', (code) => {
+        clearTimeout(timer);
+        if (code !== 0) {
+          reject(new Error(stderrData || stdoutData || `Process exited with code ${code}`));
+          return;
+        }
+        try {
+          const firstBrace = stdoutData.indexOf('{');
+          const lastBrace = stdoutData.lastIndexOf('}');
+          if (firstBrace === -1 || lastBrace === -1) {
+            throw new Error('No valid JSON output found from inference engine');
+          }
+          const jsonStr = stdoutData.slice(firstBrace, lastBrace + 1);
+          resolve(JSON.parse(jsonStr));
+        } catch (err: any) {
+          reject(new Error(`Failed to parse inference output: ${err.message}`));
+        }
+      });
+
+      pyProcess.stdin.write(imageDataUrl);
+      pyProcess.stdin.end();
+    });
+  }
+
+  const retinalWorker = new RetinalInferenceWorker();
+
   const detectPredictSchema = z.object({
     imageDataUrl: z.string().min(20).max(10_000_000),
   });
 
-  app.post('/api/detect/predict', (req: AuthRequest, res) => {
+  app.get('/api/detect/worker-status', (_req, res) => {
+    res.json(retinalWorker.getStatus());
+  });
+
+  app.post('/api/detect/predict', async (req: AuthRequest, res) => {
     // Optional Bearer token resolution (permits live kiosk screening without dropping authenticated user context)
     const authHeader = req.headers.authorization;
     if (authHeader && authHeader.startsWith('Bearer ')) {
@@ -1292,65 +1465,16 @@ export async function createMritidhristiApp(options: { skipFrontend?: boolean } 
       return;
     }
 
-    const pyProcess = spawn('python', ['scripts/retinal_inference_engine.py', '--stdin'], {
-      cwd: process.cwd(),
-      env: {
-        ...process.env,
-        KERAS_HOME: path.join(process.cwd(), '.keras'),
-        TF_CPP_MIN_LOG_LEVEL: '3',
-      },
-    });
-
-    let stdoutData = '';
-    let stderrData = '';
-
-    pyProcess.stdout.on('data', (chunk) => {
-      stdoutData += chunk.toString();
-    });
-
-    pyProcess.stderr.on('data', (chunk) => {
-      stderrData += chunk.toString();
-    });
-
-    pyProcess.stdin.on('error', () => {
-      // Prevent unhandled write EOF exceptions if python terminates early
-    });
-
-    const timeoutTimer = setTimeout(() => {
-      pyProcess.kill();
-      if (!res.headersSent) {
-        res.status(504).json({ error: 'Inference timed out after 60 seconds.' });
-      }
-    }, 60000);
-
-    pyProcess.on('close', (code) => {
-      clearTimeout(timeoutTimer);
-      if (res.headersSent) return;
-
-      if (code !== 0) {
-        res.status(500).json({
-          error: 'CNN inference process exited with error',
-          details: stderrData || stdoutData || `Exit code ${code}`,
-        });
-        return;
-      }
-
-      try {
-        const firstBrace = stdoutData.indexOf('{');
-        const lastBrace = stdoutData.lastIndexOf('}');
-        if (firstBrace === -1 || lastBrace === -1) {
-          throw new Error('No valid JSON output found from inference engine');
-        }
-        const jsonStr = stdoutData.slice(firstBrace, lastBrace + 1);
-        const parsedResult = JSON.parse(jsonStr);
-        res.json(parsedResult);
-      } catch (err: any) {
-        res.status(500).json({ error: 'Failed to parse inference output', details: err.message, raw: stdoutData });
-      }
-    });
-
-    pyProcess.stdin.write(parsed.data.imageDataUrl);
-    pyProcess.stdin.end();
+    try {
+      const result = await retinalWorker.predict(parsed.data.imageDataUrl, INFERENCE_TIMEOUT_MS);
+      res.json(result);
+    } catch (err: any) {
+      const isTimeout = err.message?.includes('timed out');
+      res.status(isTimeout ? 504 : 500).json({
+        error: isTimeout ? err.message : 'CNN retinal inference failed',
+        details: err.message,
+      });
+    }
   });
 
   app.post('/api/detect/predict-dme', requireAuth, (req: AuthRequest, res) => {
