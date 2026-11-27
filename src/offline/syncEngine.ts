@@ -1,4 +1,5 @@
 import { offlineDb, type PendingOfflineAction } from './db';
+import { apiUrl } from '../services/apiConfig';
 
 export function createIdempotencyKey(prefix: string): string {
   const rand = Math.random().toString(36).slice(2, 10);
@@ -55,7 +56,7 @@ export async function synchronizePendingQueue(token: string): Promise<{
     }
   }
 
-  const response = await fetch('/api/sync/batch', {
+  const response = await fetch(apiUrl('/api/sync/batch'), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

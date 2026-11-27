@@ -5,9 +5,11 @@ import {
   CheckCircle2,
   Globe,
   Lock,
+  Server,
   ShieldCheck,
 } from 'lucide-react';
 import type { AppNavView, BootstrapPayload, LanguageCode } from '../types/domain';
+import { apiUrl, getApiBaseUrl, setApiBaseUrl } from '../services/apiConfig';
 
 interface NotificationsViewProps {
   data: BootstrapPayload;
@@ -108,12 +110,22 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 }) => {
   const [rbacResult, setRbacResult] = useState<string | null>(null);
   const [testingRbac, setTestingRbac] = useState(false);
+  const [apiUrlInput, setApiUrlInput] = useState(getApiBaseUrl());
+  const [apiSaveStatus, setApiSaveStatus] = useState<string | null>(null);
+
+  const handleSaveApiUrl = () => {
+    setApiBaseUrl(apiUrlInput);
+    setApiSaveStatus('Saved! Reloading to apply configuration...');
+    setTimeout(() => {
+      window.location.reload();
+    }, 600);
+  };
 
   const testBackendRbac = async () => {
     setTestingRbac(true);
     setRbacResult(null);
     try {
-      const res = await fetch('/api/audit-logs', {
+      const res = await fetch(apiUrl('/api/audit-logs'), {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       const body = await res.json();
@@ -205,6 +217,41 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           {rbacResult && (
             <span className="text-[13px] font-mono text-slate-800 leading-relaxed">{rbacResult}</span>
           )}
+        </div>
+      </section>
+
+      {/* Backend API Gateway Configuration */}
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 space-y-4 shadow-sm">
+        <div className="flex items-center gap-2.5">
+          <Server className="h-5 w-5 text-[#0F766E]" />
+          <h2 className="font-display text-[19px] font-bold text-[#0B2540]">
+            Backend API Gateway Configuration
+          </h2>
+        </div>
+        <p className="text-[14px] text-slate-700 leading-relaxed">
+          Configure the active MITRA DRISHTI backend service URL (Express &amp; Python AI inference daemon). In local development and unified deployments, leave empty to use same-origin relative endpoints.
+        </p>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <input
+            type="text"
+            placeholder="e.g. https://api.yourdomain.com or leave empty for same-origin"
+            value={apiUrlInput}
+            onChange={(e) => setApiUrlInput(e.target.value)}
+            className="flex-1 rounded-xl border border-slate-300 px-4 py-2.5 text-[14px] font-mono text-slate-800 focus:border-[#0F766E] focus:outline-none"
+          />
+          <button
+            type="button"
+            onClick={handleSaveApiUrl}
+            className="rounded-xl bg-[#0F766E] px-5 py-2.5 text-[14px] font-semibold text-white hover:bg-[#0D655E] transition-colors shadow-sm"
+          >
+            Save Gateway URL
+          </button>
+        </div>
+        {apiSaveStatus && (
+          <p className="text-[13px] text-emerald-600 font-medium">{apiSaveStatus}</p>
+        )}
+        <div className="text-[12px] text-slate-500 font-mono">
+          Active Endpoint: {getApiBaseUrl() ? `${getApiBaseUrl()}/api/...` : 'Relative Origin (/api/...)'}
         </div>
       </section>
 

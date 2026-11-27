@@ -15,6 +15,7 @@ import {
   Upload,
 } from 'lucide-react';
 import type { BootstrapPayload, RetinalScreening } from '../types/domain';
+import { apiUrl } from '../services/apiConfig';
 import { FundusVisualizer } from '../components/FundusVisualizer';
 import {
   analyzeRetinalCanvasPixels,
@@ -147,7 +148,7 @@ export const DetectModule: React.FC<DetectModuleProps> = ({
     if (subTab === 'datasets') {
       setLoadingStats(true);
       const token = authToken || localStorage.getItem('mitra_drishti_token') || localStorage.getItem('mritidhristi_token');
-      fetch('/api/detect/dataset-stats', {
+      fetch(apiUrl('/api/detect/dataset-stats'), {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       })
         .then((r) => (r.ok ? r.json() : null))
@@ -188,7 +189,7 @@ export const DetectModule: React.FC<DetectModuleProps> = ({
 
         if (isOnline) {
           const effectiveToken = authToken || localStorage.getItem('mitra_drishti_token') || localStorage.getItem('mritidhristi_token');
-          fetch('/api/detect/predict', {
+          fetch(apiUrl('/api/detect/predict'), {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',

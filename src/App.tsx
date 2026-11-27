@@ -30,6 +30,8 @@ import type {
 import { AuthModal } from './components/AuthModal';
 import { Sidebar } from './components/Sidebar';
 import { TopBar } from './components/TopBar';
+import { apiUrl } from './services/apiConfig';
+import { createOfflineFallbackBootstrap } from './offline/fallbackData';
 import { AdminDashboard } from './views/AdminDashboard';
 import { DetectModule } from './views/DetectModule';
 import { DoctorDashboard } from './views/DoctorDashboard';
@@ -116,7 +118,7 @@ export default function App() {
   }, []);
 
   const fetchBootstrap = useCallback(async (authToken: string) => {
-    const res = await fetch('/api/bootstrap', {
+    const res = await fetch(apiUrl('/api/bootstrap'), {
       headers: { Authorization: `Bearer ${authToken}` },
     });
     if (!res.ok) {
@@ -144,7 +146,7 @@ export default function App() {
   const apiFetch = useCallback(
     async <T,>(url: string, options?: RequestInit): Promise<T> => {
       if (!token) throw new Error('No active authenticated session.');
-      const res = await fetch(url, {
+      const res = await fetch(apiUrl(url), {
         ...options,
         headers: {
           'Content-Type': 'application/json',
@@ -161,26 +163,52 @@ export default function App() {
     [token]
   );
 
-  // Initialize default synthetic Patient demo session on startup
+  // Initialize authenticated session or offline clinical workspace
   useEffect(() => {
     let active = true;
     (async () => {
       setLoading(true);
       setFatalError(null);
       try {
-        const res = await fetch('/api/auth/demo-session', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ role: 'patient' }),
-        });
-        if (!res.ok) throw new Error('Unable to initialize prototype session');
-        const auth = (await res.json()) as { token: string };
+        let activeToken = token;
+
+        // If no stored token, attempt to establish default demo session on backend
+        if (!activeToken) {
+          try {
+            const res = await fetch(apiUrl('/api/auth/demo-session'), {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ role: 'patient' }),
+            });
+            if (res.ok) {
+              const auth = (await res.json()) as { token: string };
+              activeToken = auth.token;
+              if (active) setToken(auth.token);
+            }
+          } catch {
+            // Backend unreachable; proceed to offline fallback
+          }
+        }
+
+        // If we have a token, attempt to fetch live bootstrap data
+        if (activeToken) {
+          try {
+            await fetchBootstrap(activeToken);
+            return;
+          } catch (bootErr) {
+            console.warn('Live bootstrap unavailable, switching to offline workspace:', bootErr);
+          }
+        }
+
+        // If backend is unreachable or offline, initialize fallback workspace without crashing
         if (!active) return;
-        setToken(auth.token);
-        await fetchBootstrap(auth.token);
+        const fallback = createOfflineFallbackBootstrap('patient');
+        setData(fallback);
+        showToast('Operating in standalone offline mode. Configure backend URL in Settings.');
       } catch (err) {
         if (!active) return;
-        setFatalError(err instanceof Error ? err.message : 'Unable to connect to MITRA DRISHTI API');
+        const fallback = createOfflineFallbackBootstrap('patient');
+        setData(fallback);
       } finally {
         if (active) setLoading(false);
       }
@@ -188,7 +216,7 @@ export default function App() {
     return () => {
       active = false;
     };
-  }, [fetchBootstrap]);
+  }, [fetchBootstrap, showToast, token]);
 
   const handleSyncNow = useCallback(async (): Promise<string> => {
     if (!token) return 'Sign in required to synchronize.';
@@ -208,31 +236,45 @@ export default function App() {
 
   // Auth handlers
   const handleSwitchDemoRole = async (role: UserRole) => {
-    const res = await fetch('/api/auth/demo-session', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ role }),
-    });
-    const body = await res.json();
-    if (!res.ok) throw new Error(body.error || 'Role switch failed');
-    setToken(body.token);
-    await fetchBootstrap(body.token);
+    try {
+      const res = await fetch(apiUrl('/api/auth/demo-session'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role }),
+      });
+      if (res.ok) {
+        const body = await res.json();
+        setToken(body.token);
+        await fetchBootstrap(body.token);
+        setActiveView('dashboard');
+        showToast(`Switched to ${body.user.name} (${body.user.role}).`);
+        return;
+      }
+    } catch {
+      // Backend unavailable; switch in offline standalone mode
+    }
+    const fallback = createOfflineFallbackBootstrap(role);
+    setData(fallback);
     setActiveView('dashboard');
-    showToast(`Switched to ${body.user.name} (${body.user.role}).`);
+    showToast(`Switched to offline ${role} role.`);
   };
 
   const handleLogin = async (email: string, password: string) => {
-    const res = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
-    });
-    const body = await res.json();
-    if (!res.ok) throw new Error(body.error || 'Login failed');
-    setToken(body.token);
-    await fetchBootstrap(body.token);
-    setActiveView('dashboard');
-    showToast(`Signed in as ${body.user.name}.`);
+    try {
+      const res = await fetch(apiUrl('/api/auth/login'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error || 'Login failed');
+      setToken(body.token);
+      await fetchBootstrap(body.token);
+      setActiveView('dashboard');
+      showToast(`Signed in as ${body.user.name}.`);
+    } catch (err: any) {
+      throw new Error(err.message || 'Login request failed. Verify backend connectivity.');
+    }
   };
 
   const handleRegisterAccount = async (payload: {
@@ -242,18 +284,22 @@ export default function App() {
     role: UserRole;
     language: LanguageCode;
   }) => {
-    const res = await fetch('/api/auth/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-    const body = await res.json();
-    if (!res.ok) throw new Error(body.error || 'Registration failed');
-    setToken(body.token);
-    setLanguage(payload.language);
-    await fetchBootstrap(body.token);
-    setActiveView('dashboard');
-    showToast(`Account created for ${body.user.name}.`);
+    try {
+      const res = await fetch(apiUrl('/api/auth/register'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error || 'Registration failed');
+      setToken(body.token);
+      setLanguage(payload.language);
+      await fetchBootstrap(body.token);
+      setActiveView('dashboard');
+      showToast(`Account created for ${body.user.name}.`);
+    } catch (err: any) {
+      throw new Error(err.message || 'Registration request failed. Verify backend connectivity.');
+    }
   };
 
   // Pillar 1: Prevent handlers (Offline-capable!)

@@ -22,6 +22,7 @@ import {
   YAxis,
 } from 'recharts';
 import type { AppNavView, BootstrapPayload } from '../types/domain';
+import { apiUrl } from '../services/apiConfig';
 
 interface AdminDashboardProps {
   data: BootstrapPayload;
@@ -59,7 +60,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     setStaffSuccess(null);
     setStaffError(null);
     try {
-      const res = await fetch('/api/admin/staff-accounts', {
+      const res = await fetch(apiUrl('/api/admin/staff-accounts'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
