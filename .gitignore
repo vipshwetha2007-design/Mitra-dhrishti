@@ -20,5 +20,6 @@ scratch/
 .keras/
 __pycache__/
 *.pyc
+.antigravity/
 
 
